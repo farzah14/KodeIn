@@ -1,10 +1,4 @@
-import { useState } from "react";
 export default function Navbar({activeNav, setActiveNav}) {
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
   return (
     <nav className='bg-white shadow-md w-full fixed top-0 left-0 z-10'>
       <div className="container mx-auto flex justify-between items-center">
@@ -32,11 +26,7 @@ export default function Navbar({activeNav, setActiveNav}) {
           </div>
         </div>
       </div>
-      <div className="md:hidden">
-        <button onClick={toggleMenu} className="text-gray-600">
-          {menuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+      
       {menuOpen && (
         <div className="md:hidden bg-white py-2 px-4 shadow-lg">
           <div className="flex flex-col space-y-3">
@@ -70,7 +60,11 @@ export default function Navbar({activeNav, setActiveNav}) {
           </div>
         </div>
       )}
-
+      <div className="md:hidden">
+        <button onClick={toggleMenu} className="text-gray-600">
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
     </nav>
   )
 }
