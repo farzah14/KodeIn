@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+.live{
+  color: red !important;
+  font-size: 20px;
+  font-weight: bold;
+}
+.live:hover{
+  color: rgb(151, 14, 14) !important;
+}
+
+.live:active{
+  color: rgb(245, 42, 42);
+}
