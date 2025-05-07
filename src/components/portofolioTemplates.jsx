@@ -66,7 +66,7 @@ export default function PortfolioTemplateDetail({setActiveNav}){
               <img src="/assets/portofolio/contact.png" alt="homepage" className="w-full rounded-lg hover:scale-106 transition delay-100 duration-300 ease-in-out hover:shadow-lg" />
               <img src="/assets/portofolio/home1.png" alt="projects" className="w-full rounded-lg hover:scale-106 transition delay-100 duration-300 ease-in-out hover:shadow-lg" />
               <img src="/assets/portofolio/blog.png" alt="skills" className="w-full rounded-lg hover:scale-106 transition delay-100 duration-300 ease-in-out hover:shadow-lg" />
-              <img src="/assets/portofolio/portofolio.png hover:scale-106 transition delay-100 duration-300 ease-in-out hover:shadow-lg" alt="contact" className="w-full rounded-lg" />
+              <img src="/assets/portofolio/portofolio.png" alt="contact" className="w-full rounded-lg hover:scale-106 transition delay-100 duration-300 ease-in-out hover:shadow-lg" />
             </div>
           </div>
         </div>
