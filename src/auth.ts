@@ -19,6 +19,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       clientSecret: process.env.AUTH_GITHUB_SECRET!,
     }),
   ],
+  
 
   pages: {
     signIn: "/login",

@@ -12,7 +12,7 @@ export default function Page() {
           </div>
 
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-gray-900">
-            DuoCode
+            KodeIn
           </h1>
 
           <p className="mt-4 max-w-2xl text-base leading-7 text-gray-700">
