@@ -3,8 +3,9 @@
 import { useMemo, useState } from "react";
 import { CodeEditor } from "@/components/CodeEditor";
 import { mockPythonRunner } from "@/lib/runner/mockPythonRunner";
-import { markStepCompleted } from "@/lib/storage";
 import { LessonStep } from "@/lib/types";
+import { completeStep } from "@/lib/progressStore";
+
 
 export function CodeStep({
   step,
@@ -43,7 +44,8 @@ export function CodeStep({
 
     if (res.status === "pass") {
       setStatus("pass");
-      markStepCompleted(step.id, 10);
+      await completeStep(step.id, 10);
+
 
       // tampilkan success animation
       setShowSuccess(true);

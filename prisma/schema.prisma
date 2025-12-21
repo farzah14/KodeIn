@@ -16,6 +16,7 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  progress Progress?
 }
 
 model Account {
@@ -52,4 +53,16 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Progress {
+  userId        String   @id
+  xp            Int      @default(0)
+  streakCurrent Int      @default(0)
+  streakLongest Int      @default(0)
+  lastActiveISO String?
+  completedJson String   @default("{}")
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

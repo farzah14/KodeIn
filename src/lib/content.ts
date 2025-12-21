@@ -39,7 +39,7 @@ export const content: Content = {
           type: "explain",
           title: "Return",
           markdown:
-            "Di MVP ini kita fokus **function-based**.\n\nGunakan `return` untuk mengembalikan nilai.\n\nContoh:\n```py\ndef double(n):\n    return n * 2\n```",
+            "Di MVP ini kita fokus Function-Based.\n\nGunakan `return` untuk mengembalikan nilai.\n\nContoh:\n```py\ndef double(n):\n    return n * 2\n```",
         },
         {
           id: "py-l1-s2",

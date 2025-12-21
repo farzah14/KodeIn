@@ -1,12 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useSyncExternalStore } from "react";
-import { defaultProgress, getProgressSnapshot, subscribeProgress } from "./storage";
+import { getProgressSnapshot, initProgress, subscribeProgress } from "./progressStore";
 
 export function useProgress() {
-  return useSyncExternalStore(
+  const snap = useSyncExternalStore(
     subscribeProgress,
     getProgressSnapshot,
-    () => defaultProgress
+    getProgressSnapshot
   );
+
+  useEffect(() => {
+    initProgress();
+  }, []);
+
+  return snap.progress;
 }
