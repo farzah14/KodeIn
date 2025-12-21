@@ -26,23 +26,31 @@ function Pill({
   );
 }
 
-function UserChip({
+function AvatarButton({
   name,
   email,
+  image,
 }: {
   name?: string | null;
   email?: string | null;
+  image?: string | null;
 }) {
-  const text = name?.trim() || email?.trim() || "User";
+  const text = name?.trim() || email?.trim() || "U";
   const initial = (text[0] ?? "U").toUpperCase();
 
   return (
-    <div className="flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs shadow-sm">
-      <div className="grid h-6 w-6 place-items-center rounded-full bg-gray-900 text-[11px] font-semibold text-white">
-        {initial}
-      </div>
-      <div className="max-w-[160px] truncate text-gray-900">{text}</div>
-    </div>
+    <Link
+      href="/profile"
+      title="Profile"
+      className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+    >
+      {image ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={image} alt="Avatar" className="h-full w-full object-cover" />
+      ) : (
+        <span className="text-xs font-semibold text-gray-900">{initial}</span>
+      )}
+    </Link>
   );
 }
 
@@ -53,12 +61,9 @@ export function Topbar() {
   const isAuthed = status === "authenticated";
   const isAuthLoading = status === "loading";
 
-  // Jika belum login, kita anggap progress tidak relevan (akan kosong dari store).
-  // Kalau login, useProgress akan fetch /api/progress.
   const showProgressLoading = isAuthLoading;
 
   async function handleSignOut() {
-    // reset cache progress sebelum pindah user
     resetProgressStore();
     await signOut({ callbackUrl: "/" });
   }
@@ -91,10 +96,15 @@ export function Topbar() {
 
           {/* Auth Area */}
           {isAuthLoading ? (
-            <div className="h-8 w-24 animate-pulse rounded-full border border-gray-200 bg-gray-50" />
+            <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50" />
           ) : isAuthed && session?.user ? (
             <>
-              <UserChip name={session.user.name} email={session.user.email} />
+              <AvatarButton
+                name={session.user.name}
+                email={session.user.email}
+                image={session.user.image}
+              />
+
               <button
                 onClick={handleSignOut}
                 className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50"
