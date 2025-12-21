@@ -4,34 +4,34 @@ import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 
-function required(name: string) {
+function requiredEnv(name: string) {
   const v = process.env[name];
   if (!v) throw new Error(`Missing env: ${name}`);
   return v;
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  // WAJIB di production (Vercel)
-  secret: required("AUTH_SECRET"),
-
-  // di Vercel paling aman true (biar tidak UntrustedHost)
-  trustHost: true,
-
-  // opsional, tapi membantu saat debugging
-  debug: process.env.NODE_ENV === "development",
-
   adapter: PrismaAdapter(prisma),
+
+  // Pastikan secret ada di runtime (lebih jelas daripada rely inferensi)
+  secret: process.env.AUTH_SECRET,
+
+  // Di Vercel aman untuk di-true-kan agar tidak tergantung env var yang mungkin lupa diset
+  trustHost: true,
 
   providers: [
     Google({
-      clientId: required("AUTH_GOOGLE_ID"),
-      clientSecret: required("AUTH_GOOGLE_SECRET"),
+      clientId: requiredEnv("AUTH_GOOGLE_ID"),
+      clientSecret: requiredEnv("AUTH_GOOGLE_SECRET"),
     }),
     GitHub({
-      clientId: required("AUTH_GITHUB_ID"),
-      clientSecret: required("AUTH_GITHUB_SECRET"),
+      clientId: requiredEnv("AUTH_GITHUB_ID"),
+      clientSecret: requiredEnv("AUTH_GITHUB_SECRET"),
     }),
   ],
 
   pages: { signIn: "/login" },
+
+  // Nyalakan sementara kalau masih error biar log lebih jelas di Vercel
+  debug: process.env.NODE_ENV !== "production",
 });
