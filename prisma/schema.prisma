@@ -13,10 +13,11 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-
-  accounts Account[]
-  sessions Session[]
-  progress Progress?
+  address       String?
+  theme         String    @default("system") // "light" | "dark" | "system"
+  accounts      Account[]
+  sessions      Session[]
+  progress      Progress?
 }
 
 model Account {

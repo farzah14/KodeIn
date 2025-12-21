@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* paksa dark variant pakai class .dark, bukan media */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   html, body {
     height: 100%;

@@ -15,12 +15,12 @@ function Pill({
   isLoading?: boolean;
 }) {
   return (
-    <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow-sm">
-      <span className="text-gray-500">{label}</span>{" "}
+    <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200">
+      <span className="text-gray-500 dark:text-zinc-400">{label}</span>{" "}
       {isLoading ? (
-        <span className="inline-block h-4 w-8 animate-pulse rounded bg-gray-100 align-middle" />
+        <span className="inline-block h-4 w-8 animate-pulse rounded bg-gray-100 align-middle dark:bg-zinc-800" />
       ) : (
-        <span className="font-semibold text-gray-900">{value}</span>
+        <span className="font-semibold text-gray-900 dark:text-zinc-100">{value}</span>
       )}
     </div>
   );
@@ -42,13 +42,13 @@ function AvatarButton({
     <Link
       href="/profile"
       title="Profile"
-      className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50"
+      className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
     >
       {image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={image} alt="Avatar" className="h-full w-full object-cover" />
       ) : (
-        <span className="text-xs font-semibold text-gray-900">{initial}</span>
+        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{initial}</span>
       )}
     </Link>
   );
@@ -60,7 +60,6 @@ export function Topbar() {
 
   const isAuthed = status === "authenticated";
   const isAuthLoading = status === "loading";
-
   const showProgressLoading = isAuthLoading;
 
   async function handleSignOut() {
@@ -69,16 +68,18 @@ export function Topbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/60">
       <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
         {/* Left: Brand */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gray-900 text-sm font-semibold text-white shadow-sm">
+          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gray-900 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-black">
             KI
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold text-gray-900">KodeIn</div>
-            <div className="text-[11px] text-gray-500">Learn coding by doing</div>
+            <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">KodeIn</div>
+            <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+              Learn coding by doing
+            </div>
           </div>
         </Link>
 
@@ -89,14 +90,14 @@ export function Topbar() {
 
           <Link
             href="/learn"
-            className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50"
+            className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
           >
             Course Map
           </Link>
 
           {/* Auth Area */}
           {isAuthLoading ? (
-            <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50" />
+            <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900" />
           ) : isAuthed && session?.user ? (
             <>
               <AvatarButton
@@ -107,7 +108,7 @@ export function Topbar() {
 
               <button
                 onClick={handleSignOut}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50"
+                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
               >
                 Sign out
               </button>
@@ -115,7 +116,7 @@ export function Topbar() {
           ) : (
             <Link
               href="/login"
-              className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white shadow-sm hover:opacity-95"
+              className="rounded-full bg-gray-900 px-3 py-1 text-xs font-medium text-white shadow-sm hover:opacity-95 dark:bg-white dark:text-black"
             >
               Sign in
             </Link>
