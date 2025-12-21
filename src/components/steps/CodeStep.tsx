@@ -6,7 +6,6 @@ import { mockPythonRunner } from "@/lib/runner/mockPythonRunner";
 import { LessonStep } from "@/lib/types";
 import { completeStep } from "@/lib/progressStore";
 
-
 export function CodeStep({
   step,
   onPassed,
@@ -46,7 +45,6 @@ export function CodeStep({
       setStatus("pass");
       await completeStep(step.id, 10);
 
-
       // tampilkan success animation
       setShowSuccess(true);
       return;
@@ -75,13 +73,19 @@ export function CodeStep({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-3xl border bg-white p-6 shadow-sm">
+      {/* Prompt card */}
+      <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold">{step.title}</div>
-            <div className="mt-2 text-sm leading-6 text-gray-700">{step.prompt}</div>
+            <div className="text-lg font-semibold text-gray-900 dark:text-zinc-100">
+              {step.title}
+            </div>
+            <div className="mt-2 text-sm leading-6 text-gray-700 dark:text-zinc-300">
+              {step.prompt}
+            </div>
           </div>
-          <div className="rounded-full border bg-white px-3 py-1 text-xs text-gray-600 shadow-sm">
+
+          <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-200">
             Python
           </div>
         </div>
@@ -90,32 +94,39 @@ export function CodeStep({
       {/* Editor Card */}
       <div
         key={shakeKey}
-        className={`rounded-3xl border bg-white p-4 shadow-sm ${
+        className={`rounded-3xl border border-gray-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 ${
           status === "fail" ? "anim-shake" : ""
         }`}
       >
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-sm font-semibold text-gray-900">Editor</div>
+          <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Editor</div>
+
           <button
-            className="rounded-xl border bg-white px-3 py-1 text-xs shadow-sm hover:bg-gray-50"
+            className="rounded-xl border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900/40"
             onClick={onReset}
             type="button"
           >
             Reset code
           </button>
         </div>
-        <CodeEditor value={code} onChange={setCode} />
+
+        {/* INVERT: dark => editor putih */}
+        <CodeEditor value={code} onChange={setCode} invertOnDark />
       </div>
 
       {(status === "fail" || message) && (
-        <div className="rounded-3xl border bg-white p-6 shadow-sm anim-fade-in">
-          <div className="text-sm font-semibold text-red-700">Belum tepat</div>
-          <div className="mt-2 text-sm text-gray-800">{message}</div>
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm anim-fade-in dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="text-sm font-semibold text-red-700 dark:text-red-300">
+            Belum tepat
+          </div>
+          <div className="mt-2 text-sm text-gray-800 dark:text-zinc-200">{message}</div>
 
           {currentHint && (
-            <div className="mt-4 rounded-2xl border bg-gray-50 p-4">
-              <div className="text-xs font-semibold text-gray-700">Hint</div>
-              <div className="mt-1 text-sm text-gray-800">{currentHint}</div>
+            <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
+              <div className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                Hint
+              </div>
+              <div className="mt-1 text-sm text-gray-800 dark:text-zinc-200">{currentHint}</div>
             </div>
           )}
         </div>
@@ -123,15 +134,16 @@ export function CodeStep({
 
       {/* Sticky action bar */}
       <div className="sticky bottom-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border bg-white/90 px-4 py-3 shadow-lg backdrop-blur">
-          <div className="text-xs text-gray-600">
-            Klik <span className="font-semibold text-gray-900">Check</span> untuk menjalankan penilaian.
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+          <div className="text-xs text-gray-600 dark:text-zinc-300">
+            Klik <span className="font-semibold text-gray-900 dark:text-zinc-100">Check</span>{" "}
+            untuk menjalankan penilaian.
           </div>
 
           <button
             onClick={onCheck}
             disabled={status === "checking" || showSuccess}
-            className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60"
+            className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60 dark:bg-white dark:text-black"
           >
             {status === "checking" ? "Checking..." : "Check"}
           </button>
@@ -143,26 +155,30 @@ export function CodeStep({
         <div className="fixed inset-0 z-[60] flex items-end justify-center">
           {/* backdrop */}
           <div
-            className="absolute inset-0 bg-black/20 anim-fade-in"
+            className="absolute inset-0 bg-black/30 anim-fade-in"
             onClick={() => setShowSuccess(false)}
           />
           {/* sheet */}
           <div className="relative w-full max-w-5xl px-4 pb-6">
-            <div className="rounded-3xl border bg-white p-6 shadow-xl anim-slide-up">
+            <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-xl anim-slide-up dark:border-zinc-800 dark:bg-zinc-950">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="grid h-12 w-12 place-items-center rounded-2xl bg-green-600 text-white anim-pop">
                     ✓
                   </div>
                   <div>
-                    <div className="text-lg font-semibold text-gray-900">Benar!</div>
-                    <div className="mt-1 text-sm text-gray-600">Kamu dapat +10 XP</div>
+                    <div className="text-lg font-semibold text-gray-900 dark:text-zinc-100">
+                      Benar!
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600 dark:text-zinc-300">
+                      Kamu dapat +10 XP
+                    </div>
                   </div>
                 </div>
 
                 <button
                   onClick={onContinueAfterSuccess}
-                  className="focus-ring rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95"
+                  className="focus-ring rounded-xl bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:opacity-95 dark:bg-white dark:text-black"
                 >
                   Lanjut
                 </button>

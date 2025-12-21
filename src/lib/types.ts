@@ -2,6 +2,20 @@ export type Language = "python" | "javascript" | "sql";
 
 export type StepType = "explain" | "code";
 
+/**
+ * JSONValue untuk testcases (aman untuk diserialisasi).
+ * Cocok untuk input/output runner karena biasanya berbasis JSON.
+ */
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export type JsonObject = { [key: string]: JsonValue };
+export type JsonArray = JsonValue[];
+
+export type PublicCase = {
+  input: JsonValue[];   // sebelumnya: any[]
+  output: JsonValue;    // sebelumnya: any
+};
+
 export type LessonStep =
   | {
       id: string;
@@ -17,7 +31,7 @@ export type LessonStep =
       starterCode: string;
       functionName: string;
       hints: string[];
-      publicCases: Array<{ input: any[]; output: any }>;
+      publicCases: PublicCase[]; // sebelumnya: Array<{ input: any[]; output: any }>
     };
 
 export type Lesson = {
@@ -52,7 +66,7 @@ export type RunnerRequest = {
   language: Language;
   code: string;
   functionName: string;
-  publicCases: Array<{ input: any[]; output: any }>;
+  publicCases: PublicCase[]; // sebelumnya: Array<{ input: any[]; output: any }>
   timeoutMs: number;
 };
 

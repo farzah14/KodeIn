@@ -23,8 +23,9 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const pct = totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
 
   const canBack = idx > 0;
-  const isCompleted = !!(step && p.completedStepIds[step.id]);
   const isLastStep = idx >= totalSteps - 1;
+
+  const isStepCompleted = step ? !!p.completedStepIds[step.id] : false;
 
   const header = useMemo(
     () => ({
@@ -41,7 +42,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
     const t = setTimeout(() => {
       router.push("/learn");
-    }, 1200); // durasi animasi sebelum balik map
+    }, 1200);
 
     return () => clearTimeout(t);
   }, [isFinishing, router]);
@@ -65,9 +66,16 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   async function handleContinueExplain() {
     if (!step) return;
 
+    // ✅ kalau sudah completed, jangan save lagi (hindari XP double),
+    // tapi tetap boleh lanjut
+    if (isStepCompleted) {
+      nextOrFinish();
+      return;
+    }
+
     try {
       setIsSaving(true);
-      await completeStep(step.id, 2); // ubah ke 0 kalau tidak mau XP dari explain
+      await completeStep(step.id, 2); // XP explain (ubah 0 jika tidak ingin XP)
       nextOrFinish();
     } finally {
       setIsSaving(false);
@@ -87,19 +95,19 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
       {/* Finish Animation Overlay */}
       {isFinishing && (
         <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-white/70 backdrop-blur"
+          className="fixed inset-0 z-[60] grid place-items-center bg-white/70 backdrop-blur dark:bg-black/50"
           role="status"
           aria-live="polite"
         >
-          <div className="finish-card w-[min(520px,92vw)] rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="finish-card w-[min(520px,92vw)] rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
             <div className="flex items-center gap-4">
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gray-900">
+              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gray-900 dark:bg-white">
                 <svg
                   width="28"
                   height="28"
                   viewBox="0 0 24 24"
                   fill="none"
-                  className="text-white"
+                  className="text-white dark:text-black"
                   aria-hidden="true"
                 >
                   <path
@@ -114,19 +122,21 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
               </div>
 
               <div className="min-w-0">
-                <div className="text-xs font-medium text-gray-500">Lesson Completed</div>
-                <div className="mt-1 text-xl font-semibold text-gray-900 truncate">
+                <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
+                  Lesson Completed
+                </div>
+                <div className="mt-1 text-xl font-semibold text-gray-900 dark:text-zinc-100 truncate">
                   {lesson.title}
                 </div>
-                <div className="mt-1 text-sm text-gray-600">
+                <div className="mt-1 text-sm text-gray-600 dark:text-zinc-300">
                   Great job. Returning to Course Map…
                 </div>
               </div>
             </div>
 
             <div className="mt-6">
-              <div className="h-2 w-full rounded-full bg-gray-100">
-                <div className="finish-bar h-2 rounded-full bg-gray-900" />
+              <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900/40">
+                <div className="finish-bar h-2 rounded-full bg-gray-900 dark:bg-white" />
               </div>
             </div>
           </div>
@@ -145,7 +155,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                 transform: translateY(0) scale(1);
               }
             }
-
             .check-path {
               stroke-dasharray: 60;
               stroke-dashoffset: 60;
@@ -156,7 +165,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                 stroke-dashoffset: 0;
               }
             }
-
             .finish-bar {
               width: 0%;
               animation: fill 1000ms ease-out 120ms forwards;
@@ -171,25 +179,34 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
       )}
 
       {/* Header */}
-      <div className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="text-xs font-medium text-gray-500">Lesson</div>
-        <div className="mt-1 text-2xl font-semibold text-gray-900">{lesson.title}</div>
+      <div className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">Lesson</div>
+        <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">
+          {lesson.title}
+        </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-gray-500">
+        <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
           <span>
             Step{" "}
-            <span className="font-semibold text-gray-900">{header.currentIndex}</span>/
-            {header.total}
+            <span className="font-semibold text-gray-900 dark:text-zinc-100">
+              {header.currentIndex}
+            </span>
+            /{header.total}
           </span>
 
           <span>
-            <span className="font-semibold text-gray-900">{header.completedSteps}</span>/
-            {header.total} completed • {header.pct}%
+            <span className="font-semibold text-gray-900 dark:text-zinc-100">
+              {header.completedSteps}
+            </span>
+            /{header.total} completed • {header.pct}%
           </span>
         </div>
 
-        <div className="mt-2 h-2 w-full rounded-full bg-gray-100">
-          <div className="h-2 rounded-full bg-gray-900" style={{ width: `${header.pct}%` }} />
+        <div className="mt-2 h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900/40">
+          <div
+            className="h-2 rounded-full bg-gray-900 dark:bg-white"
+            style={{ width: `${header.pct}%` }}
+          />
         </div>
       </div>
 
@@ -202,18 +219,17 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
             <button
               onClick={back}
               disabled={!canBack || isSaving || isFinishing}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:opacity-60"
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40"
             >
               Back
             </button>
 
             <button
               onClick={handleContinueExplain}
-              disabled={isSaving || isCompleted || isFinishing}
-              className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60"
-              title={isCompleted ? "Step ini sudah selesai" : undefined}
+              disabled={isSaving || isFinishing}
+              className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 dark:bg-white dark:text-black"
             >
-              {isSaving ? "Saving..." : isCompleted ? "Completed" : isLastStep ? "Finish" : "Continue"}
+              {isSaving ? "Saving..." : isLastStep ? "Finish" : "Continue"}
             </button>
           </div>
         </div>
