@@ -1233,6 +1233,7 @@ export type ProgressCreateManyArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * The data used to create many Progresses.
    */
   data: Prisma.ProgressCreateManyInput | Prisma.ProgressCreateManyInput[]
+  skipDuplicates?: boolean
 }
 
 /**
@@ -1251,6 +1252,7 @@ export type ProgressCreateManyAndReturnArgs<ExtArgs extends runtime.Types.Extens
    * The data used to create many Progresses.
    */
   data: Prisma.ProgressCreateManyInput | Prisma.ProgressCreateManyInput[]
+  skipDuplicates?: boolean
   /**
    * Choose, which related nodes to fetch as well
    */

@@ -1,12 +1,15 @@
+// prisma.config.ts
 import "dotenv/config";
-import { defineConfig, env } from "prisma/config";
+import { defineConfig } from "@prisma/config";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL is missing. Put it in .env (root).');
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",
-  migrations: {
-    path: "prisma/migrations",
-  },
+  migrations: { path: "prisma/migrations" },
   datasource: {
-    url: env("DATABASE_URL"),
+    url: process.env.DATABASE_URL,
   },
 });
