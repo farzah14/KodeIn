@@ -10,12 +10,15 @@ function requiredEnv(name: string) {
   return v;
 }
 
-const adapter = PrismaAdapter(prisma);
-
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter,
+  adapter: PrismaAdapter(prisma),
+
+  // Pastikan secret ada di runtime (lebih jelas daripada rely inferensi)
   secret: process.env.AUTH_SECRET,
+
+  // Di Vercel aman untuk di-true-kan agar tidak tergantung env var yang mungkin lupa diset
   trustHost: true,
+
   providers: [
     Google({
       clientId: requiredEnv("AUTH_GOOGLE_ID"),
@@ -26,6 +29,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: requiredEnv("AUTH_GITHUB_SECRET"),
     }),
   ],
+
   pages: { signIn: "/login" },
+
+  // Nyalakan sementara kalau masih error biar log lebih jelas di Vercel
   debug: process.env.NODE_ENV !== "production",
 });
