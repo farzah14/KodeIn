@@ -10,22 +10,53 @@ import { completeStep } from "@/lib/progressStore";
 
 export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const router = useRouter();
-
-  const [idx, setIdx] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isFinishing, setIsFinishing] = useState(false);
-
-  const step = lesson.steps[idx];
   const p = useProgress();
 
   const totalSteps = lesson.steps.length;
-  const completedSteps = lesson.steps.filter((s) => p.completedStepIds[s.id]).length;
+
+  const completedSteps = useMemo(() => {
+    return lesson.steps.filter((s) => p.completedStepIds[s.id]).length;
+  }, [lesson.steps, p.completedStepIds]);
+
   const pct = totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
 
-  const canBack = idx > 0;
-  const isLastStep = idx >= totalSteps - 1;
+  // === INI KUNCI LOGIKA ===
+  // Lesson dianggap selesai jika semua step completed.
+  const isLessonCompleted = totalSteps > 0 && completedSteps === totalSteps;
 
+  // Resume learning: cari step pertama yang belum selesai
+  const initialIdx = useMemo(() => {
+    if (!lesson.steps.length) return 0;
+    const firstIncomplete = lesson.steps.findIndex((s) => !p.completedStepIds[s.id]);
+    return firstIncomplete === -1 ? 0 : firstIncomplete;
+  }, [lesson.steps, p.completedStepIds]);
+
+  const [idx, setIdx] = useState(0);
+  const [hasUserNavigated, setHasUserNavigated] = useState(false);
+
+  const [isSaving, setIsSaving] = useState(false);
+  const [isFinishing, setIsFinishing] = useState(false);
+
+  // Sinkronisasi idx:
+  // - Jika lesson sudah completed => paksa idx = 0 (Step 1) dan lock
+  // - Jika belum completed => resume ke initialIdx, tapi hanya sebelum user mulai navigasi manual
+  useEffect(() => {
+    if (isLessonCompleted) {
+      setIdx(0);
+      return;
+    }
+    if (!hasUserNavigated) {
+      setIdx(initialIdx);
+    }
+  }, [isLessonCompleted, initialIdx, hasUserNavigated]);
+
+  const step = lesson.steps[idx];
+
+  const isLastStep = idx >= totalSteps - 1;
   const isStepCompleted = step ? !!p.completedStepIds[step.id] : false;
+
+  // Karena saat completed kita LOCK di Step 1, maka navigasi dimatikan
+  const canBack = !isLessonCompleted && idx > 0;
 
   const header = useMemo(
     () => ({
@@ -52,6 +83,11 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   }
 
   function nextOrFinish() {
+    // Jika lesson sudah 100%, tidak boleh pindah step sama sekali
+    if (isLessonCompleted) return;
+
+    setHasUserNavigated(true);
+
     if (isLastStep) {
       finishLesson();
       return;
@@ -60,14 +96,19 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   }
 
   function back() {
+    if (isLessonCompleted) return;
+
+    setHasUserNavigated(true);
     setIdx((i) => Math.max(i - 1, 0));
   }
 
   async function handleContinueExplain() {
     if (!step) return;
 
-    // ✅ kalau sudah completed, jangan save lagi (hindari XP double),
-    // tapi tetap boleh lanjut
+    // Jika lesson sudah completed => Step 1 hanya Completed dan tidak boleh lanjut
+    if (isLessonCompleted) return;
+
+    // Kalau step sudah completed, langsung next saja (jangan save XP lagi)
     if (isStepCompleted) {
       nextOrFinish();
       return;
@@ -75,7 +116,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
     try {
       setIsSaving(true);
-      await completeStep(step.id, 2); // XP explain (ubah 0 jika tidak ingin XP)
+      await completeStep(step.id, 2);
       nextOrFinish();
     } finally {
       setIsSaving(false);
@@ -215,28 +256,39 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
         <div className="space-y-4">
           <ExplainStep title={step.title} markdown={step.markdown} />
 
-          <div className="flex items-center justify-between">
-            <button
-              onClick={back}
-              disabled={!canBack || isSaving || isFinishing}
-              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 disabled:opacity-60 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40"
-            >
-              Back
-            </button>
-
-            <button
-              onClick={handleContinueExplain}
-              disabled={isSaving || isFinishing}
-              className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 dark:bg-white dark:text-black"
-            >
-              {isSaving ? "Saving..." : isLastStep ? "Finish" : "Continue"}
-            </button>
-          </div>
+          {/* Footer buttons */}
+          {isLessonCompleted ? (
+            // === LOCK MODE: Step 1 hanya Completed ===
+            <div className="flex items-center justify-end">
+              <button
+                disabled
+                className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white opacity-80 cursor-not-allowed"
+              >
+                Completed
+              </button>
+            </div>
+          ) : (
+            // === NORMAL MODE ===
+            <div className="flex items-center justify-end">
+              <button
+                onClick={handleContinueExplain}
+                disabled={isSaving || isFinishing}
+                className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 dark:bg-white dark:text-black"
+              >
+                {isSaving ? "Saving..." : isLastStep ? "Finish" : "Continue"}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <CodeStep
+          key={step.id}
           step={step as Extract<LessonStep, { type: "code" }>}
           onPassed={nextOrFinish}
+          isCompleted={isStepCompleted}
+          locked={isLessonCompleted}
+          showBack={idx > 0 && !isLessonCompleted}
+          onBack={back}
         />
       )}
     </div>

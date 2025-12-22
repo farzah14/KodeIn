@@ -9,19 +9,32 @@ import { completeStep } from "@/lib/progressStore";
 export function CodeStep({
   step,
   onPassed,
+  isCompleted = false,
+  locked = false,
+  showBack = false,
+  onBack,
 }: {
   step: Extract<LessonStep, { type: "code" }>;
   onPassed: () => void;
+  isCompleted?: boolean;
+  locked?: boolean;
+
+  // === BARU ===
+  showBack?: boolean;
+  onBack?: () => void;
 }) {
-  const [code, setCode] = useState(step.starterCode);
-  const [status, setStatus] = useState<"idle" | "checking" | "pass" | "fail">("idle");
+  const isReadOnly = locked || isCompleted;
+
+  const [code, setCode] = useState(() => step.starterCode);
+
+  const [status, setStatus] = useState<"idle" | "checking" | "pass" | "fail">(
+    () => (isReadOnly ? "pass" : "idle")
+  );
+
   const [hintIndex, setHintIndex] = useState(0);
   const [message, setMessage] = useState("");
 
-  // Animasi fail ringan pada card editor
   const [shakeKey, setShakeKey] = useState(0);
-
-  // Success overlay
   const [showSuccess, setShowSuccess] = useState(false);
 
   const currentHint = useMemo(() => {
@@ -30,6 +43,9 @@ export function CodeStep({
   }, [hintIndex, step.hints]);
 
   async function onCheck() {
+    if (isReadOnly) return;
+    if (status === "pass") return;
+
     setStatus("checking");
     setMessage("");
 
@@ -44,8 +60,6 @@ export function CodeStep({
     if (res.status === "pass") {
       setStatus("pass");
       await completeStep(step.id, 10);
-
-      // tampilkan success animation
       setShowSuccess(true);
       return;
     }
@@ -53,12 +67,11 @@ export function CodeStep({
     setStatus("fail");
     setMessage(res.friendlyMessage);
     setHintIndex((i) => Math.min(i + 1, Math.max(step.hints.length - 1, 0)));
-
-    // trigger shake animation (pakai key agar animasi bisa repeat)
     setShakeKey((k) => k + 1);
   }
 
   function onReset() {
+    if (isReadOnly) return;
     setCode(step.starterCode);
     setStatus("idle");
     setMessage("");
@@ -84,7 +97,6 @@ export function CodeStep({
               {step.prompt}
             </div>
           </div>
-
           <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs text-gray-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-200">
             Python
           </div>
@@ -102,16 +114,20 @@ export function CodeStep({
           <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">Editor</div>
 
           <button
-            className="rounded-xl border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900/40"
+            className="rounded-xl border border-gray-200 bg-white px-3 py-1 text-xs text-gray-700 shadow-sm hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900/40"
             onClick={onReset}
             type="button"
+            disabled={isReadOnly}
           >
             Reset code
           </button>
         </div>
 
-        {/* INVERT: dark => editor putih */}
-        <CodeEditor value={code} onChange={setCode} invertOnDark />
+        <CodeEditor
+          value={code}
+          onChange={isReadOnly ? () => {} : setCode}
+          invertOnDark
+        />
       </div>
 
       {(status === "fail" || message) && (
@@ -132,33 +148,72 @@ export function CodeStep({
         </div>
       )}
 
-      {/* Sticky action bar */}
-      <div className="sticky bottom-4">
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 rounded-2xl border border-gray-200 bg-white/90 px-4 py-3 shadow-lg backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+      {/* Sticky action bar (TANPA rectangle putih) */}
+      <div className="bottom-4">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-2">
           <div className="text-xs text-gray-600 dark:text-zinc-300">
-            Klik <span className="font-semibold text-gray-900 dark:text-zinc-100">Check</span>{" "}
-            untuk menjalankan penilaian.
+            {status === "pass" ? (
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                Langkah ini sudah selesai!
+              </span>
+            ) : (
+              <>
+                Klik <span className="font-semibold text-gray-900 dark:text-zinc-100">Check</span>{" "}
+                untuk menjalankan penilaian.
+              </>
+            )}
           </div>
 
-          <button
-            onClick={onCheck}
-            disabled={status === "checking" || showSuccess}
-            className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-60 dark:bg-white dark:text-black"
-          >
-            {status === "checking" ? "Checking..." : "Check"}
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Back hanya muncul jika Step > 1 */}
+            {showBack && onBack && (
+              <button
+                onClick={onBack}
+                type="button"
+                className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900/40"
+              >
+                Back
+              </button>
+            )}
+
+            {/* Tombol Check */}
+            <button
+              onClick={onCheck}
+              disabled={status === "checking" || status === "pass" || isReadOnly}
+              className={`focus-ring rounded-xl px-5 py-2 text-sm font-semibold text-white shadow-sm transition-colors disabled:opacity-80 disabled:cursor-not-allowed
+                ${
+                  status === "pass"
+                    ? "bg-green-600 dark:bg-green-500"
+                    : "bg-gray-900 hover:opacity-95 dark:bg-white dark:text-black"
+                }`}
+            >
+              {status === "checking"
+                ? "Checking..."
+                : status === "pass"
+                ? "Completed"
+                : "Check"}
+            </button>
+
+            {/* Tombol Lanjut hanya kalau pass DAN tidak locked */}
+            {status === "pass" && !locked && (
+              <button
+                onClick={onPassed}
+                className="focus-ring animate-in fade-in rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 dark:bg-white dark:text-black"
+              >
+                Lanjut
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* SUCCESS OVERLAY (Duolingo-style) */}
+      {/* SUCCESS OVERLAY */}
       {showSuccess && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center">
-          {/* backdrop */}
           <div
             className="absolute inset-0 bg-black/30 anim-fade-in"
             onClick={() => setShowSuccess(false)}
           />
-          {/* sheet */}
           <div className="relative w-full max-w-5xl px-4 pb-6">
             <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-xl anim-slide-up dark:border-zinc-800 dark:bg-zinc-950">
               <div className="flex items-center justify-between gap-4">
