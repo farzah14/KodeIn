@@ -43,10 +43,22 @@ export async function PATCH(req: Request): Promise<Response> {
   const email = session?.user?.email;
   if (!email) return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
 
-  const body = (await req.json()) as { name?: string; address?: string; theme?: string };
+  // Update tipe data body agar menerima 'image'
+  const body = (await req.json()) as { 
+    name?: string; 
+    address?: string; 
+    theme?: string; 
+    image?: string; 
+  };
 
-  const dataToUpdate: { name?: string; address?: string; theme?: string } = {};
+  const dataToUpdate: { 
+    name?: string; 
+    address?: string; 
+    theme?: string; 
+    image?: string; 
+  } = {};
 
+  // Validasi Name
   if (typeof body.name === "string") {
     const name = body.name.trim();
     if (name.length < 2) return Response.json({ error: "NAME_TOO_SHORT" }, { status: 400 });
@@ -54,18 +66,29 @@ export async function PATCH(req: Request): Promise<Response> {
     dataToUpdate.name = name;
   }
 
+  // Validasi Address
   if (typeof body.address === "string") {
     const address = body.address.trim();
     if (address.length > 200) return Response.json({ error: "ADDRESS_TOO_LONG" }, { status: 400 });
     dataToUpdate.address = address;
   }
 
+  // Validasi Theme
   if (typeof body.theme === "string") {
     const theme = body.theme.trim();
     if (!THEMES.has(theme)) return Response.json({ error: "INVALID_THEME" }, { status: 400 });
     dataToUpdate.theme = theme;
   }
 
+  // === TAMBAHAN BARU: Validasi Image (Seed) ===
+  if (typeof body.image === "string") {
+    const image = body.image.trim();
+    // Kita batasi panjangnya agar aman, meski seed biasanya pendek
+    if (image.length > 255) return Response.json({ error: "IMAGE_TOO_LONG" }, { status: 400 });
+    dataToUpdate.image = image;
+  }
+
+  // Cek apakah ada data yang mau diupdate
   if (Object.keys(dataToUpdate).length === 0) {
     return Response.json({ error: "NO_FIELDS" }, { status: 400 });
   }

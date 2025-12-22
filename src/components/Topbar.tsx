@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { useProgress } from "@/lib/useProgress";
 import { resetProgressStore } from "@/lib/progressStore";
+import { Avatar3D } from "@/components/Avatar3D";
 
 function Pill({
   label,
@@ -26,7 +27,8 @@ function Pill({
   );
 }
 
-function AvatarButton({
+// UPDATE 1: Tambahkan prop 'image' dan jadikan prioritas seed
+function AvatarButton3D({
   name,
   email,
   image,
@@ -35,8 +37,9 @@ function AvatarButton({
   email?: string | null;
   image?: string | null;
 }) {
-  const text = name?.trim() || email?.trim() || "U";
-  const initial = (text[0] ?? "U").toUpperCase();
+  // Jika 'image' ada (dari database), gunakan itu sebagai seed.
+  // Jika tidak, fallback ke email atau name.
+  const seed = (image?.trim() || email?.trim() || name?.trim() || "anonymous") as string;
 
   return (
     <Link
@@ -44,12 +47,7 @@ function AvatarButton({
       title="Profile"
       className="grid h-9 w-9 place-items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
     >
-      {image ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={image} alt="Avatar" className="h-full w-full object-cover" />
-      ) : (
-        <span className="text-xs font-semibold text-gray-900 dark:text-zinc-100">{initial}</span>
-      )}
+      <Avatar3D seed={seed} size={36} className="h-9 w-9" title="Avatar" />
     </Link>
   );
 }
@@ -76,7 +74,9 @@ export function Topbar() {
             KI
           </div>
           <div className="leading-tight">
-            <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">KodeIn</div>
+            <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+              KodeIn
+            </div>
             <div className="text-[11px] text-gray-500 dark:text-zinc-400">
               Learn coding by doing
             </div>
@@ -100,10 +100,11 @@ export function Topbar() {
             <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900" />
           ) : isAuthed && session?.user ? (
             <>
-              <AvatarButton
-                name={session.user.name}
-                email={session.user.email}
-                image={session.user.image}
+              {/* UPDATE 2: Pass session.user.image ke komponen */}
+              <AvatarButton3D 
+                name={session.user.name} 
+                email={session.user.email} 
+                image={session.user.image} 
               />
 
               <button
