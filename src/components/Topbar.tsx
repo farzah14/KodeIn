@@ -185,7 +185,7 @@ export function Topbar() {
                   onClick={() => setIsMenuOpen(false)}
                   className="inline-block w-full rounded-xl bg-gray-900 py-2 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-black"
                 >
-                  Sign in to Save Progress
+                  Sign In
                 </Link>
               </div>
             )}
