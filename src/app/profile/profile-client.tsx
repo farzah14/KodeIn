@@ -202,7 +202,7 @@ export default function ProfileClient() {
       <div>
         <button
           onClick={() => router.back()}
-          className="group flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:text-gray-900 active:scale-95 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="group flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:text-gray-900 active:scale-95 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           <ArrowLeft
             size={18}

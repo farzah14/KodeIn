@@ -9,7 +9,7 @@ export default function Page() {
       <main className="mx-auto max-w-5xl px-4 py-12">
         <div className="rounded-[28px] border border-gray-200 bg-white p-10 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
           <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200">
-            <span className="font-semibold">New</span> Python track (MVP)
+            <span className="font-semibold">Python track</span> 
           </div>
 
           <h1 className="mt-5 text-4xl font-semibold leading-tight text-gray-900 dark:text-zinc-100">

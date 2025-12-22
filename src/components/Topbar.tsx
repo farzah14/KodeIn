@@ -82,9 +82,6 @@ export function Topbar() {
         
         {/* LEFT: Brand */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gray-900 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-black">
-            KI
-          </div>
           <div className="leading-tight">
             <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
               KodeIn
