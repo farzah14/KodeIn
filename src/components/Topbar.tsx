@@ -41,6 +41,7 @@ function AvatarButton3D({
   email?: string | null;
   image?: string | null;
 }) {
+  // Prioritas seed: Image (DB) -> Email -> Name -> Anonymous
   const seed = (image?.trim() || email?.trim() || name?.trim() || "anonymous") as string;
 
   return (
@@ -72,7 +73,7 @@ export function Topbar() {
     await signOut({ callbackUrl: "/" });
   }
 
-  // Helper untuk mendapatkan seed avatar
+  // Helper untuk mendapatkan seed avatar yang konsisten dengan ProfileClient
   const userSeed = (session?.user?.image?.trim() || session?.user?.email?.trim() || session?.user?.name?.trim() || "anonymous") as string;
 
   return (
@@ -135,8 +136,6 @@ export function Topbar() {
 
         {/* RIGHT (MOBILE): Hamburger Menu Button */}
         <div className="flex items-center gap-2 md:hidden">
-          {/* XP Pill telah DIHAPUS dari sini agar topbar lebih bersih */}
-
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="grid h-10 w-10 place-items-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm active:scale-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
@@ -156,8 +155,9 @@ export function Topbar() {
             {isAuthed && session?.user ? (
               <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
                 <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
-                  <div className="h-14 w-14 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-black dark:ring-zinc-800">
-                    <Avatar3D seed={userSeed} size={56} className="h-14 w-14" />
+                  <div className="h-16 w-16 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-black dark:ring-zinc-800">
+                     {/* Avatar3D akan otomatis menyesuaikan visual berdasarkan 'userSeed' (termasuk variasi baju/rambut) */}
+                    <Avatar3D seed={userSeed} size={64} className="h-16 w-16" />
                   </div>
                 </Link>
                 <div className="min-w-0 flex-1">
@@ -167,10 +167,11 @@ export function Topbar() {
                   <div className="truncate text-xs text-gray-500 dark:text-zinc-400">
                     {session.user.email}
                   </div>
+                  {/* UPDATE: Ukuran text diperbesar ke text-xs */}
                   <Link 
                     href="/profile" 
                     onClick={() => setIsMenuOpen(false)}
-                    className="mt-1 inline-block text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    className="mt-1.5 inline-block text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
                   >
                     Edit Profile
                   </Link>
@@ -200,7 +201,7 @@ export function Topbar() {
                 Course Map
               </Link>
 
-               {/* Stats (Mobile Only View) - Tetap ada di sini */}
+               {/* Stats (Mobile Only View) */}
                <div className="flex gap-2">
                   <div className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
                     <div className="text-[10px] uppercase tracking-wider text-gray-400">XP</div>
@@ -230,5 +231,3 @@ export function Topbar() {
     </header>
   );
 }
-
-// Update

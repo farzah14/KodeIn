@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { signOut, useSession } from "next-auth/react"; // 1. Import useSession
+import { signOut, useSession } from "next-auth/react";
+import { ArrowLeft } from "lucide-react"; // Import icon panah
+
 import { resetProgressStore } from "@/lib/progressStore";
-// Pastikan path ini sesuai
 import { Avatar3D } from "@/components/Avatar3D";
 
 type ProfileData = {
@@ -45,7 +46,6 @@ function ProviderBadge({ provider }: { provider: string }) {
 
 export default function ProfileClient() {
   const router = useRouter();
-  // 2. Ambil fungsi update dari session
   const { update } = useSession();
 
   const [data, setData] = useState<ProfileData | null>(null);
@@ -54,7 +54,6 @@ export default function ProfileClient() {
   const [address, setAddress] = useState("");
   const [theme, setTheme] = useState<ProfileData["theme"]>("system");
   
-  // State untuk menyimpan seed avatar yang dipilih
   const [selectedSeed, setSelectedSeed] = useState("");
 
   const [savingProfile, setSavingProfile] = useState(false);
@@ -91,8 +90,7 @@ export default function ProfileClient() {
     setAddress(j.address || "");
     setTheme(j.theme || "system");
     
-    // Jika user sudah punya 'image' di database, pakai itu sebagai seed.
-    // Jika belum, gunakan email sebagai default seed.
+    // Default avatar
     setSelectedSeed(j.image || j.email || "user");
 
     persistTheme(j.theme || "system");
@@ -102,13 +100,13 @@ export default function ProfileClient() {
     load();
   }, []);
 
-  // Membuat 3 opsi variasi avatar berdasarkan email
+  // Opsi Avatar (V1, V2, V3) berdasarkan email
   const avatarOptions = useMemo(() => {
     const base = data?.email || "user";
     return [
-      base,               // Opsi 1: Email asli
-      `${base}-variantA`, // Opsi 2: Variasi A
-      `${base}-variantB`  // Opsi 3: Variasi B
+      base,          // Default
+      `${base}-v2`,  // Varian 1 (Beda warna)
+      `${base}-v3`   // Varian 2 (Beda warna lagi)
     ];
   }, [data?.email]);
 
@@ -135,14 +133,13 @@ export default function ProfileClient() {
     try {
       setSavingProfile(true);
 
-      // Kita kirim 'image' berisi selectedSeed agar backend menyimpannya
       const res = await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           name: vName, 
           address: vAddress,
-          image: selectedSeed // Simpan pilihan avatar ke DB
+          image: selectedSeed 
         }),
       });
 
@@ -153,11 +150,8 @@ export default function ProfileClient() {
         return;
       }
 
-      // 3. UPDATE SESSION AGAR TOPBAR BERUBAH SEKETIKA
-      // update() tanpa argumen akan me-trigger re-fetch session dari server (database)
       await update(); 
 
-      // Update state lokal
       setData((d) => (d ? { ...d, name: vName, address: vAddress, image: selectedSeed } : d));
 
       router.refresh();
@@ -178,8 +172,6 @@ export default function ProfileClient() {
       });
       if (!res.ok) throw new Error("Gagal save theme");
       
-      // Theme juga bagian dari session user? Jika ya, update session juga.
-      // Jika tidak (hanya local storage/db), baris ini opsional tapi aman dilakukan.
       await update();
 
       setData((d) => (d ? { ...d, theme: nextTheme } : d));
@@ -208,6 +200,18 @@ export default function ProfileClient() {
 
   return (
     <div className="space-y-6">
+      {/* --- TOMBOL KEMBALI YANG UNIK --- */}
+      <div>
+        <button
+          onClick={() => router.back()}
+          className="group flex items-center gap-2 rounded-2xl border border-transparent bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:border-gray-200 hover:bg-white hover:text-gray-900 hover:shadow-sm active:scale-95 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-zinc-800 dark:hover:bg-zinc-950 dark:hover:text-zinc-100"
+        >
+          {/* Ikon panah yang bergerak saat di-hover */}
+          <ArrowLeft size={18} className="transition-transform duration-300 group-hover:-translate-x-1" />
+          <span>Kembali</span>
+        </button>
+      </div>
+
       {/* Toast Component */}
       {toast && (
         <div className={`fixed bottom-5 right-5 z-[80] rounded-2xl border px-4 py-3 text-sm shadow-sm toast-enter ${
@@ -230,7 +234,7 @@ export default function ProfileClient() {
           {/* Bagian Kiri: Info User */}
           <div>
             <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">Profile</div>
-            <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">Akun Anda</div>
+            <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">Account</div>
             
             <div className="mt-4">
               <div className="text-base font-bold text-gray-900 dark:text-zinc-100">{data.email}</div>
@@ -251,10 +255,10 @@ export default function ProfileClient() {
               <Avatar3D 
                 seed={selectedSeed} 
                 size={100} 
-                className="h-[100px] w-[100px] shadow-lg"
+                className="h-[100px] w-[100px] shadow-lg transition-transform hover:scale-105"
                 title="Avatar Terpilih"
               />
-              <div className="absolute -bottom-2 right-0 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              <div className="absolute -bottom-2 right-0 rounded-full bg-green-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-zinc-950">
                 Active
               </div>
             </div>

@@ -7,6 +7,9 @@ type Avatar3DProps = {
   size?: number;
   className?: string;
   title?: string;
+  // Kita tambahkan prop opsional jika ingin memaksa variasi manual, 
+  // tapi logika utama kita tanam di dalam deteksi seed.
+  variant?: number; 
 };
 
 function hashString(input: string) {
@@ -30,35 +33,50 @@ function mulberry32(seed: number) {
 
 export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: Avatar3DProps) {
   const cfg = useMemo(() => {
+    // 1. Deteksi Variasi dari String Seed
+    // Ini trik agar desainnya PASTI berbeda
+    let variantOffset = 0;
+    if (seed.endsWith("-v2")) variantOffset = 1; // Geser 1 langkah
+    if (seed.endsWith("-v3")) variantOffset = 2; // Geser 2 langkah
+
+    // Bersihkan seed dari suffix agar bentuk wajah dasarnya tetap konsisten (opsional), 
+    // atau biarkan hash berubah total. 
+    // Di sini kita biarkan hash berubah total TAPI kita paksa warna berbeda.
     const h = hashString(seed || "anonymous");
     const rnd = mulberry32(h);
 
-    const skin = [
-      "#F7D7C4",
-      "#EFC7A9",
-      "#E7B38D",
-      "#D99A6C",
-      "#C7804F",
-      "#A9653C",
-    ][Math.floor(rnd() * 6)];
+    const skinColors = [
+      "#F7D7C4", "#EFC7A9", "#E7B38D", 
+      "#D99A6C", "#C7804F", "#A9653C",
+    ];
+    
+    const hairColors = [
+      "#111827", "#1F2937", "#3F2E1E", 
+      "#5B3A1E", "#7A4B2A", "#D6B06E",
+    ];
 
-    const hair = [
-      "#111827",
-      "#1F2937",
-      "#3F2E1E",
-      "#5B3A1E",
-      "#7A4B2A",
-      "#D6B06E",
-    ][Math.floor(rnd() * 6)];
+    const shirtColors = [
+      "#111827", // Hitam/Gelap
+      "#0F172A", // Navy
+      "#1D4ED8", // Biru
+      "#16A34A", // Hijau
+      "#DC2626", // Merah
+      "#7C3AED", // Ungu
+    ];
 
-    const shirt = [
-      "#111827",
-      "#0F172A",
-      "#1D4ED8",
-      "#16A34A",
-      "#DC2626",
-      "#7C3AED",
-    ][Math.floor(rnd() * 6)];
+    // LOGIKA PERBEDAAN WARNA:
+    // Kita ambil random index, lalu tambahkan offset berdasarkan variasi (-v2, -v3).
+    // Modulo (%) memastikan index berputar kembali ke awal jika melebihi batas.
+    // variantOffset * 2 memastikan loncatannya jauh (misal: Hitam -> Biru -> Merah).
+    const skin = skinColors[Math.floor(rnd() * skinColors.length)];
+    
+    // Agar rambut berbeda tiap varian
+    const rawHairIdx = Math.floor(rnd() * hairColors.length);
+    const hair = hairColors[(rawHairIdx + variantOffset) % hairColors.length];
+
+    // Agar baju PASTI berbeda tiap varian
+    const rawShirtIdx = Math.floor(rnd() * shirtColors.length);
+    const shirt = shirtColors[(rawShirtIdx + (variantOffset * 2)) % shirtColors.length];
 
     const eyeType = Math.floor(rnd() * 3); // 0..2
     const mouthType = Math.floor(rnd() * 3); // 0..2
@@ -71,7 +89,7 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
 
   const px = `${size}px`;
 
-  // Bentuk mulut (3 variasi)
+  // Bentuk mulut
   const mouthPath =
     cfg.mouthType === 0
       ? "M40 64 C47 70, 53 70, 60 64" // smile
@@ -79,9 +97,9 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
       ? "M40 66 C47 64, 53 64, 60 66" // flat
       : "M42 66 C48 62, 52 62, 58 66"; // small smirk
 
-  // Bentuk mata (3 variasi) - kita buat lewat SVG saja
+  // Tinggi mata
   const eyeOpen =
-    cfg.eyeType === 0 ? 1 : cfg.eyeType === 1 ? 0.65 : 0.35; // tinggi mata
+    cfg.eyeType === 0 ? 1 : cfg.eyeType === 1 ? 0.65 : 0.35; 
 
   return (
     <div
@@ -96,19 +114,19 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
     >
       <svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label={title}>
         <defs>
-          <radialGradient id="faceGrad" cx="35%" cy="30%" r="70%">
+          <radialGradient id={`faceGrad-${seed}`} cx="35%" cy="30%" r="70%">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
             <stop offset="35%" stopColor={cfg.skin} stopOpacity="1" />
             <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
           </radialGradient>
 
-          <linearGradient id="hairGrad" x1="0" y1="0" x2="1" y2="1">
+          <linearGradient id={`hairGrad-${seed}`} x1="0" y1="0" x2="1" y2="1">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
             <stop offset="40%" stopColor={cfg.hair} stopOpacity="1" />
             <stop offset="100%" stopColor="#000000" stopOpacity="0.25" />
           </linearGradient>
 
-          <linearGradient id="shirtGrad" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={`shirtGrad-${seed}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
             <stop offset="35%" stopColor={cfg.shirt} stopOpacity="1" />
             <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
@@ -126,7 +144,7 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
         <g filter="url(#softShadow)">
           <path
             d="M18 98 C24 78, 34 70, 50 70 C66 70, 76 78, 82 98 Z"
-            fill="url(#shirtGrad)"
+            fill={`url(#shirtGrad-${seed})`}
           />
         </g>
 
@@ -135,14 +153,14 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
 
         {/* Face */}
         <g filter="url(#softShadow)">
-          <ellipse cx="50" cy="48" rx="24" ry="26" fill="url(#faceGrad)" />
+          <ellipse cx="50" cy="48" rx="24" ry="26" fill={`url(#faceGrad-${seed})`} />
         </g>
 
         {/* Hair cap */}
         <path
           d="M26 46 C26 26, 38 16, 50 16 C62 16, 74 26, 74 46
              C72 34, 62 30, 50 30 C38 30, 28 34, 26 46 Z"
-          fill="url(#hairGrad)"
+          fill={`url(#hairGrad-${seed})`}
         />
 
         {/* Ears */}
@@ -184,27 +202,18 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
       <style jsx>{`
         .avatar-gloss {
           background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%);
-          transform: translateZ(0);
         }
-
-        /* “3D-ish tilt” */
         div {
           transform: perspective(700px) rotateX(7deg) rotateY(-10deg);
           transform-style: preserve-3d;
         }
-
         @media (prefers-reduced-motion: no-preference) {
           div {
             animation: bob 2.8s ease-in-out infinite;
           }
           @keyframes bob {
-            0%,
-            100% {
-              transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(0);
-            }
-            50% {
-              transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(-1px);
-            }
+            0%, 100% { transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(0); }
+            50% { transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(-1px); }
           }
         }
       `}</style>
