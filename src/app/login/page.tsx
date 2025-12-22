@@ -17,14 +17,14 @@ export default function LoginPage() {
               onClick={() => signIn("google", { callbackUrl: "/learn" })}
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold shadow-sm hover:bg-gray-50"
             >
-              Continue with Google
+              Google
             </button>
 
             <button
               onClick={() => signIn("github", { callbackUrl: "/learn" })}
               className="w-full rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95"
             >
-              Continue with GitHub
+              GitHub
             </button>
           </div>
         </div>
