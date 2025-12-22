@@ -1,10 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { Menu, X, LogOut, Map } from "lucide-react";
+
 import { useProgress } from "@/lib/useProgress";
 import { resetProgressStore } from "@/lib/progressStore";
 import { Avatar3D } from "@/components/Avatar3D";
+
+// --- Components Kecil ---
 
 function Pill({
   label,
@@ -27,7 +32,6 @@ function Pill({
   );
 }
 
-// UPDATE 1: Tambahkan prop 'image' dan jadikan prioritas seed
 function AvatarButton3D({
   name,
   email,
@@ -37,8 +41,6 @@ function AvatarButton3D({
   email?: string | null;
   image?: string | null;
 }) {
-  // Jika 'image' ada (dari database), gunakan itu sebagai seed.
-  // Jika tidak, fallback ke email atau name.
   const seed = (image?.trim() || email?.trim() || name?.trim() || "anonymous") as string;
 
   return (
@@ -52,9 +54,14 @@ function AvatarButton3D({
   );
 }
 
+// --- Main Component ---
+
 export function Topbar() {
   const p = useProgress();
   const { data: session, status } = useSession();
+  
+  // State untuk hamburger menu
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const isAuthed = status === "authenticated";
   const isAuthLoading = status === "loading";
@@ -65,10 +72,14 @@ export function Topbar() {
     await signOut({ callbackUrl: "/" });
   }
 
+  // Helper untuk mendapatkan seed avatar
+  const userSeed = (session?.user?.image?.trim() || session?.user?.email?.trim() || session?.user?.name?.trim() || "anonymous") as string;
+
   return (
     <header className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur dark:border-zinc-800 dark:bg-black/60">
-      <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
-        {/* Left: Brand */}
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
+        
+        {/* LEFT: Brand */}
         <Link href="/" className="flex items-center gap-2">
           <div className="grid h-10 w-10 place-items-center rounded-2xl bg-gray-900 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-black">
             KI
@@ -83,8 +94,8 @@ export function Topbar() {
           </div>
         </Link>
 
-        {/* Right: Stats + Auth */}
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        {/* RIGHT (DESKTOP): Tampil hanya di layar md ke atas */}
+        <div className="hidden items-center justify-end gap-2 md:flex">
           <Pill label="XP" value={p.xp} isLoading={showProgressLoading} />
           <Pill label="Streak" value={p.streak.current} isLoading={showProgressLoading} />
 
@@ -95,18 +106,16 @@ export function Topbar() {
             Course Map
           </Link>
 
-          {/* Auth Area */}
+          {/* Auth Area Desktop */}
           {isAuthLoading ? (
             <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900" />
           ) : isAuthed && session?.user ? (
             <>
-              {/* UPDATE 2: Pass session.user.image ke komponen */}
               <AvatarButton3D 
                 name={session.user.name} 
                 email={session.user.email} 
                 image={session.user.image} 
               />
-
               <button
                 onClick={handleSignOut}
                 className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
@@ -123,7 +132,101 @@ export function Topbar() {
             </Link>
           )}
         </div>
+
+        {/* RIGHT (MOBILE): Hamburger Menu Button */}
+        <div className="flex items-center gap-2 md:hidden">
+          {/* XP Pill telah DIHAPUS dari sini agar topbar lebih bersih */}
+
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="grid h-10 w-10 place-items-center rounded-xl border border-gray-200 bg-white text-gray-500 shadow-sm active:scale-95 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400"
+            aria-label="Menu"
+          >
+            {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
+
+      {/* MOBILE MENU DROPDOWN */}
+      {isMenuOpen && (
+        <div className="border-t border-gray-100 bg-white px-4 py-4 shadow-xl md:hidden dark:border-zinc-800 dark:bg-zinc-950">
+          <div className="flex flex-col gap-4">
+            
+            {/* 1. Profile Section */}
+            {isAuthed && session?.user ? (
+              <div className="flex items-center gap-4 rounded-2xl border border-gray-100 bg-gray-50 p-4 dark:border-zinc-800 dark:bg-zinc-900">
+                <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
+                  <div className="h-14 w-14 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-gray-200 dark:bg-black dark:ring-zinc-800">
+                    <Avatar3D seed={userSeed} size={56} className="h-14 w-14" />
+                  </div>
+                </Link>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate font-semibold text-gray-900 dark:text-zinc-100">
+                    {session.user.name || "User"}
+                  </div>
+                  <div className="truncate text-xs text-gray-500 dark:text-zinc-400">
+                    {session.user.email}
+                  </div>
+                  <Link 
+                    href="/profile" 
+                    onClick={() => setIsMenuOpen(false)}
+                    className="mt-1 inline-block text-[10px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                  >
+                    Edit Profile
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              // Jika belum login
+              <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 text-center dark:border-zinc-800 dark:bg-zinc-900">
+                 <Link
+                  href="/login"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="inline-block w-full rounded-xl bg-gray-900 py-2 text-sm font-semibold text-white shadow-sm dark:bg-white dark:text-black"
+                >
+                  Sign in to Save Progress
+                </Link>
+              </div>
+            )}
+
+            {/* 2. Menu Items */}
+            <div className="grid gap-2">
+               <Link
+                href="/learn"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm active:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:active:bg-zinc-900"
+              >
+                <Map size={18} className="text-gray-400" />
+                Course Map
+              </Link>
+
+               {/* Stats (Mobile Only View) - Tetap ada di sini */}
+               <div className="flex gap-2">
+                  <div className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400">XP</div>
+                    <div className="font-bold text-gray-900 dark:text-zinc-100">{p.xp}</div>
+                  </div>
+                  <div className="flex-1 rounded-xl border border-gray-200 bg-white px-4 py-2 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
+                    <div className="text-[10px] uppercase tracking-wider text-gray-400">Streak</div>
+                    <div className="font-bold text-gray-900 dark:text-zinc-100">{p.streak.current}</div>
+                  </div>
+               </div>
+            </div>
+
+            {/* 3. Sign Out Button */}
+            {isAuthed && (
+              <button
+                onClick={handleSignOut}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 py-3 text-sm font-medium text-red-600 active:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400 dark:active:bg-red-900/20"
+              >
+                <LogOut size={16} />
+                Sign out
+              </button>
+            )}
+
+          </div>
+        </div>
+      )}
     </header>
   );
 }
