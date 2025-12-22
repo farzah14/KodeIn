@@ -202,7 +202,7 @@ export default function ProfileClient() {
       <div>
         <button
           onClick={() => router.back()}
-          className="group flex items-center gap-2 rounded-2xl border border-transparent bg-gray-100 px-5 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:border-gray-200 hover:bg-white hover:text-gray-900 hover:shadow-sm active:scale-95 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-zinc-800 dark:hover:bg-zinc-950 dark:hover:text-zinc-100"
+          className="group flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-semibold text-gray-600 transition-all hover:text-gray-900 active:scale-95 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           <ArrowLeft
             size={18}
@@ -375,13 +375,6 @@ export default function ProfileClient() {
             {savingProfile ? "Saving..." : "Save Changes"}
           </button>
 
-          <button
-            onClick={handleSignOut}
-            className="rounded-xl border border-red-200 bg-white px-5 py-2 text-sm font-semibold text-red-600 shadow-sm hover:bg-red-50 dark:border-red-900/40 dark:bg-zinc-950 dark:text-red-400 dark:hover:bg-red-900/20"
-            type="button"
-          >
-            Sign out
-          </button>
         </div>
       </div>
     </div>

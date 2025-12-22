@@ -100,13 +100,6 @@ export function Topbar() {
           <Pill label="XP" value={p.xp} isLoading={showProgressLoading} />
           <Pill label="Streak" value={p.streak.current} isLoading={showProgressLoading} />
 
-          <Link
-            href="/learn"
-            className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
-          >
-            Course Map
-          </Link>
-
           {/* Auth Area Desktop */}
           {isAuthLoading ? (
             <div className="h-9 w-9 animate-pulse rounded-xl border border-gray-200 bg-gray-50 dark:border-zinc-800 dark:bg-zinc-900" />
@@ -119,7 +112,7 @@ export function Topbar() {
               />
               <button
                 onClick={handleSignOut}
-                className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 shadow-sm hover:bg-gray-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
+                className="rounded-full border border-red-200 bg-white px-3 py-1 text-sm font-medium text-red-600 shadow-sm hover:bg-red-50 dark:border-red-900/40 dark:bg-zinc-950 dark:text-red-400 dark:hover:bg-red-900/20"
               >
                 Sign out
               </button>
@@ -218,7 +211,7 @@ export function Topbar() {
             {isAuthed && (
               <button
                 onClick={handleSignOut}
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 bg-red-50 py-3 text-sm font-medium text-red-600 active:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400 dark:active:bg-red-900/20"
+                className="flex w-full items-center justify-center gap-2 rounded-full border border-red-100 bg-red-50 py-3 text-sm font-medium text-red-600 active:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400 dark:active:bg-red-900/20"
               >
                 <LogOut size={16} />
                 Sign out

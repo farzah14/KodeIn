@@ -9,7 +9,7 @@ export default function LoginPage() {
         <div className="rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm">
           <h1 className="text-2xl font-semibold text-gray-900">Masuk / Daftar</h1>
           <p className="mt-2 text-sm text-gray-600">
-            Login pertama kali otomatis membuat akun.
+            Untuk sekarang hanya bisa langsung login
           </p>
 
           <div className="mt-6 space-y-3">
