@@ -53,32 +53,32 @@ function LessonNode({
 
   const card = (
     <div
-      className={`group relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-200 ${cfg.cardBorder} ${cfg.cardBg} ${
+      className={`group relative flex items-center gap-3 sm:gap-4 rounded-2xl border p-3 sm:p-4 transition-all duration-200 ${cfg.cardBorder} ${cfg.cardBg} ${
         state === "available" ? "hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" : ""
       } ${state === "completed" ? "hover:shadow-md cursor-pointer" : ""} ${
         state === "locked" ? "opacity-50 cursor-not-allowed" : ""
       }`}
     >
       {/* Icon */}
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg}`}>
+      <div className={`flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg}`}>
         {cfg.icon}
       </div>
 
       {/* Content */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-base font-bold text-gray-900 dark:text-white truncate">{lesson.title}</span>
-          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
+          <span className="text-sm sm:text-base font-bold text-gray-900 dark:text-white truncate">{lesson.title}</span>
+          <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[8px] sm:text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
             {cfg.badgeText}
           </span>
         </div>
-        <div className="mt-1.5 text-xs text-gray-500 dark:text-zinc-400">
+        <div className="mt-0.5 sm:mt-1.5 text-[10px] sm:text-xs text-gray-500 dark:text-zinc-400">
           {completedSteps}/{totalSteps} langkah
         </div>
         {/* Mini progress */}
-        <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100 dark:bg-zinc-800">
+        <div className="mt-1.5 sm:mt-2 h-1 w-full rounded-full bg-gray-100 dark:bg-zinc-800">
           <div
-            className={`h-1.5 rounded-full transition-all duration-700 ${
+            className={`h-1 rounded-full transition-all duration-700 ${
               state === "completed"
                 ? "bg-green-500"
                 : state === "available"
@@ -130,30 +130,30 @@ export function PathMap() {
         return (
           <section
             key={unit.id}
-            className="rounded-[28px] border border-gray-200 bg-white p-6 sm:p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+            className="rounded-[24px] sm:rounded-[28px] border border-gray-200 bg-white p-4 sm:p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
           >
             {/* Unit Header */}
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <div>
+            <div className="flex items-center justify-between gap-3 mb-5 sm:mb-6">
+              <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
                     Unit {unit.order}
                   </span>
                   {unitDone && (
-                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
                       ✓ Tuntas
                     </span>
                   )}
                 </div>
-                <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+                <h2 className="mt-0.5 sm:mt-1 text-lg sm:text-xl font-bold text-gray-900 dark:text-white truncate">
                   {unit.title}
                 </h2>
               </div>
 
               {/* Unit Progress Ring */}
-              <div className="flex flex-col items-center">
-                <div className="relative h-14 w-14">
-                  <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
+              <div className="shrink-0">
+                <div className="relative h-12 w-12 sm:h-14 sm:w-14">
+                  <svg className="h-12 w-12 sm:h-14 sm:w-14 -rotate-90" viewBox="0 0 36 36">
                     <path
                       d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"
                       fill="none"
@@ -171,7 +171,7 @@ export function PathMap() {
                       className={unitDone ? "text-green-500" : "text-indigo-500"}
                     />
                   </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-xs font-black text-gray-900 dark:text-white">
+                  <div className="absolute inset-0 flex items-center justify-center text-[10px] sm:text-xs font-black text-gray-900 dark:text-white">
                     {unitPct}%
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export function PathMap() {
                 Materi segera hadir...
               </div>
             ) : (
-              <div className="grid gap-3">
+              <div className="grid gap-2.5 sm:gap-3">
                 {lessons.map((lesson, idx) => {
                   const totalSteps = lesson.steps.length;
                   const completedSteps = lesson.steps.filter((s) => p.completedStepIds[s.id]).length;

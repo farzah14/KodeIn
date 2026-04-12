@@ -1,19 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 
 type Avatar3DProps = {
   seed: string;
   size?: number;
   className?: string;
   title?: string;
-  // Kita tambahkan prop opsional jika ingin memaksa variasi manual, 
-  // tapi logika utama kita tanam di dalam deteksi seed.
   variant?: number; 
 };
 
 function hashString(input: string) {
-  // deterministic hash (FNV-1a-like)
   let h = 2166136261;
   for (let i = 0; i < input.length; i++) {
     h ^= input.charCodeAt(i);
@@ -32,202 +29,163 @@ function mulberry32(seed: number) {
 }
 
 export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: Avatar3DProps) {
-  const cfg = useMemo(() => {
-    // 1. Deteksi Variasi dari String Seed
-    // Ini trik agar desainnya PASTI berbeda
-    let variantOffset = 0;
-    if (seed.endsWith("-v2")) variantOffset = 1; // Geser 1 langkah
-    if (seed.endsWith("-v3")) variantOffset = 2; // Geser 2 langkah
+  const [rotate, setRotate] = useState({ x: 5, y: -8 });
+  const containerRef = useRef<HTMLDivElement>(null);
 
-    // Bersihkan seed dari suffix agar bentuk wajah dasarnya tetap konsisten (opsional), 
-    // atau biarkan hash berubah total. 
-    // Di sini kita biarkan hash berubah total TAPI kita paksa warna berbeda.
+  const cfg = useMemo(() => {
+    let variantOffset = 0;
+    if (seed.endsWith("-v2")) variantOffset = 1;
+    if (seed.endsWith("-v3")) variantOffset = 2;
+
     const h = hashString(seed || "anonymous");
     const rnd = mulberry32(h);
 
-    const skinColors = [
-      "#F7D7C4", "#EFC7A9", "#E7B38D", 
-      "#D99A6C", "#C7804F", "#A9653C",
-    ];
-    
-    const hairColors = [
-      "#111827", "#1F2937", "#3F2E1E", 
-      "#5B3A1E", "#7A4B2A", "#D6B06E",
-    ];
+    const skinColors = ["#F7D7C4", "#EFC7A9", "#E7B38D", "#D99A6C", "#C7804F", "#A9653C"];
+    const hairColors = ["#111827", "#1F2937", "#3F2E1E", "#5B3A1E", "#7A4B2A", "#D6B06E"];
+    const shirtColors = ["#111827", "#0F172A", "#1D4ED8", "#16A34A", "#DC2626", "#7C3AED"];
 
-    const shirtColors = [
-      "#111827", // Hitam/Gelap
-      "#0F172A", // Navy
-      "#1D4ED8", // Biru
-      "#16A34A", // Hijau
-      "#DC2626", // Merah
-      "#7C3AED", // Ungu
-    ];
-
-    // LOGIKA PERBEDAAN WARNA:
-    // Kita ambil random index, lalu tambahkan offset berdasarkan variasi (-v2, -v3).
-    // Modulo (%) memastikan index berputar kembali ke awal jika melebihi batas.
-    // variantOffset * 2 memastikan loncatannya jauh (misal: Hitam -> Biru -> Merah).
     const skin = skinColors[Math.floor(rnd() * skinColors.length)];
-    
-    // Agar rambut berbeda tiap varian
-    const rawHairIdx = Math.floor(rnd() * hairColors.length);
-    const hair = hairColors[(rawHairIdx + variantOffset) % hairColors.length];
+    const hair = hairColors[(Math.floor(rnd() * hairColors.length) + variantOffset) % hairColors.length];
+    const shirt = shirtColors[(Math.floor(rnd() * shirtColors.length) + (variantOffset * 2)) % shirtColors.length];
 
-    // Agar baju PASTI berbeda tiap varian
-    const rawShirtIdx = Math.floor(rnd() * shirtColors.length);
-    const shirt = shirtColors[(rawShirtIdx + (variantOffset * 2)) % shirtColors.length];
+    const eyeType = Math.floor(rnd() * 3);
+    const mouthType = Math.floor(rnd() * 3);
 
-    const eyeType = Math.floor(rnd() * 3); // 0..2
-    const mouthType = Math.floor(rnd() * 3); // 0..2
-
-    const pupilX = 47 + Math.floor(rnd() * 7); // 47..53
-    const pupilY = 48 + Math.floor(rnd() * 4); // 48..51
+    const pupilX = 47 + Math.floor(rnd() * 7);
+    const pupilY = 48 + Math.floor(rnd() * 4);
 
     return { skin, hair, shirt, eyeType, mouthType, pupilX, pupilY };
   }, [seed]);
 
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      if (x > 0 && x < rect.width && y > 0 && y < rect.height) {
+        const rotateY = ((x / rect.width) - 0.5) * 40;
+        const rotateX = ((y / rect.height) - 0.5) * -40;
+        setRotate({ x: rotateX, y: rotateY });
+      } else {
+        setRotate({ x: 5, y: -8 });
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   const px = `${size}px`;
 
-  // Bentuk mulut
   const mouthPath =
     cfg.mouthType === 0
-      ? "M40 64 C47 70, 53 70, 60 64" // smile
+      ? "M40 64 C47 70, 53 70, 60 64" 
       : cfg.mouthType === 1
-      ? "M40 66 C47 64, 53 64, 60 66" // flat
-      : "M42 66 C48 62, 52 62, 58 66"; // small smirk
+      ? "M40 66 C47 64, 53 64, 60 66" 
+      : "M42 66 C48 62, 52 62, 58 66"; 
 
-  // Tinggi mata
-  const eyeOpen =
-    cfg.eyeType === 0 ? 1 : cfg.eyeType === 1 ? 0.65 : 0.35; 
+  const eyeOpen = cfg.eyeType === 0 ? 1 : cfg.eyeType === 1 ? 0.65 : 0.35; 
 
   return (
     <div
+      ref={containerRef}
       className={[
-        "relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm",
+        "relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300",
         "dark:border-zinc-800 dark:bg-zinc-950",
         className,
       ].join(" ")}
-      style={{ width: px, height: px }}
+      style={{ 
+        width: px, 
+        height: px,
+        perspective: "1000px"
+      }}
       aria-label={title}
       title={title}
     >
-      <svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label={title}>
-        <defs>
-          <radialGradient id={`faceGrad-${seed}`} cx="35%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
-            <stop offset="35%" stopColor={cfg.skin} stopOpacity="1" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
-          </radialGradient>
+      <div 
+        className="w-full h-full transform-gpu transition-transform duration-200 ease-out"
+        style={{
+          transform: `rotateX(${rotate.x}deg) rotateY(${rotate.y}deg)`,
+          transformStyle: "preserve-3d"
+        }}
+      >
+        <svg viewBox="0 0 100 100" width="100%" height="100%" role="img" aria-label={title}>
+          <defs>
+            <radialGradient id={`faceGrad-${seed}`} cx="35%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.35" />
+              <stop offset="35%" stopColor={cfg.skin} stopOpacity="1" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.18" />
+            </radialGradient>
 
-          <linearGradient id={`hairGrad-${seed}`} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-            <stop offset="40%" stopColor={cfg.hair} stopOpacity="1" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="0.25" />
-          </linearGradient>
+            <linearGradient id={`hairGrad-${seed}`} x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
+              <stop offset="40%" stopColor={cfg.hair} stopOpacity="1" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.25" />
+            </linearGradient>
 
-          <linearGradient id={`shirtGrad-${seed}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
-            <stop offset="35%" stopColor={cfg.shirt} stopOpacity="1" />
-            <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
-          </linearGradient>
+            <linearGradient id={`shirtGrad-${seed}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.18" />
+              <stop offset="35%" stopColor={cfg.shirt} stopOpacity="1" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+            </linearGradient>
 
-          <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-            <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" floodColor="#000" floodOpacity="0.18" />
-          </filter>
-        </defs>
+            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" floodColor="#000" floodOpacity="0.18" />
+            </filter>
+          </defs>
 
-        {/* Background */}
-        <rect x="0" y="0" width="100" height="100" fill="transparent" />
+          <rect x="0" y="0" width="100" height="100" fill="transparent" />
 
-        {/* Body / shirt */}
-        <g filter="url(#softShadow)">
+          <g filter="url(#softShadow)" style={{ transform: "translateZ(10px)" }}>
+            <path
+              d="M18 98 C24 78, 34 70, 50 70 C66 70, 76 78, 82 98 Z"
+              fill={`url(#shirtGrad-${seed})`}
+            />
+          </g>
+
+          <path d="M44 66 C46 73, 54 73, 56 66 Z" fill={cfg.skin} opacity="0.95" style={{ transform: "translateZ(20px)" }} />
+
+          <g filter="url(#softShadow)" style={{ transform: "translateZ(30px)" }}>
+            <ellipse cx="50" cy="48" rx="24" ry="26" fill={`url(#faceGrad-${seed})`} />
+          </g>
+
           <path
-            d="M18 98 C24 78, 34 70, 50 70 C66 70, 76 78, 82 98 Z"
-            fill={`url(#shirtGrad-${seed})`}
+            d="M26 46 C26 26, 38 16, 50 16 C62 16, 74 26, 74 46
+               C72 34, 62 30, 50 30 C38 30, 28 34, 26 46 Z"
+            fill={`url(#hairGrad-${seed})`}
+            style={{ transform: "translateZ(40px)" }}
           />
-        </g>
 
-        {/* Neck */}
-        <path d="M44 66 C46 73, 54 73, 56 66 Z" fill={cfg.skin} opacity="0.95" />
+          <g style={{ transform: "translateZ(50px)" }}>
+            <ellipse cx="41" cy="48" rx="6.2" ry={4.6 * eyeOpen} fill="#fff" opacity="0.95" />
+            <circle cx={cfg.pupilX - 9} cy={cfg.pupilY} r="2.2" fill="#111827" opacity="0.95" />
+            <ellipse cx="59" cy="48" rx="6.2" ry={4.6 * eyeOpen} fill="#fff" opacity="0.95" />
+            <circle cx={cfg.pupilX + 9} cy={cfg.pupilY} r="2.2" fill="#111827" opacity="0.95" />
+          </g>
 
-        {/* Face */}
-        <g filter="url(#softShadow)">
-          <ellipse cx="50" cy="48" rx="24" ry="26" fill={`url(#faceGrad-${seed})`} />
-        </g>
+          <path d={mouthPath} fill="none" stroke="#111827" strokeWidth="2.4" strokeLinecap="round" opacity="0.85" style={{ transform: "translateZ(55px)" }} />
+        </svg>
 
-        {/* Hair cap */}
-        <path
-          d="M26 46 C26 26, 38 16, 50 16 C62 16, 74 26, 74 46
-             C72 34, 62 30, 50 30 C38 30, 28 34, 26 46 Z"
-          fill={`url(#hairGrad-${seed})`}
-        />
-
-        {/* Ears */}
-        <ellipse cx="26.5" cy="50" rx="5" ry="7" fill={cfg.skin} opacity="0.95" />
-        <ellipse cx="73.5" cy="50" rx="5" ry="7" fill={cfg.skin} opacity="0.95" />
-
-        {/* Eyes */}
-        <g>
-          {/* left eye */}
-          <ellipse cx="41" cy="48" rx="6.2" ry={4.6 * eyeOpen} fill="#fff" opacity="0.95" />
-          <circle cx={cfg.pupilX - 9} cy={cfg.pupilY} r="2.2" fill="#111827" opacity="0.95" />
-          <circle cx={cfg.pupilX - 9.7} cy={cfg.pupilY - 0.8} r="0.7" fill="#fff" opacity="0.9" />
-
-          {/* right eye */}
-          <ellipse cx="59" cy="48" rx="6.2" ry={4.6 * eyeOpen} fill="#fff" opacity="0.95" />
-          <circle cx={cfg.pupilX + 9} cy={cfg.pupilY} r="2.2" fill="#111827" opacity="0.95" />
-          <circle cx={cfg.pupilX + 8.3} cy={cfg.pupilY - 0.8} r="0.7" fill="#fff" opacity="0.9" />
-        </g>
-
-        {/* Nose */}
-        <path d="M50 50 C49 55, 48 57, 50 58 C52 57, 51 55, 50 50 Z" fill="#000" opacity="0.10" />
-
-        {/* Mouth */}
-        <path d={mouthPath} fill="none" stroke="#111827" strokeWidth="2.4" strokeLinecap="round" opacity="0.85" />
-
-        {/* Face highlight */}
-        <path
-          d="M34 40 C36 30, 44 24, 50 24"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="4"
-          strokeLinecap="round"
-          opacity="0.18"
-        />
-      </svg>
-
-      <div className="pointer-events-none absolute inset-0 avatar-gloss" />
+        <div className="pointer-events-none absolute inset-0 avatar-gloss" />
+      </div>
 
       <style jsx>{`
         .avatar-gloss {
           background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 60%);
         }
+        @media (hover: hover) {
+          div:hover {
+            box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.3);
+          }
+        }
+        @keyframes avatar-float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-3px); }
+        }
         div[aria-label] {
-          transform: perspective(800px) rotateX(5deg) rotateY(-8deg);
-          transform-style: preserve-3d;
-          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
-          box-shadow: 0 8px 24px -4px rgba(99,102,241,0.15), 0 4px 12px -2px rgba(0,0,0,0.08);
-        }
-        div[aria-label]:hover {
-          transform: perspective(800px) rotateX(0deg) rotateY(0deg) scale(1.08);
-          box-shadow: 0 16px 40px -8px rgba(99,102,241,0.25), 0 8px 20px -4px rgba(0,0,0,0.12);
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          div[aria-label] {
-            animation: avatar-float 3.5s ease-in-out infinite;
-          }
-          @keyframes avatar-float {
-            0%, 100% { 
-              transform: perspective(800px) rotateX(5deg) rotateY(-8deg) translateY(0px); 
-            }
-            33% { 
-              transform: perspective(800px) rotateX(3deg) rotateY(-5deg) translateY(-3px); 
-            }
-            66% { 
-              transform: perspective(800px) rotateX(7deg) rotateY(-10deg) translateY(-1px); 
-            }
-          }
+          animation: avatar-float 4s ease-in-out infinite;
         }
       `}</style>
     </div>
