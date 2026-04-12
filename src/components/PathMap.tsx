@@ -3,71 +3,105 @@
 import Link from "next/link";
 import { content } from "@/lib/content";
 import { useProgress } from "@/lib/useProgress";
+import { CheckCircle2, Lock, Play, ChevronRight } from "lucide-react";
 
 type NodeState = "completed" | "available" | "locked";
 
-function NodeIcon({ state }: { state: NodeState }) {
-  if (state === "completed") {
-    return (
-      <div className="grid h-12 w-12 place-items-center rounded-2xl bg-gray-900 text-white shadow-sm dark:bg-white dark:text-black">
-        ✓
-      </div>
-    );
-  }
+const stateConfig = {
+  completed: {
+    icon: <CheckCircle2 size={20} />,
+    iconBg: "bg-gradient-to-br from-green-500 to-emerald-600 text-white shadow-lg shadow-green-500/25",
+    cardBorder: "border-green-200 dark:border-green-900/40",
+    cardBg: "bg-green-50/50 dark:bg-green-900/5",
+    badge: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    badgeText: "Selesai",
+  },
+  available: {
+    icon: <Play size={18} fill="currentColor" />,
+    iconBg: "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25 animate-pulse",
+    cardBorder: "border-indigo-200 dark:border-indigo-900/40",
+    cardBg: "bg-white dark:bg-zinc-950",
+    badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+    badgeText: "Mulai",
+  },
+  locked: {
+    icon: <Lock size={16} />,
+    iconBg: "bg-gray-200 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600",
+    cardBorder: "border-gray-100 dark:border-zinc-800/50",
+    cardBg: "bg-gray-50/50 dark:bg-zinc-900/20",
+    badge: "bg-gray-100 text-gray-400 dark:bg-zinc-800 dark:text-zinc-600",
+    badgeText: "Terkunci",
+  },
+};
 
-  if (state === "locked") {
-    return (
-      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-gray-200 bg-gray-100 text-gray-400 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-500">
-        •
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid h-12 w-12 place-items-center rounded-2xl border border-gray-200 bg-white text-gray-900 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100">
-      ▶
-    </div>
-  );
-}
-
-function LessonCard({
-  title,
-  subtitle,
-  pct,
+function LessonNode({
+  lesson,
   state,
+  completedSteps,
+  totalSteps,
+  pct,
+  index,
 }: {
-  title: string;
-  subtitle: string;
-  pct: number;
+  lesson: { id: string; title: string };
   state: NodeState;
+  completedSteps: number;
+  totalSteps: number;
+  pct: number;
+  index: number;
 }) {
-  return (
+  const cfg = stateConfig[state];
+
+  const card = (
     <div
-      className={[
-        "w-full max-w-[360px] rounded-3xl border border-gray-200 bg-white p-4 shadow-sm transition dark:border-zinc-800 dark:bg-zinc-950",
-        state === "available" ? "hover:shadow-md dark:hover:bg-zinc-900/40" : "",
-        state === "locked" ? "opacity-60" : "",
-      ].join(" ")}
+      className={`group relative flex items-center gap-4 rounded-2xl border p-4 transition-all duration-200 ${cfg.cardBorder} ${cfg.cardBg} ${
+        state === "available" ? "hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" : ""
+      } ${state === "completed" ? "hover:shadow-md cursor-pointer" : ""} ${
+        state === "locked" ? "opacity-50 cursor-not-allowed" : ""
+      }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="font-semibold text-gray-900 dark:text-zinc-100">{title}</div>
-          <div className="mt-1 text-xs text-gray-500 dark:text-zinc-400">{subtitle}</div>
-        </div>
+      {/* Icon */}
+      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${cfg.iconBg}`}>
+        {cfg.icon}
+      </div>
 
-        <div className="shrink-0 text-xs font-medium text-gray-500 dark:text-zinc-400">
-          {state === "locked" ? "Locked" : state === "completed" ? "Done" : "Start"}
+      {/* Content */}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-base font-bold text-gray-900 dark:text-white truncate">{lesson.title}</span>
+          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
+            {cfg.badgeText}
+          </span>
+        </div>
+        <div className="mt-1.5 text-xs text-gray-500 dark:text-zinc-400">
+          {completedSteps}/{totalSteps} langkah
+        </div>
+        {/* Mini progress */}
+        <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100 dark:bg-zinc-800">
+          <div
+            className={`h-1.5 rounded-full transition-all duration-700 ${
+              state === "completed"
+                ? "bg-green-500"
+                : state === "available"
+                ? "bg-indigo-500"
+                : "bg-gray-300 dark:bg-zinc-700"
+            }`}
+            style={{ width: `${pct}%` }}
+          />
         </div>
       </div>
 
-      <div className="mt-3 h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900">
-        <div
-          className="h-2 rounded-full bg-gray-900 dark:bg-white"
-          style={{ width: `${pct}%` }}
+      {/* Arrow */}
+      {state !== "locked" && (
+        <ChevronRight
+          size={20}
+          className="shrink-0 text-gray-300 transition-transform group-hover:translate-x-1 group-hover:text-gray-500 dark:text-zinc-700 dark:group-hover:text-zinc-400"
         />
-      </div>
+      )}
     </div>
   );
+
+  if (state === "locked") return <div>{card}</div>;
+  return <Link href={`/learn/${lesson.id}`}>{card}</Link>;
 }
 
 export function PathMap() {
@@ -78,7 +112,7 @@ export function PathMap() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {units.map((unit) => {
         const lessons = unit.lessonIds
           .map((lid) => content.lessons[lid])
@@ -89,99 +123,95 @@ export function PathMap() {
           (acc, l) => acc + l.steps.filter((s) => p.completedStepIds[s.id]).length,
           0
         );
-
         const unitPct =
           unitTotalSteps === 0 ? 0 : Math.round((unitCompletedSteps / unitTotalSteps) * 100);
+        const unitDone = unitTotalSteps > 0 && unitCompletedSteps === unitTotalSteps;
 
         return (
           <section
             key={unit.id}
-            className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
+            className="rounded-[28px] border border-gray-200 bg-white p-6 sm:p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
           >
-            <div className="flex flex-wrap items-end justify-between gap-4">
+            {/* Unit Header */}
+            <div className="flex items-center justify-between gap-4 mb-6">
               <div>
-                <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                  Unit {unit.order}
-                </div>
-
-                <div className="mt-1 text-xl font-semibold text-gray-900 dark:text-zinc-100">
-                  {unit.title}
-                </div>
-
-                <div className="mt-1 text-sm text-gray-600 dark:text-zinc-300">
-                  {unitCompletedSteps}/{unitTotalSteps} steps •{" "}
-                  <span className="font-semibold text-gray-900 dark:text-zinc-100">
-                    {unitPct}%
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-zinc-500">
+                    Unit {unit.order}
                   </span>
+                  {unitDone && (
+                    <span className="rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-bold text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      ✓ Tuntas
+                    </span>
+                  )}
                 </div>
+                <h2 className="mt-1 text-xl font-bold text-gray-900 dark:text-white">
+                  {unit.title}
+                </h2>
               </div>
 
-              <div className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-                <div className="text-xs text-gray-500 dark:text-zinc-400">Progress</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-zinc-100">
-                  {unitPct}%
+              {/* Unit Progress Ring */}
+              <div className="flex flex-col items-center">
+                <div className="relative h-14 w-14">
+                  <svg className="h-14 w-14 -rotate-90" viewBox="0 0 36 36">
+                    <path
+                      d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      className="text-gray-100 dark:text-zinc-800"
+                    />
+                    <path
+                      d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831a 15.9155 15.9155 0 0 1 0 -31.831"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeDasharray={`${unitPct}, 100`}
+                      strokeLinecap="round"
+                      className={unitDone ? "text-green-500" : "text-indigo-500"}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center text-xs font-black text-gray-900 dark:text-white">
+                    {unitPct}%
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-4 h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900">
-              <div
-                className="h-2 rounded-full bg-gray-900 dark:bg-white"
-                style={{ width: `${unitPct}%` }}
-              />
-            </div>
-
+            {/* Lessons */}
             {lessons.length === 0 ? (
-              <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-300">
-                Coming soon.
+              <div className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-6 text-center text-sm text-gray-500 dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-500">
+                Materi segera hadir...
               </div>
             ) : (
-              <div className="relative mt-8">
-                {/* “spine” line */}
-                <div className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 bg-gray-200 dark:bg-zinc-800 md:block" />
+              <div className="grid gap-3">
+                {lessons.map((lesson, idx) => {
+                  const totalSteps = lesson.steps.length;
+                  const completedSteps = lesson.steps.filter((s) => p.completedStepIds[s.id]).length;
+                  const done = completedSteps === totalSteps;
 
-                <div className="space-y-6">
-                  {lessons.map((lesson, idx) => {
-                    const totalSteps = lesson.steps.length;
-                    const completedSteps = lesson.steps.filter((s) => p.completedStepIds[s.id]).length;
-                    const done = completedSteps === totalSteps;
+                  const prev = lessons[idx - 1];
+                  const prevDone = !prev
+                    ? true
+                    : prev.steps.every((s) => p.completedStepIds[s.id]);
 
-                    const prev = lessons[idx - 1];
-                    const prevDone = !prev ? true : prev.steps.every((s) => p.completedStepIds[s.id]);
+                  const state: NodeState = done ? "completed" : prevDone ? "available" : "locked";
 
-                    const state: NodeState = done ? "completed" : prevDone ? "available" : "locked";
+                  const pct =
+                    totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
 
-                    const pct =
-                      totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
-
-                    const left = idx % 2 === 0;
-                    const rowClass = left ? "md:justify-start" : "md:justify-end";
-
-                    const node = (
-                      <div className="flex w-full items-center gap-4 md:w-1/2">
-                        <NodeIcon state={state} />
-                        <LessonCard
-                          title={lesson.title}
-                          subtitle={`${completedSteps}/${totalSteps} steps`}
-                          pct={pct}
-                          state={state}
-                        />
-                      </div>
-                    );
-
-                    return (
-                      <div key={lesson.id} className={`flex justify-center ${rowClass}`}>
-                        {state === "locked" ? (
-                          <div className="w-full md:w-auto">{node}</div>
-                        ) : (
-                          <Link href={`/learn/${lesson.id}`} className="w-full md:w-auto">
-                            {node}
-                          </Link>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
+                  return (
+                    <LessonNode
+                      key={lesson.id}
+                      lesson={lesson}
+                      state={state}
+                      completedSteps={completedSteps}
+                      totalSteps={totalSteps}
+                      pct={pct}
+                      index={idx}
+                    />
+                  );
+                })}
               </div>
             )}
           </section>

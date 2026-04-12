@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CodeEditor } from "@/components/CodeEditor";
-import { mockPythonRunner } from "@/lib/runner/mockPythonRunner";
+import { runWithPiston } from "@/lib/runner/pistonRunner";
 import { LessonStep } from "@/lib/types";
 import { completeStep } from "@/lib/progressStore";
 
@@ -33,6 +33,8 @@ export function CodeStep({
 
   const [hintIndex, setHintIndex] = useState(0);
   const [message, setMessage] = useState("");
+  const [stdoutStr, setStdoutStr] = useState("");
+  const [isEngineError, setIsEngineError] = useState(false);
 
   const [shakeKey, setShakeKey] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -48,14 +50,19 @@ export function CodeStep({
 
     setStatus("checking");
     setMessage("");
+    setStdoutStr("");
+    setIsEngineError(false);
 
-    const res = await mockPythonRunner({
+    const res = await runWithPiston({
       language: "python",
       code,
       functionName: step.functionName,
       publicCases: step.publicCases,
-      timeoutMs: 1500,
+      timeoutMs: 3000,
     });
+
+    const parsedStdout = res.stdout ? res.stdout.replace("ALL_PASS", "").trim() : "";
+    setStdoutStr(parsedStdout || (res.stderr?.trim() ?? ""));
 
     if (res.status === "pass") {
       setStatus("pass");
@@ -65,9 +72,13 @@ export function CodeStep({
     }
 
     setStatus("fail");
-    setMessage(res.friendlyMessage);
-    setHintIndex((i) => Math.min(i + 1, Math.max(step.hints.length - 1, 0)));
-    setShakeKey((k) => k + 1);
+    const isEngine = res.status === "error" && res.friendlyMessage?.includes("Server kode");
+    setIsEngineError(isEngine);
+    setMessage(res.friendlyMessage || "Ada error yang tidak diketahui.");
+    if (!isEngine) {
+      setHintIndex((i: number) => Math.min(i + 1, Math.max(step.hints.length - 1, 0)));
+    }
+    setShakeKey((k: number) => k + 1);
   }
 
   function onReset() {
@@ -75,6 +86,8 @@ export function CodeStep({
     setCode(step.starterCode);
     setStatus("idle");
     setMessage("");
+    setStdoutStr("");
+    setIsEngineError(false);
     setHintIndex(0);
     setShowSuccess(false);
   }
@@ -123,38 +136,61 @@ export function CodeStep({
           </button>
         </div>
 
-        <CodeEditor
-          value={code}
-          onChange={isReadOnly ? () => {} : setCode}
-          invertOnDark
-        />
+        <div className="h-[400px] md:h-[440px] mt-4 overflow-hidden rounded-xl shadow-xl shadow-gray-900/10">
+          <CodeEditor
+            value={code}
+            onChange={isReadOnly ? () => {} : setCode}
+            invertOnDark
+          />
+        </div>
       </div>
 
-      {(status === "fail" || message) && (
+      {/* Result Card: Error / Console Output */}
+      {(status === "fail" || message || stdoutStr) && (
         <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm anim-fade-in dark:border-zinc-800 dark:bg-zinc-950">
-          <div className="text-sm font-semibold text-red-700 dark:text-red-300">
-            Belum tepat
-          </div>
-          <div className="mt-2 text-sm text-gray-800 dark:text-zinc-200">{message}</div>
+          
+          {(status === "fail" || message) && (
+            <div className="mb-4">
+              <div className={`text-sm font-semibold ${isEngineError ? "text-amber-600 dark:text-amber-400" : "text-red-600 dark:text-red-400"}`}>
+                {isEngineError ? "⚠️ Server Sibuk" : "Belum tepat"}
+              </div>
+              <div className="mt-2 text-sm text-gray-800 dark:text-zinc-200">{message}</div>
+            </div>
+          )}
 
-          {currentHint && (
-            <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/30">
-              <div className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
+          {/* Menampilkan Output Print/StdErr dari Python */}
+          {stdoutStr && (
+            <div className="mt-3 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-zinc-800 dark:bg-zinc-900/50">
+              <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400 mb-2">Console Output:</div>
+              <pre className="text-xs text-gray-800 dark:text-zinc-300 whitespace-pre-wrap font-mono">
+                {stdoutStr}
+              </pre>
+            </div>
+          )}
+
+          {currentHint && status === "fail" && (
+            <div className="mt-4 rounded-2xl border border-gray-200 bg-indigo-50 p-4 dark:border-indigo-900/30 dark:bg-indigo-900/10">
+              <div className="text-xs font-semibold text-indigo-700 dark:text-indigo-400">
                 Hint
               </div>
-              <div className="mt-1 text-sm text-gray-800 dark:text-zinc-200">{currentHint}</div>
+              <div className="mt-1 text-sm text-indigo-900 dark:text-indigo-200">{currentHint}</div>
             </div>
           )}
         </div>
       )}
 
-      {/* Sticky action bar (TANPA rectangle putih) */}
+      {/* Sticky action bar */}
       <div className="bottom-4">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-2">
           <div className="text-xs text-gray-600 dark:text-zinc-300">
             {status === "pass" ? (
               <span className="font-semibold text-green-600 dark:text-green-400">
                 Langkah ini sudah selesai!
+              </span>
+            ) : status === "checking" ? (
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900 dark:border-zinc-700 dark:border-t-white"></span>
+                Menjalankan kode di server...
               </span>
             ) : (
               <>

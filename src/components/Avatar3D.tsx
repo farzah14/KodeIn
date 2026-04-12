@@ -201,19 +201,32 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
 
       <style jsx>{`
         .avatar-gloss {
-          background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0) 60%);
+          background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 60%);
         }
-        div {
-          transform: perspective(700px) rotateX(7deg) rotateY(-10deg);
+        div[aria-label] {
+          transform: perspective(800px) rotateX(5deg) rotateY(-8deg);
           transform-style: preserve-3d;
+          transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.4s ease;
+          box-shadow: 0 8px 24px -4px rgba(99,102,241,0.15), 0 4px 12px -2px rgba(0,0,0,0.08);
+        }
+        div[aria-label]:hover {
+          transform: perspective(800px) rotateX(0deg) rotateY(0deg) scale(1.08);
+          box-shadow: 0 16px 40px -8px rgba(99,102,241,0.25), 0 8px 20px -4px rgba(0,0,0,0.12);
         }
         @media (prefers-reduced-motion: no-preference) {
-          div {
-            animation: bob 2.8s ease-in-out infinite;
+          div[aria-label] {
+            animation: avatar-float 3.5s ease-in-out infinite;
           }
-          @keyframes bob {
-            0%, 100% { transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(0); }
-            50% { transform: perspective(700px) rotateX(7deg) rotateY(-10deg) translateY(-1px); }
+          @keyframes avatar-float {
+            0%, 100% { 
+              transform: perspective(800px) rotateX(5deg) rotateY(-8deg) translateY(0px); 
+            }
+            33% { 
+              transform: perspective(800px) rotateX(3deg) rotateY(-5deg) translateY(-3px); 
+            }
+            66% { 
+              transform: perspective(800px) rotateX(7deg) rotateY(-10deg) translateY(-1px); 
+            }
           }
         }
       `}</style>

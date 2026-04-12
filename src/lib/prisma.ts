@@ -7,14 +7,11 @@ declare global {
 }
 
 function createPrismaClient() {
-  const url = process.env.DATABASE_URL;
-  if (!url) {
-    throw new Error('DATABASE_URL is missing. Put it in .env (root).');
-  }
+  const url = process.env.DATABASE_URL!;
 
   const pool = new Pool({
     connectionString: url,
-    // optional: kecilkan untuk serverless
+    ssl: { rejectUnauthorized: false }, // wajib untuk Neon.tech
     max: 5,
   });
 
