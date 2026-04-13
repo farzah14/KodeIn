@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Check, Code2 } from "lucide-react";
 import { Lesson, LessonStep } from "@/lib/types";
 import { ExplainStep } from "@/components/steps/ExplainStep";
 import { CodeStep } from "@/components/steps/CodeStep";
@@ -20,7 +21,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   const pct = totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
 
-  // === INI KUNCI LOGIKA ===
   // Lesson dianggap selesai jika semua step completed.
   const isLessonCompleted = totalSteps > 0 && completedSteps === totalSteps;
 
@@ -37,9 +37,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
 
-  // Sinkronisasi idx:
-  // - Jika lesson sudah completed => paksa idx = 0 (Step 1) dan lock
-  // - Jika belum completed => resume ke initialIdx, tapi hanya sebelum user mulai navigasi manual
   useEffect(() => {
     if (isLessonCompleted) {
       setIdx(0);
@@ -54,9 +51,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   const isLastStep = idx >= totalSteps - 1;
   const isStepCompleted = step ? !!p.completedStepIds[step.id] : false;
-
-  // Karena saat completed kita LOCK di Step 1, maka navigasi dimatikan
-  const canBack = !isLessonCompleted && idx > 0;
 
   const header = useMemo(
     () => ({
@@ -73,7 +67,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
     const t = setTimeout(() => {
       router.push("/learn");
-    }, 1200);
+    }, 1500);
 
     return () => clearTimeout(t);
   }, [isFinishing, router]);
@@ -83,7 +77,6 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   }
 
   function nextOrFinish() {
-    // Jika lesson sudah 100%, tidak boleh pindah step sama sekali
     if (isLessonCompleted) return;
 
     setHasUserNavigated(true);
@@ -104,11 +97,8 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   async function handleContinueExplain() {
     if (!step) return;
-
-    // Jika lesson sudah completed => Step 1 hanya Completed dan tidak boleh lanjut
     if (isLessonCompleted) return;
 
-    // Kalau step sudah completed, langsung next saja (jangan save XP lagi)
     if (isStepCompleted) {
       nextOrFinish();
       return;
@@ -125,172 +115,105 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   if (!step) {
     return (
-      <div className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm">
-        <div className="text-sm font-semibold text-gray-900">Lesson tidak memiliki step.</div>
+      <div className="rounded-xl border border-edu-border bg-edu-surface1 p-6 w-full max-w-5xl mx-auto mt-6">
+        <div className="text-sm font-semibold text-edu-textPrimary">Lesson does not have any steps.</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Finish Animation Overlay */}
+    <div className="w-full pb-20">
+      {/* Level Clear Overlay */}
       {isFinishing && (
-        <div
-          className="fixed inset-0 z-[60] grid place-items-center bg-white/70 backdrop-blur dark:bg-black/50"
-          role="status"
-          aria-live="polite"
-        >
-          <div className="finish-card w-[min(520px,92vw)] rounded-[28px] border border-gray-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="flex items-center gap-4">
-              <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gray-900 dark:bg-white">
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="text-white dark:text-black"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M20 6L9 17l-5-5"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="check-path"
-                  />
-                </svg>
-              </div>
-
-              <div className="min-w-0">
-                <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                  Lesson Completed
-                </div>
-                <div className="mt-1 text-xl font-semibold text-gray-900 dark:text-zinc-100 truncate">
-                  {lesson.title}
-                </div>
-                <div className="mt-1 text-sm text-gray-600 dark:text-zinc-300">
-                  Great job. Returning to Course Map…
-                </div>
-              </div>
+        <div className="fixed inset-0 z-[100] grid place-items-center bg-edu-bg/95">
+          <div className="anim-slide-up flex flex-col items-center">
+            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-edu-success/10 text-edu-success mb-6">
+              <Check size={40} strokeWidth={3} />
             </div>
-
-            <div className="mt-6">
-              <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900/40">
-                <div className="finish-bar h-2 rounded-full bg-gray-900 dark:bg-white" />
+            <div className="text-xs font-bold uppercase tracking-widest text-edu-success mb-2">Lesson Completed</div>
+            <h2 className="text-3xl font-bold text-white mb-8">{lesson.title}</h2>
+            
+            <div className="w-64 max-w-full">
+              <div className="h-2 w-full rounded-full bg-edu-surface2 overflow-hidden">
+                <div className="finish-bar h-full bg-edu-success rounded-full" />
               </div>
+              <div className="mt-3 text-center text-xs font-medium text-edu-textSecondary">Returning to map...</div>
             </div>
           </div>
-
           <style jsx>{`
-            .finish-card {
-              animation: popIn 240ms ease-out both;
-            }
-            @keyframes popIn {
-              0% {
-                opacity: 0;
-                transform: translateY(10px) scale(0.985);
-              }
-              100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-              }
-            }
-            .check-path {
-              stroke-dasharray: 60;
-              stroke-dashoffset: 60;
-              animation: draw 420ms ease-out 80ms forwards;
-            }
-            @keyframes draw {
-              to {
-                stroke-dashoffset: 0;
-              }
-            }
-            .finish-bar {
-              width: 0%;
-              animation: fill 1000ms ease-out 120ms forwards;
-            }
-            @keyframes fill {
-              to {
-                width: 100%;
-              }
-            }
+            .anim-slide-up { animation: slideUp 0.4s ease-out both; }
+            @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            .finish-bar { width: 0%; animation: fill 1200ms ease-out forwards; }
+            @keyframes fill { to { width: 100%; } }
           `}</style>
         </div>
       )}
 
-      {/* Header */}
-      <div className="rounded-[28px] border border-gray-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">Lesson</div>
-        <div className="mt-1 text-2xl font-semibold text-gray-900 dark:text-zinc-100">
-          {lesson.title}
-        </div>
+      {/* Lesson Progress Header */}
+      <div className="w-full max-w-5xl mx-auto bg-edu-surface1 border border-edu-border rounded-xl p-6 md:p-8 mt-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          
+          <div className="flex-1">
+             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-edu-primary mb-2">
+                <Code2 size={16} /> Current Lesson
+             </div>
+             <h1 className="text-2xl md:text-3xl font-bold text-edu-textPrimary leading-tight">
+               {lesson.title}
+             </h1>
+          </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
-          <span>
-            Step{" "}
-            <span className="font-semibold text-gray-900 dark:text-zinc-100">
-              {header.currentIndex}
-            </span>
-            /{header.total}
-          </span>
-
-          <span>
-            <span className="font-semibold text-gray-900 dark:text-zinc-100">
-              {header.completedSteps}
-            </span>
-            /{header.total} completed • {header.pct}%
-          </span>
-        </div>
-
-        <div className="mt-2 h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-900/40">
-          <div
-            className="h-2 rounded-full bg-gray-900 dark:bg-white"
-            style={{ width: `${header.pct}%` }}
-          />
+          <div className="w-full md:w-auto flex flex-col items-start md:items-end gap-3 min-w-[200px]">
+             <div className="flex items-center justify-between w-full">
+                <div className="text-xs font-semibold text-edu-textSecondary uppercase tracking-widest">Progress</div>
+                <div className="text-sm font-bold text-edu-textPrimary">{header.pct}%</div>
+             </div>
+             <div className="h-2.5 w-full rounded-full bg-edu-surface2 border border-edu-border overflow-hidden">
+                <div 
+                  className="h-full bg-edu-xp transition-all duration-500 rounded-full"
+                  style={{ width: `${header.pct}%` }}
+                />
+             </div>
+             <div className="text-xs text-edu-textMuted font-medium w-full text-right">
+               Step {header.currentIndex} of {header.total}
+             </div>
+          </div>
         </div>
       </div>
 
-      {/* Content */}
-      {step.type === "explain" ? (
-        <div className="space-y-4">
-          <ExplainStep title={step.title} markdown={step.markdown} />
+      {/* Main Content Area */}
+      <div className="relative mt-6">
+        {step.type === "explain" ? (
+          <div className="space-y-6">
+            <ExplainStep title={step.title} markdown={step.markdown} />
 
-          {/* Footer buttons */}
-          {isLessonCompleted ? (
-            // === LOCK MODE: Step 1 hanya Completed ===
-            <div className="flex items-center justify-end">
-              <button
-                disabled
-                className="rounded-xl bg-green-600 px-5 py-2 text-sm font-semibold text-white opacity-80 cursor-not-allowed"
-              >
-                Completed
-              </button>
+            <div className="flex items-center justify-end w-full max-w-5xl mx-auto">
+              {isLessonCompleted ? (
+                <div className="px-6 py-3 rounded-lg bg-edu-success/10 border border-edu-success/30 text-edu-success font-semibold text-sm">
+                  Lesson Cleared
+                </div>
+              ) : (
+                <button
+                  onClick={handleContinueExplain}
+                  disabled={isSaving || isFinishing}
+                  className="px-8 py-3 rounded-lg bg-edu-primary text-white font-semibold hover:bg-edu-primaryHover focus:ring-2 focus:ring-offset-2 focus:ring-offset-edu-bg focus:ring-edu-primary transition-colors disabled:opacity-50"
+                >
+                  {isSaving ? "Saving..." : isLastStep ? "Finish Lesson" : "Continue"}
+                </button>
+              )}
             </div>
-          ) : (
-            // === NORMAL MODE ===
-            <div className="flex items-center justify-end">
-              <button
-                onClick={handleContinueExplain}
-                disabled={isSaving || isFinishing}
-                className="focus-ring rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:opacity-95 disabled:opacity-60 dark:bg-white dark:text-black"
-              >
-                {isSaving ? "Saving..." : isLastStep ? "Finish" : "Continue"}
-              </button>
-            </div>
-          )}
-        </div>
-      ) : (
-        <CodeStep
-          key={step.id}
-          step={step as Extract<LessonStep, { type: "code" }>}
-          onPassed={nextOrFinish}
-          isCompleted={isStepCompleted}
-          locked={isLessonCompleted}
-          showBack={idx > 0 && !isLessonCompleted}
-          onBack={back}
-        />
-      )}
+          </div>
+        ) : (
+          <CodeStep
+            key={step.id}
+            step={step as Extract<LessonStep, { type: "code" }>}
+            onPassed={nextOrFinish}
+            isCompleted={isStepCompleted}
+            locked={isLessonCompleted}
+            showBack={idx > 0 && !isLessonCompleted}
+            onBack={back}
+          />
+        )}
+      </div>
     </div>
   );
 }

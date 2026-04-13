@@ -92,8 +92,7 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
     <div
       ref={containerRef}
       className={[
-        "relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300",
-        "dark:border-zinc-800 dark:bg-zinc-950",
+        "relative overflow-hidden rounded-full border border-edu-border bg-edu-surface1 transition-all duration-300",
         className,
       ].join(" ")}
       style={{ 
@@ -130,15 +129,11 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
               <stop offset="35%" stopColor={cfg.shirt} stopOpacity="1" />
               <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
             </linearGradient>
-
-            <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
-              <feDropShadow dx="0" dy="2.2" stdDeviation="2.2" floodColor="#000" floodOpacity="0.18" />
-            </filter>
           </defs>
 
           <rect x="0" y="0" width="100" height="100" fill="transparent" />
 
-          <g filter="url(#softShadow)" style={{ transform: "translateZ(10px)" }}>
+          <g style={{ transform: "translateZ(10px)" }}>
             <path
               d="M18 98 C24 78, 34 70, 50 70 C66 70, 76 78, 82 98 Z"
               fill={`url(#shirtGrad-${seed})`}
@@ -147,7 +142,7 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
 
           <path d="M44 66 C46 73, 54 73, 56 66 Z" fill={cfg.skin} opacity="0.95" style={{ transform: "translateZ(20px)" }} />
 
-          <g filter="url(#softShadow)" style={{ transform: "translateZ(30px)" }}>
+          <g style={{ transform: "translateZ(30px)" }}>
             <ellipse cx="50" cy="48" rx="24" ry="26" fill={`url(#faceGrad-${seed})`} />
           </g>
 
@@ -167,27 +162,7 @@ export function Avatar3D({ seed, size = 72, className = "", title = "Avatar" }: 
 
           <path d={mouthPath} fill="none" stroke="#111827" strokeWidth="2.4" strokeLinecap="round" opacity="0.85" style={{ transform: "translateZ(55px)" }} />
         </svg>
-
-        <div className="pointer-events-none absolute inset-0 avatar-gloss" />
       </div>
-
-      <style jsx>{`
-        .avatar-gloss {
-          background: radial-gradient(80% 60% at 30% 20%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0) 60%);
-        }
-        @media (hover: hover) {
-          div:hover {
-            box-shadow: 0 20px 40px -12px rgba(99, 102, 241, 0.3);
-          }
-        }
-        @keyframes avatar-float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-3px); }
-        }
-        div[aria-label] {
-          animation: avatar-float 4s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

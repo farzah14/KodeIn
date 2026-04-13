@@ -80,11 +80,11 @@ export async function PATCH(req: Request): Promise<Response> {
     dataToUpdate.theme = theme;
   }
 
-  // === TAMBAHAN BARU: Validasi Image (Seed) ===
+  // === TAMBAHAN BARU: Validasi Image (Seed atau Base64) ===
   if (typeof body.image === "string") {
     const image = body.image.trim();
-    // Kita batasi panjangnya agar aman, meski seed biasanya pendek
-    if (image.length > 255) return Response.json({ error: "IMAGE_TOO_LONG" }, { status: 400 });
+    // Allow large strings for Base64 photo uploads (up to ~2MB)
+    if (image.length > 2000000) return Response.json({ error: "IMAGE_TOO_LARGE" }, { status: 400 });
     dataToUpdate.image = image;
   }
 
