@@ -4,7 +4,7 @@ import { content } from "@/lib/content";
 import { useProgress } from "@/lib/useProgress";
 import { getLevelInfo } from "@/components/XPBar";
 import { BookOpen, Flame, Zap, Trophy } from "lucide-react";
-import { Avatar3D } from "@/components/Avatar3D";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useSession } from "next-auth/react";
 
 export function CourseProgressHeader() {
@@ -30,16 +30,16 @@ export function CourseProgressHeader() {
     <div className="bg-edu-surface1 border border-edu-border rounded-xl p-6 sm:p-8">
       {/* Top Row */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
            <div className="shrink-0 relative">
-             <Avatar3D seed={userSeed} size={80} className="rounded-full" />
+             <UserAvatar src={userSeed} size={64} className="rounded-full sm:w-[80px] sm:h-[80px]" />
            </div>
            <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-edu-primary mb-2">
                 <BookOpen size={14} /> Current Quest
               </div>
 
-              <h1 className="text-2xl sm:text-3xl font-bold text-edu-textPrimary leading-tight">
+              <h1 className="text-xl sm:text-3xl font-bold text-edu-textPrimary leading-tight">
                 {content.course.title}
               </h1>
 
@@ -56,9 +56,9 @@ export function CourseProgressHeader() {
 
         {/* Stats Pills */}
         <div className="flex flex-row w-full sm:w-auto gap-4">
-          <div className="flex items-center gap-4 bg-edu-surface2 border border-edu-border rounded-xl p-4 flex-1 sm:flex-none">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-edu-textSecondary/10 text-edu-textPrimary">
-              <Zap size={20} />
+          <div className="flex items-center gap-3 sm:gap-4 bg-edu-surface2 border border-edu-border rounded-xl p-3 sm:p-4 flex-1 sm:flex-none">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-edu-textSecondary/10 text-edu-textPrimary">
+              <Zap size={16} className="sm:w-5 sm:h-5" />
             </div>
             <div>
                <div className="text-xl font-bold text-edu-textPrimary leading-none mb-1">{p.xp}</div>
@@ -66,9 +66,9 @@ export function CourseProgressHeader() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4 bg-edu-surface2 border border-edu-border rounded-xl p-4 flex-1 sm:flex-none">
-            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-edu-textSecondary/10 text-edu-textPrimary">
-              <Flame size={20} className={p.streak.current > 0 ? "text-edu-streak" : "text-edu-textMuted"} />
+          <div className="flex items-center gap-3 sm:gap-4 bg-edu-surface2 border border-edu-border rounded-xl p-3 sm:p-4 flex-1 sm:flex-none">
+            <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-edu-textSecondary/10 text-edu-textPrimary">
+              <Flame size={16} className={p.streak.current > 0 ? "text-edu-streak sm:w-5 sm:h-5" : "text-edu-textMuted sm:w-5 sm:h-5"} />
             </div>
             <div>
                <div className="text-xl font-bold text-edu-textPrimary leading-none mb-1">{p.streak.current}</div>
@@ -80,11 +80,11 @@ export function CourseProgressHeader() {
 
       {/* Progress Bar */}
       <div className="mt-8">
-        <div className="flex items-center justify-between text-xs font-semibold text-edu-textSecondary tracking-widest uppercase mb-3">
+        <div className="flex items-center justify-between text-[10px] sm:text-xs font-semibold text-edu-textSecondary tracking-widest uppercase mb-2 sm:mb-3">
           <span>Total Progress</span>
           <span>{pct}%</span>
         </div>
-        <div className="h-3 w-full bg-edu-surface2 rounded-full overflow-hidden border border-edu-border">
+        <div className="h-2 sm:h-3 w-full bg-edu-surface2 rounded-full overflow-hidden border border-edu-border">
           <div
             className="h-full bg-edu-primary transition-all duration-1000 ease-out rounded-full"
             style={{ width: `${pct}%` }}

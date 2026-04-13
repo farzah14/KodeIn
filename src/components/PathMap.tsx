@@ -55,7 +55,7 @@ function LessonNode({
 
   const card = (
     <div
-      className={`group relative flex items-center gap-6 p-5 rounded-2xl border transition-all duration-300 ${
+      className={`group relative flex items-center gap-3 sm:gap-6 p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${
         state === "available" ? "bg-edu-surface1 border-edu-primary hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.2)] cursor-pointer" : ""
       } ${
         state === "completed" ? "bg-edu-surface1 border-edu-success hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(16,185,129,0.1)] cursor-pointer" : ""
@@ -64,17 +64,19 @@ function LessonNode({
       }`}
     >
       {/* Icon Circle */}
-      <div className={`flex shrink-0 items-center justify-center w-14 h-14 rounded-full border ${cfg.bg} ${cfg.border}`}>
-        {cfg.icon}
+      <div className={`flex shrink-0 items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-full border ${cfg.bg} ${cfg.border}`}>
+        {state === "available" ? <Play size={18} fill="currentColor" strokeWidth={0} className="text-edu-primary sm:w-5 sm:h-5" /> : 
+         state === "completed" ? <CheckCircle2 size={20} className="text-edu-success sm:w-6 sm:h-6" /> :
+         <Lock size={16} className="text-edu-textMuted sm:w-[18px] sm:h-[18px]" />}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:items-center py-0.5 justify-between gap-2 mb-2">
-          <h3 className="text-base sm:text-lg font-bold text-edu-textPrimary truncate transition-colors group-hover:text-black">
+        <div className="flex flex-col sm:flex-row sm:items-center py-0.5 justify-between gap-1 sm:gap-2 mb-1.5 sm:mb-2">
+          <h3 className="text-sm sm:text-lg font-bold text-edu-textPrimary truncate transition-colors group-hover:text-black">
             {lesson.title}
           </h3>
-          <span className={`inline-flex shrink-0 px-2.5 py-0.5 rounded-full border text-xs font-bold uppercase tracking-wider ${cfg.badgeText}`}>
+          <span className={`inline-flex self-start shrink-0 px-2 py-0.5 rounded-full border text-[10px] sm:text-xs font-bold uppercase tracking-wider ${cfg.badgeText}`}>
             {cfg.textLabel}
           </span>
         </div>
@@ -127,22 +129,22 @@ export function PathMap() {
         return (
           <section
             key={unit.id}
-            className="bg-edu-surface1 border border-edu-border rounded-3xl p-6 sm:p-10"
+            className="bg-edu-surface1 border border-edu-border rounded-2xl sm:rounded-3xl p-4 sm:p-10"
           >
             {/* Unit Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 pb-8 border-b border-edu-border">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 sm:mb-10 pb-6 sm:pb-8 border-b border-edu-border">
               <div className="min-w-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-sm font-bold text-edu-primary uppercase tracking-[0.1em]">
+                <div className="flex items-center gap-3 mb-1.5 sm:mb-2">
+                  <span className="text-[10px] sm:text-sm font-bold text-edu-primary uppercase tracking-[0.1em]">
                     Unit {unit.order}
                   </span>
                   {unitDone && (
-                    <span className="px-2 py-0.5 rounded bg-edu-success/10 text-edu-success text-xs font-bold uppercase tracking-wider">
+                    <span className="px-1.5 py-0.5 rounded bg-edu-success/10 text-edu-success text-[10px] font-bold uppercase tracking-wider">
                       Cleared
                     </span>
                   )}
                 </div>
-                <h2 className="text-2xl sm:text-3xl font-extrabold text-edu-textPrimary leading-tight">
+                <h2 className="text-xl sm:text-3xl font-extrabold text-edu-textPrimary leading-tight">
                   {unit.title}
                 </h2>
               </div>
