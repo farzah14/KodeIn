@@ -35,7 +35,6 @@ const authOptions = {
   ],
   pages: {
     signIn: "/login",
-    error: "/error",
   },
   debug: true,
 };
