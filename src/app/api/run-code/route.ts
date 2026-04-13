@@ -3,6 +3,7 @@ import { exec } from "child_process";
 import { promisify } from "util";
 import fs from "fs";
 import path from "path";
+import os from "os";
 
 const execAsync = promisify(exec);
 
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
     const content = files[0].content;
 
     // Siapkan folder temporary untuk menampung file kode sementara
-    const tmpDir = path.join(process.cwd(), ".tmp_code");
+    // Gunakan os.tmpdir() karena '/var/task' di Vercel bersifat read-only.
+    const tmpDir = path.join(os.tmpdir(), "kodein_tmp_code");
     if (!fs.existsSync(tmpDir)) {
       fs.mkdirSync(tmpDir, { recursive: true });
     }
