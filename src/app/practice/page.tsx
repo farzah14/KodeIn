@@ -1,192 +1,153 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Topbar } from "@/components/Topbar";
-import { CodeEditor } from "@/components/CodeEditor";
-import { runGenericPiston } from "@/lib/runner/pistonRunner";
-import { Play, Code2, Terminal, Palette, CodeIcon, RotateCcw } from "lucide-react";
+import { practiceChallenges } from "@/lib/practiceChallenges";
+import { Trophy, Zap, Code2, ArrowRight, Star, Search, Filter, Check } from "lucide-react";
+import Link from "next/link";
 
-const TEMPLATES: Record<string, string> = {
-  python: `def greet(name):\n    return f"Hello {name}!"\n\nprint(greet("Dunia"))\n`,
-  javascript: `function greet(name) {\n  return \`Hello \${name}!\`;\n}\n\nconsole.log(greet("Dunia"));\n`,
-  sql: `-- Buat tabel sementara\nCREATE TABLE users (\n  id INTEGER PRIMARY KEY,\n  name TEXT,\n  role TEXT\n);\n\n-- Masukkan data\nINSERT INTO users (name, role) VALUES \n  ('Budi', 'Admin'), \n  ('Andi', 'Member'),\n  ('Siti', 'Member');\n\n-- Ambil data\nSELECT * FROM users;`
-};
+export default function PracticeListPage() {
+  const [filter, setFilter] = useState<string>("All");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [completedIds, setCompletedIds] = useState<string[]>([]);
 
-export default function PracticePage() {
-  const [language, setLanguage] = useState("python");
-  const [editorTheme, setEditorTheme] = useState("system");
-  const [code, setCode] = useState(TEMPLATES["python"]);
-  const [output, setOutput] = useState("");
-  const [isRunning, setIsRunning] = useState(false);
+  useEffect(() => {
+    const fetchProgress = async () => {
+      try {
+        const res = await fetch("/api/progress");
+        if (res.ok) {
+          const data = await res.json();
+          // The API returns normalized data in completedStepIds
+          const practice = data.completedStepIds?.practice || [];
+          setCompletedIds(practice);
+        }
+      } catch (e) {
+        console.error("Failed to fetch progress");
+      }
+    };
+    fetchProgress();
+  }, []);
 
-  function handleLanguageChange(lang: string) {
-    setLanguage(lang);
-    setCode(TEMPLATES[lang] || "");
-    setOutput("");
-  }
-
-  function handleReset() {
-    setCode(TEMPLATES[language] || "");
-    setOutput("");
-  }
-
-  async function handleRun() {
-     if (isRunning) return;
-     setIsRunning(true);
-     setOutput("");
-     const res = await runGenericPiston(code, language);
-     
-     if (res.stderr?.includes("__ENGINE_UNAVAILABLE__")) {
-       setOutput("⚠️ Server Execution Engine sedang sibuk.\nSilakan tunggu beberapa saat lalu klik Run Code lagi.");
-       setIsRunning(false);
-       return;
-     }
-
-     let finalOut = res.stderr ? `Error:\n${res.stderr}\n\n` : "";
-     finalOut += res.stdout ? res.stdout : (res.stderr ? "" : "Program exited with no output.");
-     setOutput(finalOut);
-     setIsRunning(false);
-  }
+  const filteredChallenges = practiceChallenges.filter(c => {
+    const matchesFilter = filter === "All" || c.difficulty === filter || c.category === filter;
+    const matchesSearch = c.title.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc] dark:bg-[#060608] flex flex-col font-sans transition-colors duration-500">
-      {/* Premium Background Effects */}
-      <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]"></div>
-      <div className="pointer-events-none fixed top-0 right-0 z-0 h-[600px] w-[600px] rounded-full bg-gradient-to-bl from-indigo-500/10 via-purple-500/5 to-transparent blur-[120px]"></div>
-
+    <div className="min-h-screen bg-edu-bg transition-colors duration-500 flex flex-col">
       <Topbar />
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-6 py-10 flex-1 flex flex-col gap-10">
-        
-        {/* Modern Header Section */}
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between px-2">
-           <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
-                <Code2 size={12} strokeWidth={3} /> Sandbox Environment
+      <main className="max-w-7xl mx-auto w-full px-6 py-12 flex-1">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-[3rem] bg-indigo-600 p-10 md:p-16 mb-12 shadow-2xl shadow-indigo-600/20 group">
+           <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
+           <div className="relative z-10 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mb-6 backdrop-blur-md">
+                 <Trophy size={14} className="text-orange-400" /> Level Up Your Logic
               </div>
-              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-                 KodeIn <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500">Playground</span>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-6 leading-tight">
+                 Asah Kemampuan <br/> <span className="text-indigo-200">Competitive Programming</span> Kamu.
               </h1>
-              <p className="text-gray-500 dark:text-zinc-400 font-medium max-w-2xl leading-relaxed">
-                Tempat bebas untuk bereksperimen, merancang algoritma, dan mengasah logika pemrogramanmu setiap hari.
+              <p className="text-indigo-100/70 font-medium leading-relaxed mb-8">
+                 Selesaikan tantangan algoritma harian untuk mendapatkan XP tambahan dan naiki peringkat di leaderboard global.
               </p>
-           </div>
-           
-           <div className="flex flex-wrap items-center gap-4">
-              {/* Tool Selector Group */}
-              <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white/50 backdrop-blur-md border border-gray-100 dark:bg-zinc-900/50 dark:border-zinc-800 shadow-sm">
-                {/* Theme Toggle */}
-                <select 
-                  value={editorTheme}
-                  onChange={e => setEditorTheme(e.target.value)}
-                  className="appearance-none rounded-xl bg-transparent px-4 py-2 text-xs font-bold text-gray-600 dark:text-zinc-400 outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                >
-                   <option value="system">Auto Theme</option>
-                   <option value="dark-pro">Dark Pro</option>
-                   <option value="monokai-pro">Monokai Pro (Dark)</option>
-                   <option value="monokai-pro-light">Monokai Pro (Light)</option>
-                   <option value="vs-dark">VS Dark</option>
-                   <option value="vs">VS Light</option>
-                </select>
-
-                <div className="w-px h-4 bg-gray-200 dark:bg-zinc-700 mx-1" />
-
-                {/* Language Switcher */}
-                <select 
-                  value={language}
-                  onChange={e => handleLanguageChange(e.target.value)}
-                  className="appearance-none rounded-xl bg-transparent px-4 py-2 text-xs font-black text-indigo-600 dark:text-indigo-400 outline-none cursor-pointer hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors uppercase tracking-widest"
-                >
-                   <option value="python">Python</option>
-                   <option value="javascript">JavaScript</option>
-                   <option value="sql">SQLite</option>
-                </select>
+              <div className="flex flex-wrap gap-8">
+                 <div className="flex flex-col">
+                    <span className="text-3xl font-black text-white">{practiceChallenges.length}</span>
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Soal Tersedia</span>
+                 </div>
+                 <div className="w-px h-10 bg-white/20" />
+                 <div className="flex flex-col">
+                    <span className="text-3xl font-black text-white">{practiceChallenges.filter(c => c.difficulty === 'Easy').length}</span>
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Easy Level</span>
+                 </div>
               </div>
-
-              {/* Action Button */}
-              <button
-                onClick={handleRun}
-                disabled={isRunning}
-                className="group relative flex items-center justify-center gap-3 px-10 py-3.5 rounded-2xl bg-indigo-600 text-white font-black text-sm tracking-wide shadow-xl shadow-indigo-600/25 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-70 disabled:pointer-events-none"
-              >
-                  {isRunning ? (
-                    <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <Play size={18} fill="currentColor" />
-                  )}
-                  <span>{isRunning ? "RUNNING..." : "RUN CODE"}</span>
-              </button>
            </div>
         </div>
 
-        {/* Workspace Container — Sync with Learn style */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 flex-1 min-h-[500px]">
-           
-           {/* Editor Side */}
-           <div className="flex flex-col rounded-[2rem] border border-gray-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden transition-all duration-300">
-              <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/50">
-                <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
-                  <CodeIcon size={14} /> main.{language === 'python' ? 'py' : language === 'javascript' ? 'js' : 'sql'}
-                </div>
+        {/* Filter Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-10">
+           <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 p-1.5 rounded-2xl border border-gray-100 dark:border-zinc-800 shadow-sm w-full md:w-auto">
+              <div className="pl-4 text-gray-400"><Search size={18} /></div>
+              <input 
+                type="text" 
+                placeholder="Cari tantangan..."
+                className="bg-transparent border-none outline-none px-2 py-2 text-sm font-bold w-full md:w-64"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+           </div>
+
+           <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
+              {["All", "Easy", "Medium", "Logic", "Array", "String"].map(f => (
                 <button
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-                  onClick={handleReset}
+                  key={f}
+                  onClick={() => setFilter(f)}
+                  className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap ${filter === f ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'bg-white dark:bg-zinc-900 text-gray-400 hover:text-indigo-600 border border-gray-100 dark:border-zinc-800'}`}
                 >
-                  <RotateCcw size={12} /> Reset
+                  {f}
                 </button>
-              </div>
-
-              <div className="flex-1 relative">
-                 <CodeEditor language={language} editorTheme={editorTheme} value={code} onChange={setCode} invertOnDark={false} />
-              </div>
+              ))}
            </div>
-
-           {/* Console Side */}
-           <div className="flex flex-col rounded-[2rem] border border-zinc-800 bg-[#0c0c0e] shadow-2xl overflow-hidden group">
-              <div className="px-6 py-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50">
-                  <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
-                     <Terminal size={14} /> Console Output
-                  </div>
-                  <div className="flex gap-1.5">
-                    <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
-                    <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
-                    <div className={`h-2 w-2 rounded-full ${isRunning ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-700'}`}></div>
-                  </div>
-              </div>
-
-              <div className="flex-1 p-8 font-mono text-base space-y-4 overflow-auto custom-scrollbar">
-                 {output ? (
-                    <div className="space-y-3 animate-in fade-in duration-300">
-                       <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest opacity-50">Master Terminal</div>
-                       <div className="whitespace-pre-wrap">
-                          {output.split('\n').map((line, i) => (
-                              <div key={i} className={`flex gap-4 py-0.5 ${line.startsWith('Error:') || line.includes('Error') || line.includes('Exception') ? 'text-rose-400' : 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.1)]'}`}>
-                                 <span className="opacity-20 select-none hidden sm:inline-block w-6 text-right shrink-0">{i+1}</span>
-                                 <span className="break-all">{line}</span>
-                              </div>
-                          ))}
-                       </div>
-                    </div>
-                 ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-center gap-4 text-zinc-600">
-                       <div className="p-4 rounded-full bg-zinc-900/50">
-                         <Play size={24} className="opacity-20" />
-                       </div>
-                       <p className="text-sm font-medium opacity-50 uppercase tracking-widest">Awaiting execution...</p>
-                    </div>
-                 )}
-              </div>
-           </div>
-           
         </div>
-      </main>
 
-      <style jsx>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #444; }
-      `}</style>
+        {/* Challenge Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+           {filteredChallenges.map(challenge => (
+             <Link 
+               href={`/practice/${challenge.id}`} 
+               key={challenge.id}
+               className="group relative flex flex-col p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 hover:border-indigo-600/30 hover:shadow-2xl hover:shadow-indigo-600/5 transition-all duration-500 overflow-hidden"
+             >
+                <div className="absolute top-0 right-0 p-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500 -rotate-12 translate-x-4 -translate-y-4">
+                   <Code2 size={120} className="text-indigo-600/5" />
+                </div>
+
+                <div className="flex items-center justify-between mb-6">
+                   <div className="flex items-center gap-2">
+                      <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${challenge.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-500 border-emerald-500/10' : 'bg-amber-50 text-amber-500 border-amber-500/10'}`}>
+                         {challenge.difficulty}
+                      </div>
+                      {completedIds.includes(challenge.id) && (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-[0.1em] shadow-lg shadow-emerald-500/20 animate-in zoom-in duration-300">
+                           <Check size={10} strokeWidth={4} /> Done
+                        </div>
+                      )}
+                   </div>
+                   <div className="flex items-center gap-1.5 text-edu-xp font-black">
+                      <Zap size={14} fill="currentColor" />
+                      <span className="text-xs">{challenge.xp} XP</span>
+                   </div>
+                </div>
+
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
+                   {challenge.title}
+                </h3>
+                <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium leading-relaxed mb-8 line-clamp-2">
+                   {challenge.description}
+                </p>
+
+                <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50 dark:border-zinc-800/50">
+                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{challenge.category}</span>
+                   <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0">
+                      Mulai <ArrowRight size={14} />
+                   </div>
+                </div>
+             </Link>
+           ))}
+        </div>
+
+        {filteredChallenges.length === 0 && (
+          <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 opacity-50 grayscale">
+             <Filter size={64} className="text-gray-300" />
+             <div>
+                <p className="text-lg font-black text-gray-900 dark:text-white">Tidak ada tantangan ditemukan</p>
+                <p className="text-sm font-medium text-gray-500">Coba ubah filter atau pencarianmu.</p>
+             </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 }

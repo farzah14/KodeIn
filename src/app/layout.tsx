@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import Providers from "./providers";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
 const jetbrains = JetBrains_Mono({ subsets: ["latin"], display: "swap", variable: "--font-jetbrains" });
@@ -18,10 +19,8 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" suppressHydrationWarning>
-      <head>
-        <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
-      </head>
       <body className={`${inter.variable} ${jetbrains.variable} bg-edu-bg text-edu-textPrimary font-sans antialiased min-h-screen selection:bg-edu-primary selection:text-white`}>
+        <Script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js" strategy="afterInteractive" />
         <Providers>{children}</Providers>
       </body>
     </html>
