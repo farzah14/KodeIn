@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, X, LogOut, Map, Flame, Trophy, Code2, Sun, Moon } from "lucide-react";
+import { Menu, X, LogOut, Map, Flame, Trophy, Code2, Sun, Moon, Sword } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
 import { useProgress } from "@/lib/useProgress";
@@ -87,6 +87,9 @@ export function Topbar() {
                </Link>
                <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest">
                   {t("topbar.leaderboard")}
+               </Link>
+               <Link href="/battle" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest flex items-center gap-2">
+                  <Sword size={14} className="text-edu-error" /> 1v1 Battle
                </Link>
             </div>
           )}
@@ -211,6 +214,9 @@ export function Topbar() {
                  </Link>
                  <Link href="/leaderboard" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-2xl transition-colors uppercase tracking-widest">
                     <Trophy size={20} /> {t("topbar.leaderboard")}
+                 </Link>
+                 <Link href="/battle" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-2xl transition-colors uppercase tracking-widest">
+                    <Sword size={20} /> 1v1 Battle
                  </Link>
                  <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
                  <button

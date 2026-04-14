@@ -69,3 +69,27 @@ model Progress {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model BattleRoom {
+  id          String @id @default(cuid())
+  status      String @default("waiting") // "waiting", "active", "finished"
+  challengeId String
+
+  player1Id String
+  player2Id String?
+
+  player1Code String @default("")
+  player2Code String @default("")
+
+  player1Done Boolean @default(false)
+  player2Done Boolean @default(false)
+
+  player1Result String @default("") // "pending", "success", "fail"
+  player2Result String @default("") // "pending", "success", "fail"
+
+  winnerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
+}

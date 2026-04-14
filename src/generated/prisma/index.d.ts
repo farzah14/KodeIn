@@ -38,6 +38,11 @@ export type VerificationToken = $Result.DefaultSelection<Prisma.$VerificationTok
  * 
  */
 export type Progress = $Result.DefaultSelection<Prisma.$ProgressPayload>
+/**
+ * Model BattleRoom
+ * 
+ */
+export type BattleRoom = $Result.DefaultSelection<Prisma.$BattleRoomPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -205,6 +210,16 @@ export class PrismaClient<
     * ```
     */
   get progress(): Prisma.ProgressDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.battleRoom`: Exposes CRUD operations for the **BattleRoom** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BattleRooms
+    * const battleRooms = await prisma.battleRoom.findMany()
+    * ```
+    */
+  get battleRoom(): Prisma.BattleRoomDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -643,7 +658,8 @@ export namespace Prisma {
     Account: 'Account',
     Session: 'Session',
     VerificationToken: 'VerificationToken',
-    Progress: 'Progress'
+    Progress: 'Progress',
+    BattleRoom: 'BattleRoom'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -659,7 +675,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "account" | "session" | "verificationToken" | "progress"
+      modelProps: "user" | "account" | "session" | "verificationToken" | "progress" | "battleRoom"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1033,6 +1049,80 @@ export namespace Prisma {
           }
         }
       }
+      BattleRoom: {
+        payload: Prisma.$BattleRoomPayload<ExtArgs>
+        fields: Prisma.BattleRoomFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BattleRoomFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BattleRoomFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          findFirst: {
+            args: Prisma.BattleRoomFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BattleRoomFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          findMany: {
+            args: Prisma.BattleRoomFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>[]
+          }
+          create: {
+            args: Prisma.BattleRoomCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          createMany: {
+            args: Prisma.BattleRoomCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BattleRoomCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>[]
+          }
+          delete: {
+            args: Prisma.BattleRoomDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          update: {
+            args: Prisma.BattleRoomUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          deleteMany: {
+            args: Prisma.BattleRoomDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BattleRoomUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BattleRoomUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>[]
+          }
+          upsert: {
+            args: Prisma.BattleRoomUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BattleRoomPayload>
+          }
+          aggregate: {
+            args: Prisma.BattleRoomAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBattleRoom>
+          }
+          groupBy: {
+            args: Prisma.BattleRoomGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BattleRoomGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BattleRoomCountArgs<ExtArgs>
+            result: $Utils.Optional<BattleRoomCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -1146,6 +1236,7 @@ export namespace Prisma {
     session?: SessionOmit
     verificationToken?: VerificationTokenOmit
     progress?: ProgressOmit
+    battleRoom?: BattleRoomOmit
   }
 
   /* Types for Logging */
@@ -6736,6 +6827,1131 @@ export namespace Prisma {
 
 
   /**
+   * Model BattleRoom
+   */
+
+  export type AggregateBattleRoom = {
+    _count: BattleRoomCountAggregateOutputType | null
+    _min: BattleRoomMinAggregateOutputType | null
+    _max: BattleRoomMaxAggregateOutputType | null
+  }
+
+  export type BattleRoomMinAggregateOutputType = {
+    id: string | null
+    status: string | null
+    challengeId: string | null
+    player1Id: string | null
+    player2Id: string | null
+    player1Code: string | null
+    player2Code: string | null
+    player1Done: boolean | null
+    player2Done: boolean | null
+    player1Result: string | null
+    player2Result: string | null
+    winnerId: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    expiresAt: Date | null
+  }
+
+  export type BattleRoomMaxAggregateOutputType = {
+    id: string | null
+    status: string | null
+    challengeId: string | null
+    player1Id: string | null
+    player2Id: string | null
+    player1Code: string | null
+    player2Code: string | null
+    player1Done: boolean | null
+    player2Done: boolean | null
+    player1Result: string | null
+    player2Result: string | null
+    winnerId: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+    expiresAt: Date | null
+  }
+
+  export type BattleRoomCountAggregateOutputType = {
+    id: number
+    status: number
+    challengeId: number
+    player1Id: number
+    player2Id: number
+    player1Code: number
+    player2Code: number
+    player1Done: number
+    player2Done: number
+    player1Result: number
+    player2Result: number
+    winnerId: number
+    createdAt: number
+    updatedAt: number
+    expiresAt: number
+    _all: number
+  }
+
+
+  export type BattleRoomMinAggregateInputType = {
+    id?: true
+    status?: true
+    challengeId?: true
+    player1Id?: true
+    player2Id?: true
+    player1Code?: true
+    player2Code?: true
+    player1Done?: true
+    player2Done?: true
+    player1Result?: true
+    player2Result?: true
+    winnerId?: true
+    createdAt?: true
+    updatedAt?: true
+    expiresAt?: true
+  }
+
+  export type BattleRoomMaxAggregateInputType = {
+    id?: true
+    status?: true
+    challengeId?: true
+    player1Id?: true
+    player2Id?: true
+    player1Code?: true
+    player2Code?: true
+    player1Done?: true
+    player2Done?: true
+    player1Result?: true
+    player2Result?: true
+    winnerId?: true
+    createdAt?: true
+    updatedAt?: true
+    expiresAt?: true
+  }
+
+  export type BattleRoomCountAggregateInputType = {
+    id?: true
+    status?: true
+    challengeId?: true
+    player1Id?: true
+    player2Id?: true
+    player1Code?: true
+    player2Code?: true
+    player1Done?: true
+    player2Done?: true
+    player1Result?: true
+    player2Result?: true
+    winnerId?: true
+    createdAt?: true
+    updatedAt?: true
+    expiresAt?: true
+    _all?: true
+  }
+
+  export type BattleRoomAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BattleRoom to aggregate.
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BattleRooms to fetch.
+     */
+    orderBy?: BattleRoomOrderByWithRelationInput | BattleRoomOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BattleRoomWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BattleRooms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BattleRooms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BattleRooms
+    **/
+    _count?: true | BattleRoomCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BattleRoomMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BattleRoomMaxAggregateInputType
+  }
+
+  export type GetBattleRoomAggregateType<T extends BattleRoomAggregateArgs> = {
+        [P in keyof T & keyof AggregateBattleRoom]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBattleRoom[P]>
+      : GetScalarType<T[P], AggregateBattleRoom[P]>
+  }
+
+
+
+
+  export type BattleRoomGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BattleRoomWhereInput
+    orderBy?: BattleRoomOrderByWithAggregationInput | BattleRoomOrderByWithAggregationInput[]
+    by: BattleRoomScalarFieldEnum[] | BattleRoomScalarFieldEnum
+    having?: BattleRoomScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BattleRoomCountAggregateInputType | true
+    _min?: BattleRoomMinAggregateInputType
+    _max?: BattleRoomMaxAggregateInputType
+  }
+
+  export type BattleRoomGroupByOutputType = {
+    id: string
+    status: string
+    challengeId: string
+    player1Id: string
+    player2Id: string | null
+    player1Code: string
+    player2Code: string
+    player1Done: boolean
+    player2Done: boolean
+    player1Result: string
+    player2Result: string
+    winnerId: string | null
+    createdAt: Date
+    updatedAt: Date
+    expiresAt: Date
+    _count: BattleRoomCountAggregateOutputType | null
+    _min: BattleRoomMinAggregateOutputType | null
+    _max: BattleRoomMaxAggregateOutputType | null
+  }
+
+  type GetBattleRoomGroupByPayload<T extends BattleRoomGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BattleRoomGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BattleRoomGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BattleRoomGroupByOutputType[P]>
+            : GetScalarType<T[P], BattleRoomGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BattleRoomSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    challengeId?: boolean
+    player1Id?: boolean
+    player2Id?: boolean
+    player1Code?: boolean
+    player2Code?: boolean
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: boolean
+    player2Result?: boolean
+    winnerId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    expiresAt?: boolean
+  }, ExtArgs["result"]["battleRoom"]>
+
+  export type BattleRoomSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    challengeId?: boolean
+    player1Id?: boolean
+    player2Id?: boolean
+    player1Code?: boolean
+    player2Code?: boolean
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: boolean
+    player2Result?: boolean
+    winnerId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    expiresAt?: boolean
+  }, ExtArgs["result"]["battleRoom"]>
+
+  export type BattleRoomSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    status?: boolean
+    challengeId?: boolean
+    player1Id?: boolean
+    player2Id?: boolean
+    player1Code?: boolean
+    player2Code?: boolean
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: boolean
+    player2Result?: boolean
+    winnerId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    expiresAt?: boolean
+  }, ExtArgs["result"]["battleRoom"]>
+
+  export type BattleRoomSelectScalar = {
+    id?: boolean
+    status?: boolean
+    challengeId?: boolean
+    player1Id?: boolean
+    player2Id?: boolean
+    player1Code?: boolean
+    player2Code?: boolean
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: boolean
+    player2Result?: boolean
+    winnerId?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    expiresAt?: boolean
+  }
+
+  export type BattleRoomOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "status" | "challengeId" | "player1Id" | "player2Id" | "player1Code" | "player2Code" | "player1Done" | "player2Done" | "player1Result" | "player2Result" | "winnerId" | "createdAt" | "updatedAt" | "expiresAt", ExtArgs["result"]["battleRoom"]>
+
+  export type $BattleRoomPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BattleRoom"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      status: string
+      challengeId: string
+      player1Id: string
+      player2Id: string | null
+      player1Code: string
+      player2Code: string
+      player1Done: boolean
+      player2Done: boolean
+      player1Result: string
+      player2Result: string
+      winnerId: string | null
+      createdAt: Date
+      updatedAt: Date
+      expiresAt: Date
+    }, ExtArgs["result"]["battleRoom"]>
+    composites: {}
+  }
+
+  type BattleRoomGetPayload<S extends boolean | null | undefined | BattleRoomDefaultArgs> = $Result.GetResult<Prisma.$BattleRoomPayload, S>
+
+  type BattleRoomCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BattleRoomFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BattleRoomCountAggregateInputType | true
+    }
+
+  export interface BattleRoomDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BattleRoom'], meta: { name: 'BattleRoom' } }
+    /**
+     * Find zero or one BattleRoom that matches the filter.
+     * @param {BattleRoomFindUniqueArgs} args - Arguments to find a BattleRoom
+     * @example
+     * // Get one BattleRoom
+     * const battleRoom = await prisma.battleRoom.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BattleRoomFindUniqueArgs>(args: SelectSubset<T, BattleRoomFindUniqueArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BattleRoom that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BattleRoomFindUniqueOrThrowArgs} args - Arguments to find a BattleRoom
+     * @example
+     * // Get one BattleRoom
+     * const battleRoom = await prisma.battleRoom.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BattleRoomFindUniqueOrThrowArgs>(args: SelectSubset<T, BattleRoomFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BattleRoom that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomFindFirstArgs} args - Arguments to find a BattleRoom
+     * @example
+     * // Get one BattleRoom
+     * const battleRoom = await prisma.battleRoom.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BattleRoomFindFirstArgs>(args?: SelectSubset<T, BattleRoomFindFirstArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BattleRoom that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomFindFirstOrThrowArgs} args - Arguments to find a BattleRoom
+     * @example
+     * // Get one BattleRoom
+     * const battleRoom = await prisma.battleRoom.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BattleRoomFindFirstOrThrowArgs>(args?: SelectSubset<T, BattleRoomFindFirstOrThrowArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BattleRooms that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BattleRooms
+     * const battleRooms = await prisma.battleRoom.findMany()
+     * 
+     * // Get first 10 BattleRooms
+     * const battleRooms = await prisma.battleRoom.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const battleRoomWithIdOnly = await prisma.battleRoom.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends BattleRoomFindManyArgs>(args?: SelectSubset<T, BattleRoomFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BattleRoom.
+     * @param {BattleRoomCreateArgs} args - Arguments to create a BattleRoom.
+     * @example
+     * // Create one BattleRoom
+     * const BattleRoom = await prisma.battleRoom.create({
+     *   data: {
+     *     // ... data to create a BattleRoom
+     *   }
+     * })
+     * 
+     */
+    create<T extends BattleRoomCreateArgs>(args: SelectSubset<T, BattleRoomCreateArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BattleRooms.
+     * @param {BattleRoomCreateManyArgs} args - Arguments to create many BattleRooms.
+     * @example
+     * // Create many BattleRooms
+     * const battleRoom = await prisma.battleRoom.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BattleRoomCreateManyArgs>(args?: SelectSubset<T, BattleRoomCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BattleRooms and returns the data saved in the database.
+     * @param {BattleRoomCreateManyAndReturnArgs} args - Arguments to create many BattleRooms.
+     * @example
+     * // Create many BattleRooms
+     * const battleRoom = await prisma.battleRoom.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BattleRooms and only return the `id`
+     * const battleRoomWithIdOnly = await prisma.battleRoom.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BattleRoomCreateManyAndReturnArgs>(args?: SelectSubset<T, BattleRoomCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BattleRoom.
+     * @param {BattleRoomDeleteArgs} args - Arguments to delete one BattleRoom.
+     * @example
+     * // Delete one BattleRoom
+     * const BattleRoom = await prisma.battleRoom.delete({
+     *   where: {
+     *     // ... filter to delete one BattleRoom
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BattleRoomDeleteArgs>(args: SelectSubset<T, BattleRoomDeleteArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BattleRoom.
+     * @param {BattleRoomUpdateArgs} args - Arguments to update one BattleRoom.
+     * @example
+     * // Update one BattleRoom
+     * const battleRoom = await prisma.battleRoom.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BattleRoomUpdateArgs>(args: SelectSubset<T, BattleRoomUpdateArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BattleRooms.
+     * @param {BattleRoomDeleteManyArgs} args - Arguments to filter BattleRooms to delete.
+     * @example
+     * // Delete a few BattleRooms
+     * const { count } = await prisma.battleRoom.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BattleRoomDeleteManyArgs>(args?: SelectSubset<T, BattleRoomDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BattleRooms.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BattleRooms
+     * const battleRoom = await prisma.battleRoom.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BattleRoomUpdateManyArgs>(args: SelectSubset<T, BattleRoomUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BattleRooms and returns the data updated in the database.
+     * @param {BattleRoomUpdateManyAndReturnArgs} args - Arguments to update many BattleRooms.
+     * @example
+     * // Update many BattleRooms
+     * const battleRoom = await prisma.battleRoom.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BattleRooms and only return the `id`
+     * const battleRoomWithIdOnly = await prisma.battleRoom.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BattleRoomUpdateManyAndReturnArgs>(args: SelectSubset<T, BattleRoomUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BattleRoom.
+     * @param {BattleRoomUpsertArgs} args - Arguments to update or create a BattleRoom.
+     * @example
+     * // Update or create a BattleRoom
+     * const battleRoom = await prisma.battleRoom.upsert({
+     *   create: {
+     *     // ... data to create a BattleRoom
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BattleRoom we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BattleRoomUpsertArgs>(args: SelectSubset<T, BattleRoomUpsertArgs<ExtArgs>>): Prisma__BattleRoomClient<$Result.GetResult<Prisma.$BattleRoomPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BattleRooms.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomCountArgs} args - Arguments to filter BattleRooms to count.
+     * @example
+     * // Count the number of BattleRooms
+     * const count = await prisma.battleRoom.count({
+     *   where: {
+     *     // ... the filter for the BattleRooms we want to count
+     *   }
+     * })
+    **/
+    count<T extends BattleRoomCountArgs>(
+      args?: Subset<T, BattleRoomCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BattleRoomCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BattleRoom.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BattleRoomAggregateArgs>(args: Subset<T, BattleRoomAggregateArgs>): Prisma.PrismaPromise<GetBattleRoomAggregateType<T>>
+
+    /**
+     * Group by BattleRoom.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BattleRoomGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BattleRoomGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BattleRoomGroupByArgs['orderBy'] }
+        : { orderBy?: BattleRoomGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BattleRoomGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBattleRoomGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BattleRoom model
+   */
+  readonly fields: BattleRoomFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BattleRoom.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BattleRoomClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BattleRoom model
+   */
+  interface BattleRoomFieldRefs {
+    readonly id: FieldRef<"BattleRoom", 'String'>
+    readonly status: FieldRef<"BattleRoom", 'String'>
+    readonly challengeId: FieldRef<"BattleRoom", 'String'>
+    readonly player1Id: FieldRef<"BattleRoom", 'String'>
+    readonly player2Id: FieldRef<"BattleRoom", 'String'>
+    readonly player1Code: FieldRef<"BattleRoom", 'String'>
+    readonly player2Code: FieldRef<"BattleRoom", 'String'>
+    readonly player1Done: FieldRef<"BattleRoom", 'Boolean'>
+    readonly player2Done: FieldRef<"BattleRoom", 'Boolean'>
+    readonly player1Result: FieldRef<"BattleRoom", 'String'>
+    readonly player2Result: FieldRef<"BattleRoom", 'String'>
+    readonly winnerId: FieldRef<"BattleRoom", 'String'>
+    readonly createdAt: FieldRef<"BattleRoom", 'DateTime'>
+    readonly updatedAt: FieldRef<"BattleRoom", 'DateTime'>
+    readonly expiresAt: FieldRef<"BattleRoom", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BattleRoom findUnique
+   */
+  export type BattleRoomFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter, which BattleRoom to fetch.
+     */
+    where: BattleRoomWhereUniqueInput
+  }
+
+  /**
+   * BattleRoom findUniqueOrThrow
+   */
+  export type BattleRoomFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter, which BattleRoom to fetch.
+     */
+    where: BattleRoomWhereUniqueInput
+  }
+
+  /**
+   * BattleRoom findFirst
+   */
+  export type BattleRoomFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter, which BattleRoom to fetch.
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BattleRooms to fetch.
+     */
+    orderBy?: BattleRoomOrderByWithRelationInput | BattleRoomOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BattleRooms.
+     */
+    cursor?: BattleRoomWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BattleRooms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BattleRooms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BattleRooms.
+     */
+    distinct?: BattleRoomScalarFieldEnum | BattleRoomScalarFieldEnum[]
+  }
+
+  /**
+   * BattleRoom findFirstOrThrow
+   */
+  export type BattleRoomFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter, which BattleRoom to fetch.
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BattleRooms to fetch.
+     */
+    orderBy?: BattleRoomOrderByWithRelationInput | BattleRoomOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BattleRooms.
+     */
+    cursor?: BattleRoomWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BattleRooms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BattleRooms.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BattleRooms.
+     */
+    distinct?: BattleRoomScalarFieldEnum | BattleRoomScalarFieldEnum[]
+  }
+
+  /**
+   * BattleRoom findMany
+   */
+  export type BattleRoomFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter, which BattleRooms to fetch.
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BattleRooms to fetch.
+     */
+    orderBy?: BattleRoomOrderByWithRelationInput | BattleRoomOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BattleRooms.
+     */
+    cursor?: BattleRoomWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BattleRooms from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BattleRooms.
+     */
+    skip?: number
+    distinct?: BattleRoomScalarFieldEnum | BattleRoomScalarFieldEnum[]
+  }
+
+  /**
+   * BattleRoom create
+   */
+  export type BattleRoomCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * The data needed to create a BattleRoom.
+     */
+    data: XOR<BattleRoomCreateInput, BattleRoomUncheckedCreateInput>
+  }
+
+  /**
+   * BattleRoom createMany
+   */
+  export type BattleRoomCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BattleRooms.
+     */
+    data: BattleRoomCreateManyInput | BattleRoomCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BattleRoom createManyAndReturn
+   */
+  export type BattleRoomCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * The data used to create many BattleRooms.
+     */
+    data: BattleRoomCreateManyInput | BattleRoomCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BattleRoom update
+   */
+  export type BattleRoomUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * The data needed to update a BattleRoom.
+     */
+    data: XOR<BattleRoomUpdateInput, BattleRoomUncheckedUpdateInput>
+    /**
+     * Choose, which BattleRoom to update.
+     */
+    where: BattleRoomWhereUniqueInput
+  }
+
+  /**
+   * BattleRoom updateMany
+   */
+  export type BattleRoomUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BattleRooms.
+     */
+    data: XOR<BattleRoomUpdateManyMutationInput, BattleRoomUncheckedUpdateManyInput>
+    /**
+     * Filter which BattleRooms to update
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * Limit how many BattleRooms to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BattleRoom updateManyAndReturn
+   */
+  export type BattleRoomUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * The data used to update BattleRooms.
+     */
+    data: XOR<BattleRoomUpdateManyMutationInput, BattleRoomUncheckedUpdateManyInput>
+    /**
+     * Filter which BattleRooms to update
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * Limit how many BattleRooms to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BattleRoom upsert
+   */
+  export type BattleRoomUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * The filter to search for the BattleRoom to update in case it exists.
+     */
+    where: BattleRoomWhereUniqueInput
+    /**
+     * In case the BattleRoom found by the `where` argument doesn't exist, create a new BattleRoom with this data.
+     */
+    create: XOR<BattleRoomCreateInput, BattleRoomUncheckedCreateInput>
+    /**
+     * In case the BattleRoom was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BattleRoomUpdateInput, BattleRoomUncheckedUpdateInput>
+  }
+
+  /**
+   * BattleRoom delete
+   */
+  export type BattleRoomDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+    /**
+     * Filter which BattleRoom to delete.
+     */
+    where: BattleRoomWhereUniqueInput
+  }
+
+  /**
+   * BattleRoom deleteMany
+   */
+  export type BattleRoomDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BattleRooms to delete
+     */
+    where?: BattleRoomWhereInput
+    /**
+     * Limit how many BattleRooms to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BattleRoom without action
+   */
+  export type BattleRoomDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BattleRoom
+     */
+    select?: BattleRoomSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BattleRoom
+     */
+    omit?: BattleRoomOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -6812,6 +8028,27 @@ export namespace Prisma {
   export type ProgressScalarFieldEnum = (typeof ProgressScalarFieldEnum)[keyof typeof ProgressScalarFieldEnum]
 
 
+  export const BattleRoomScalarFieldEnum: {
+    id: 'id',
+    status: 'status',
+    challengeId: 'challengeId',
+    player1Id: 'player1Id',
+    player2Id: 'player2Id',
+    player1Code: 'player1Code',
+    player2Code: 'player2Code',
+    player1Done: 'player1Done',
+    player2Done: 'player2Done',
+    player1Result: 'player1Result',
+    player2Result: 'player2Result',
+    winnerId: 'winnerId',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt',
+    expiresAt: 'expiresAt'
+  };
+
+  export type BattleRoomScalarFieldEnum = (typeof BattleRoomScalarFieldEnum)[keyof typeof BattleRoomScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -6880,6 +8117,13 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Boolean'
+   */
+  export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
@@ -7222,6 +8466,108 @@ export namespace Prisma {
     lastActiveISO?: StringNullableWithAggregatesFilter<"Progress"> | string | null
     completedJson?: StringWithAggregatesFilter<"Progress"> | string
     updatedAt?: DateTimeWithAggregatesFilter<"Progress"> | Date | string
+  }
+
+  export type BattleRoomWhereInput = {
+    AND?: BattleRoomWhereInput | BattleRoomWhereInput[]
+    OR?: BattleRoomWhereInput[]
+    NOT?: BattleRoomWhereInput | BattleRoomWhereInput[]
+    id?: StringFilter<"BattleRoom"> | string
+    status?: StringFilter<"BattleRoom"> | string
+    challengeId?: StringFilter<"BattleRoom"> | string
+    player1Id?: StringFilter<"BattleRoom"> | string
+    player2Id?: StringNullableFilter<"BattleRoom"> | string | null
+    player1Code?: StringFilter<"BattleRoom"> | string
+    player2Code?: StringFilter<"BattleRoom"> | string
+    player1Done?: BoolFilter<"BattleRoom"> | boolean
+    player2Done?: BoolFilter<"BattleRoom"> | boolean
+    player1Result?: StringFilter<"BattleRoom"> | string
+    player2Result?: StringFilter<"BattleRoom"> | string
+    winnerId?: StringNullableFilter<"BattleRoom"> | string | null
+    createdAt?: DateTimeFilter<"BattleRoom"> | Date | string
+    updatedAt?: DateTimeFilter<"BattleRoom"> | Date | string
+    expiresAt?: DateTimeFilter<"BattleRoom"> | Date | string
+  }
+
+  export type BattleRoomOrderByWithRelationInput = {
+    id?: SortOrder
+    status?: SortOrder
+    challengeId?: SortOrder
+    player1Id?: SortOrder
+    player2Id?: SortOrderInput | SortOrder
+    player1Code?: SortOrder
+    player2Code?: SortOrder
+    player1Done?: SortOrder
+    player2Done?: SortOrder
+    player1Result?: SortOrder
+    player2Result?: SortOrder
+    winnerId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    expiresAt?: SortOrder
+  }
+
+  export type BattleRoomWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: BattleRoomWhereInput | BattleRoomWhereInput[]
+    OR?: BattleRoomWhereInput[]
+    NOT?: BattleRoomWhereInput | BattleRoomWhereInput[]
+    status?: StringFilter<"BattleRoom"> | string
+    challengeId?: StringFilter<"BattleRoom"> | string
+    player1Id?: StringFilter<"BattleRoom"> | string
+    player2Id?: StringNullableFilter<"BattleRoom"> | string | null
+    player1Code?: StringFilter<"BattleRoom"> | string
+    player2Code?: StringFilter<"BattleRoom"> | string
+    player1Done?: BoolFilter<"BattleRoom"> | boolean
+    player2Done?: BoolFilter<"BattleRoom"> | boolean
+    player1Result?: StringFilter<"BattleRoom"> | string
+    player2Result?: StringFilter<"BattleRoom"> | string
+    winnerId?: StringNullableFilter<"BattleRoom"> | string | null
+    createdAt?: DateTimeFilter<"BattleRoom"> | Date | string
+    updatedAt?: DateTimeFilter<"BattleRoom"> | Date | string
+    expiresAt?: DateTimeFilter<"BattleRoom"> | Date | string
+  }, "id">
+
+  export type BattleRoomOrderByWithAggregationInput = {
+    id?: SortOrder
+    status?: SortOrder
+    challengeId?: SortOrder
+    player1Id?: SortOrder
+    player2Id?: SortOrderInput | SortOrder
+    player1Code?: SortOrder
+    player2Code?: SortOrder
+    player1Done?: SortOrder
+    player2Done?: SortOrder
+    player1Result?: SortOrder
+    player2Result?: SortOrder
+    winnerId?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    expiresAt?: SortOrder
+    _count?: BattleRoomCountOrderByAggregateInput
+    _max?: BattleRoomMaxOrderByAggregateInput
+    _min?: BattleRoomMinOrderByAggregateInput
+  }
+
+  export type BattleRoomScalarWhereWithAggregatesInput = {
+    AND?: BattleRoomScalarWhereWithAggregatesInput | BattleRoomScalarWhereWithAggregatesInput[]
+    OR?: BattleRoomScalarWhereWithAggregatesInput[]
+    NOT?: BattleRoomScalarWhereWithAggregatesInput | BattleRoomScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"BattleRoom"> | string
+    status?: StringWithAggregatesFilter<"BattleRoom"> | string
+    challengeId?: StringWithAggregatesFilter<"BattleRoom"> | string
+    player1Id?: StringWithAggregatesFilter<"BattleRoom"> | string
+    player2Id?: StringNullableWithAggregatesFilter<"BattleRoom"> | string | null
+    player1Code?: StringWithAggregatesFilter<"BattleRoom"> | string
+    player2Code?: StringWithAggregatesFilter<"BattleRoom"> | string
+    player1Done?: BoolWithAggregatesFilter<"BattleRoom"> | boolean
+    player2Done?: BoolWithAggregatesFilter<"BattleRoom"> | boolean
+    player1Result?: StringWithAggregatesFilter<"BattleRoom"> | string
+    player2Result?: StringWithAggregatesFilter<"BattleRoom"> | string
+    winnerId?: StringNullableWithAggregatesFilter<"BattleRoom"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"BattleRoom"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"BattleRoom"> | Date | string
+    expiresAt?: DateTimeWithAggregatesFilter<"BattleRoom"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -7567,6 +8913,132 @@ export namespace Prisma {
     lastActiveISO?: NullableStringFieldUpdateOperationsInput | string | null
     completedJson?: StringFieldUpdateOperationsInput | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BattleRoomCreateInput = {
+    id?: string
+    status?: string
+    challengeId: string
+    player1Id: string
+    player2Id?: string | null
+    player1Code?: string
+    player2Code?: string
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: string
+    player2Result?: string
+    winnerId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    expiresAt: Date | string
+  }
+
+  export type BattleRoomUncheckedCreateInput = {
+    id?: string
+    status?: string
+    challengeId: string
+    player1Id: string
+    player2Id?: string | null
+    player1Code?: string
+    player2Code?: string
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: string
+    player2Result?: string
+    winnerId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    expiresAt: Date | string
+  }
+
+  export type BattleRoomUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    challengeId?: StringFieldUpdateOperationsInput | string
+    player1Id?: StringFieldUpdateOperationsInput | string
+    player2Id?: NullableStringFieldUpdateOperationsInput | string | null
+    player1Code?: StringFieldUpdateOperationsInput | string
+    player2Code?: StringFieldUpdateOperationsInput | string
+    player1Done?: BoolFieldUpdateOperationsInput | boolean
+    player2Done?: BoolFieldUpdateOperationsInput | boolean
+    player1Result?: StringFieldUpdateOperationsInput | string
+    player2Result?: StringFieldUpdateOperationsInput | string
+    winnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BattleRoomUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    challengeId?: StringFieldUpdateOperationsInput | string
+    player1Id?: StringFieldUpdateOperationsInput | string
+    player2Id?: NullableStringFieldUpdateOperationsInput | string | null
+    player1Code?: StringFieldUpdateOperationsInput | string
+    player2Code?: StringFieldUpdateOperationsInput | string
+    player1Done?: BoolFieldUpdateOperationsInput | boolean
+    player2Done?: BoolFieldUpdateOperationsInput | boolean
+    player1Result?: StringFieldUpdateOperationsInput | string
+    player2Result?: StringFieldUpdateOperationsInput | string
+    winnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BattleRoomCreateManyInput = {
+    id?: string
+    status?: string
+    challengeId: string
+    player1Id: string
+    player2Id?: string | null
+    player1Code?: string
+    player2Code?: string
+    player1Done?: boolean
+    player2Done?: boolean
+    player1Result?: string
+    player2Result?: string
+    winnerId?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    expiresAt: Date | string
+  }
+
+  export type BattleRoomUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    challengeId?: StringFieldUpdateOperationsInput | string
+    player1Id?: StringFieldUpdateOperationsInput | string
+    player2Id?: NullableStringFieldUpdateOperationsInput | string | null
+    player1Code?: StringFieldUpdateOperationsInput | string
+    player2Code?: StringFieldUpdateOperationsInput | string
+    player1Done?: BoolFieldUpdateOperationsInput | boolean
+    player2Done?: BoolFieldUpdateOperationsInput | boolean
+    player1Result?: StringFieldUpdateOperationsInput | string
+    player2Result?: StringFieldUpdateOperationsInput | string
+    winnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BattleRoomUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    challengeId?: StringFieldUpdateOperationsInput | string
+    player1Id?: StringFieldUpdateOperationsInput | string
+    player2Id?: NullableStringFieldUpdateOperationsInput | string | null
+    player1Code?: StringFieldUpdateOperationsInput | string
+    player2Code?: StringFieldUpdateOperationsInput | string
+    player1Done?: BoolFieldUpdateOperationsInput | boolean
+    player2Done?: BoolFieldUpdateOperationsInput | boolean
+    player1Result?: StringFieldUpdateOperationsInput | string
+    player2Result?: StringFieldUpdateOperationsInput | string
+    winnerId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -7948,6 +9420,73 @@ export namespace Prisma {
     _max?: NestedIntFilter<$PrismaModel>
   }
 
+  export type BoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type BattleRoomCountOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    challengeId?: SortOrder
+    player1Id?: SortOrder
+    player2Id?: SortOrder
+    player1Code?: SortOrder
+    player2Code?: SortOrder
+    player1Done?: SortOrder
+    player2Done?: SortOrder
+    player1Result?: SortOrder
+    player2Result?: SortOrder
+    winnerId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    expiresAt?: SortOrder
+  }
+
+  export type BattleRoomMaxOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    challengeId?: SortOrder
+    player1Id?: SortOrder
+    player2Id?: SortOrder
+    player1Code?: SortOrder
+    player2Code?: SortOrder
+    player1Done?: SortOrder
+    player2Done?: SortOrder
+    player1Result?: SortOrder
+    player2Result?: SortOrder
+    winnerId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    expiresAt?: SortOrder
+  }
+
+  export type BattleRoomMinOrderByAggregateInput = {
+    id?: SortOrder
+    status?: SortOrder
+    challengeId?: SortOrder
+    player1Id?: SortOrder
+    player2Id?: SortOrder
+    player1Code?: SortOrder
+    player2Code?: SortOrder
+    player1Done?: SortOrder
+    player2Done?: SortOrder
+    player1Result?: SortOrder
+    player2Result?: SortOrder
+    winnerId?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    expiresAt?: SortOrder
+  }
+
+  export type BoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
+  }
+
   export type AccountCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -8138,6 +9677,10 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutProgressInput, UserUpdateWithoutProgressInput>, UserUncheckedUpdateWithoutProgressInput>
   }
 
+  export type BoolFieldUpdateOperationsInput = {
+    set?: boolean
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -8324,6 +9867,19 @@ export namespace Prisma {
     gt?: number | FloatFieldRefInput<$PrismaModel>
     gte?: number | FloatFieldRefInput<$PrismaModel>
     not?: NestedFloatFilter<$PrismaModel> | number
+  }
+
+  export type NestedBoolFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolFilter<$PrismaModel> | boolean
+  }
+
+  export type NestedBoolWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: boolean | BooleanFieldRefInput<$PrismaModel>
+    not?: NestedBoolWithAggregatesFilter<$PrismaModel> | boolean
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBoolFilter<$PrismaModel>
+    _max?: NestedBoolFilter<$PrismaModel>
   }
 
   export type AccountCreateWithoutUserInput = {

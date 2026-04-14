@@ -168,6 +168,24 @@ exports.Prisma.ProgressScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BattleRoomScalarFieldEnum = {
+  id: 'id',
+  status: 'status',
+  challengeId: 'challengeId',
+  player1Id: 'player1Id',
+  player2Id: 'player2Id',
+  player1Code: 'player1Code',
+  player2Code: 'player2Code',
+  player1Done: 'player1Done',
+  player2Done: 'player2Done',
+  player1Result: 'player1Result',
+  player2Result: 'player2Result',
+  winnerId: 'winnerId',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  expiresAt: 'expiresAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -189,7 +207,8 @@ exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   VerificationToken: 'VerificationToken',
-  Progress: 'Progress'
+  Progress: 'Progress',
+  BattleRoom: 'BattleRoom'
 };
 
 /**

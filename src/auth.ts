@@ -33,6 +33,14 @@ const authOptions = {
       clientSecret: getEnv("AUTH_GITHUB_SECRET"),
     }),
   ],
+  callbacks: {
+    async session({ session, user }: { session: any; user: any }) {
+      if (session.user && user) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
+  },
   pages: {
     signIn: "/login",
   },

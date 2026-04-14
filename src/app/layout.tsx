@@ -18,6 +18,9 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        <script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+      </head>
       <body className={`${inter.variable} ${jetbrains.variable} bg-edu-bg text-edu-textPrimary font-sans antialiased min-h-screen selection:bg-edu-primary selection:text-white`}>
         <Providers>{children}</Providers>
       </body>
