@@ -81,7 +81,7 @@ export const content: Content = {
           type: "explain",
           title: "Sintaks & Komentar",
           markdown:
-            "Python menggunakan **Indentasi** (spasi di awal baris) untuk menentukan blok kode. Ini berbeda dengan bahasa lain yang menggunakan kurung kurawal `{}`.\n\nContoh:\n```py\ndef fungsi():\n    # Ini adalah indentasi (4 spasi)\n    return \"Halo\"\n```\n\nKomentar dimulai dengan simbol `#` dan akan diabaikan oleh Python. Gunakan ini untuk memberi catatan pada kodemu!",
+            "Selamat datang di dunia Python! 🐍\n\nPython adalah bahasa yang sangat populer karena **mudah dibaca** dan **kekuataannya**. Salah satu ciri khas utamanya adalah penggunaan **Indentasi**.\n\n### 1. Indentasi (Spasi)\nDi bahasa lain, kita sering melihat `{ }`. Di Python, kita menggunakan spasi di awal baris untuk menentukan 'milik siapa' sebuah kode tersebut.\n```py\ndef perkenalan():\n    # Kode ini masuk ke dalam fungsi perkenalan karena menjorok\n    print(\"Halo, aku Python!\")\n```\n\n### 2. Komentar\nKomentar dimulai dengan simbol `#`. Semua yang ada setelah simbol ini di baris tersebut akan **diabaikan** oleh komputer. Gunakan ini untuk menjelaskan isi kodemu agar tidak lupa!",
         },
         {
           id: "py-l1-s2",
@@ -108,7 +108,7 @@ export const content: Content = {
           type: "explain",
           title: "Variabel & Penamaan",
           markdown:
-            "Variabel adalah wadah untuk menyimpan data. Di Python, kamu tidak perlu menentukan tipe data secara manual.\n\nAturan Nama Variabel:\n1. Harus dimulai dengan huruf atau underscore (`_`).\n2. Tidak boleh dimulai dengan angka.\n3. Case-sensitive (Variabel `nama` berbeda dengan `Nama`).\n\nKamu juga bisa mengisi banyak variabel sekaligus:\n```py\nx, y, z = \"Apel\", \"Mangga\", \"Jeruk\"\n```",
+            "Variabel adalah **wadah** bayangan untuk menyimpan nilai. Bayangkan variabel sebagai sebuah kotak dengan label nama di luarnya.\n\n### Aturan Main Nama Variabel:\n*   **Mulai dengan huruf** (`a-z`) atau garis bawah (`_`).\n*   **Tidak boleh** mulai dengan angka.\n*   **Case-Sensitive**: `nama` dan `Nama` adalah dua kotak yang berbeda!\n\n### Trik Cepat: Multiple Assignment\nKamu bisa mengisi banyak kotak sekaligus hanya dalam satu baris:\n```py\nx, y, z = \"Merah\", \"Kuning\", \"Hijau\"\n```\nIni membuat kodemu terlihat lebih bersih dan profesional! ✨",
         },
         {
           id: "py-l2-s2",
@@ -135,7 +135,7 @@ export const content: Content = {
           type: "explain",
           title: "Tipe Data & Angka",
           markdown:
-            "Python memiliki berbagai tipe data bawaan. Kamu bisa mengecek tipe data menggunakan fungsi `type()`.\n\nContoh Tipe Data:\n- `int`: Angka bulat (1, 10, -5).\n- `float`: Angka desimal (3.5, -2.1).\n- `str`: Teks (\"Halo\").\n- `bool`: Logika (`True` atau `False`).\n\nOperator Aritmatika:\n- `+`, `-`, `*`, `/` (dasar)\n- `%` (sisa bagi)\n- `**` (pangkat, contoh: `5 ** 2` adalah 25)\n- `//` (pembagian bulat)",
+            "Python sangat pintar mengenali jenis data yang kamu simpan. Berikut adalah 'pemeran utama' dalam tipe data:\n\n*   **int**: Bilangan bulat (contoh: `10`, `-5`).\n*   **float**: Bilangan desimal (contoh: `3.14`, `1.0`).\n*   **str**: Teks atau String (harus diapit tanda kutip `\"` atau `'`).\n*   **bool**: Logika benar/salah (`True` atau `False`).\n\n### Operator Matematika Canggih:\nSelain `+` dan `-`, perhatikan ini:\n- `**` : Pangkat (Contoh: `5 ** 2` hasilnya 25).\n- `%` : Modulo (Sisa bagi, contoh: `10 % 3` hasilnya 1).\n- `//` : Floor Division (Pembagian bulat, mengabaikan koma).",
         },
         {
           id: "py-l3-s2",
@@ -803,7 +803,7 @@ export const content: Content = {
           type: "explain",
           title: "Mengenal Set",
           markdown:
-            "Set digunakan untuk menyimpan banyak item dalam satu variabel. Set tidak berurutan, tidak dapat diubah (tapi bisa tambah/hapus), dan tidak terindeks.\n\n**Penting:** Set tidak mengizinkan nilai duplikat.\n\n```py\nmyset = {\"apple\", \"banana\", \"cherry\"}\n```",
+            "Set adalah koleksi item yang **unik** dan **tidak berurutan**. Bayangkan Set seperti sebuah kantong di mana kamu melempar barang-barang tanpa mempedulikan urutannya.\n\n### Karakteristik Set:\n*   **Unik**: Tidak boleh ada duplikat. Jika kamu memasukkan 'Apel' dua kali, Set hanya akan menyimpan satu.\n*   **Unordered**: Tidak ada urutan pasti (indeks `[0]` tidak akan bekerja).\n*   **Unchangeable**: Kamu tidak bisa mengecilkan/mengubah item yang sudah ada, tapi kamu bisa tambah atau hapus item baru.\n\n```py\nmyset = {\"apple\", \"banana\", \"cherry\"}\n```",
         },
         {
           id: "py-l27-s2",
@@ -831,7 +831,7 @@ export const content: Content = {
           type: "explain",
           title: "Membuat Fungsi",
           markdown:
-            "Fungsi adalah blok kode yang hanya berjalan saat dipanggil. Kamu dapat mengirimkan data, yang dikenal sebagai parameter, ke dalam fungsi.\n\n```py\ndef my_function(fname):\n  print(fname + \" Refsnes\")\n```",
+            "Fungsi adalah **mesin** yang bisa kamu panggil kapan saja untuk melakukan tugas tertentu. Daripada menulis kode yang sama berulang kali, kita cukup membungkusnya dalam fungsi.\n\n### Cara Membuat Fungsi:\nGunakan kata kunci `def` diikuti nama fungsi dan kurung `()`.\n\n```py\ndef sapa_teman(nama):\n  # Mesin ini akan menyapa siapapun yang diinput\n  print(f\"Halo {nama}, senang bertemu denganmu!\")\n```\n\nIngat, fungsi tidak akan berjalan sebelum kamu **memanggilnya** (contoh: `sapa_teman(\"Budi\")`)!",
         },
         {
           id: "py-l28-s2",
@@ -1160,7 +1160,7 @@ export const content: Content = {
           type: "explain",
           title: "Blueprint Objek",
           markdown:
-            "Python adalah bahasa pemrograman berorientasi objek. Cetak biru untuk membuat objek adalah **Class**.\n\n```py\nclass MyClass:\n  x = 5\n\np1 = MyClass()\nprint(p1.x)\n```",
+            "Selamat datang di dunia OOP! 🏗️\n\nClass adalah **Cetak Biru** (Blueprint) untuk menciptakan sesuatu. Jika kamu ingin membangun banyak rumah, kamu tidak membangunnya dari nol satu-satu, tapi kamu membuat satu denah (Class) lalu mencetaknya berkali-kali menjadi rumah nyata (Object).\n\n```py\nclass Rumah:\n  warna = \"Putih\"\n\n# Memasuki proses pembangunan objek\nrumah_budi = Rumah()\nprint(rumah_budi.warna) # Output: Putih\n```",
         },
         {
           id: "py-l40-s2",
@@ -1187,7 +1187,7 @@ export const content: Content = {
           type: "explain",
           title: "Inisialisasi",
           markdown:
-            "Gunakan fungsi `__init__()` untuk menetapkan nilai ke properti objek saat objek dibuat.\n\n```py\nclass Person:\n  def __init__(self, name, age):\n    self.name = name\n    self.age = age\n```",
+            "Ini adalah bagian terpenting dari sebuah Class. Fungsi `__init__` adalah fungsi yang otomatis berjalan saat objek pertama kali diciptakan (Lahir).\n\nBiasanya kita menggunakannya untuk memberikan 'identitas' awal pada objek kita.\n\n```py\nclass Kucing:\n  def __init__(self, nama, warna):\n    self.nama = nama\n    self.warna = warna\n\nmiaw = Kucing(\"Mpuss\", \"Orange\")\nprint(miaw.nama) # Output: Mpuss\n```\n`self` merujuk pada objek itu sendiri agar Python tidak bingung kotak mana yang harus diisi.",
         },
         {
           id: "py-l41-s2",
@@ -1294,7 +1294,8 @@ export const content: Content = {
           id: "py-l45-s1",
           type: "explain",
           title: "Logic Kalkulator",
-          markdown: "Proyek pertama: membuat kalkulator dalam bentuk class. Ini menggabungkan logic basic dan OOP.",
+          markdown:
+            "Proyek pertama kita! 🧮\n\nKita akan membuat mesin kalkulator menggunakan teknik OOP. Kalkulator ini akan memiliki kemampuan dasar seperti penjumlahan dan pengurangan. \n\nIni adalah cara terbaik untuk melatih logika berpikirmu tentang bagaimana 'objek' bisa menyimpan kemampuan (methods) dan data.",
         },
         {
           id: "py-l45-s2",
@@ -1320,7 +1321,8 @@ export const content: Content = {
           id: "py-l46-s1",
           type: "explain",
           title: "Manajemen Saldo",
-          markdown: "Proyek kedua: Simulasi akun bank sederhanan dengan sistem deposit.",
+          markdown:
+            "Sistem Perbankan Digital sederhana! 🏦\n\nDalam proyek ini, kamu akan mensimulasikan bagaimana akun bank bekerja. Setiap akun memiliki saldo (`balance`) dan pemilik bisa menyetor uang (`deposit`).\n\nDi sini kamu akan belajar bagaimana method dalam class bisa memanipulasi data yang ada di dalam class tersebut secara aman.",
         },
         {
           id: "py-l46-s2",
@@ -1346,7 +1348,8 @@ export const content: Content = {
           id: "py-l47-s1",
           type: "explain",
           title: "Keamanan Teks",
-          markdown: "Proyek ketiga: Memastikan password memiliki panjang minimal dan mengandung simbol.",
+          markdown:
+            "Keamanan Cyber 101! 🛡️\n\nKamu akan membangun sistem pengecekan password otomatis. Sebuah password yang kuat tidak hanya panjang, tapi juga harus memiliki karakter spesial.\n\nLogika AND dan fungsi `len()` akan menjadi senjata utamamu di sini.",
         },
         {
           id: "py-l47-s2",

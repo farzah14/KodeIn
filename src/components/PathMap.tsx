@@ -3,37 +3,34 @@
 import Link from "next/link";
 import { content } from "@/lib/content";
 import { useProgress } from "@/lib/useProgress";
-import { CheckCircle2, Lock, Play, Circle } from "lucide-react";
+import { CheckCircle2, Lock, Play, GraduationCap, Trophy } from "lucide-react";
 
 type NodeState = "completed" | "available" | "locked";
 
 const stateConfig = {
   completed: {
-    icon: <CheckCircle2 size={24} className="text-edu-success" />,
-    border: "border-edu-success",
-    bg: "bg-edu-success/10",
-    badgeBg: "bg-edu-success/20",
-    badgeText: "bg-edu-success/10 text-edu-success border-edu-success/30",
-    textLabel: "Cleared",
-    textClass: "text-edu-success",
+    icon: <Trophy size={20} className="text-emerald-500" />,
+    border: "border-emerald-200 dark:border-emerald-800/50",
+    bg: "bg-emerald-50 dark:bg-emerald-950/20",
+    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200/50",
+    label: "Mastered",
+    progressBg: "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]",
   },
   available: {
-    icon: <Play size={20} fill="currentColor" strokeWidth={0} className="text-edu-primary" />,
-    border: "border-edu-primary ring-2 ring-edu-primary/20",
-    bg: "bg-edu-primary/10",
-    badgeBg: "bg-edu-primary/20",
-    badgeText: "bg-edu-primary/10 text-edu-primary border-edu-primary/30",
-    textLabel: "Available",
-    textClass: "text-edu-primary",
+    icon: <Play size={18} fill="currentColor" strokeWidth={0} className="text-indigo-600" />,
+    border: "border-indigo-200 dark:border-indigo-800/50 ring-4 ring-indigo-50 dark:ring-indigo-900/10",
+    bg: "bg-indigo-50/50 dark:bg-indigo-950/20",
+    badge: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border-indigo-200/50",
+    label: "Current",
+    progressBg: "bg-indigo-600 shadow-[0_0_10px_rgba(79,70,229,0.3)]",
   },
   locked: {
-    icon: <Lock size={18} className="text-edu-textMuted" />,
-    border: "border-edu-border",
-    bg: "bg-edu-surface2",
-    badgeBg: "bg-edu-border",
-    badgeText: "bg-edu-surface2 text-edu-textMuted border-edu-border",
-    textLabel: "Locked",
-    textClass: "text-edu-textMuted",
+    icon: <Lock size={16} className="text-gray-400" />,
+    border: "border-gray-100 dark:border-zinc-800",
+    bg: "bg-gray-50/50 dark:bg-zinc-900/30",
+    badge: "bg-gray-100 text-gray-500 dark:bg-zinc-800/50 dark:text-zinc-500 border-gray-200/50",
+    label: "Locked",
+    progressBg: "bg-gray-200 dark:bg-zinc-800",
   },
 };
 
@@ -49,49 +46,52 @@ function LessonNode({
   completedSteps: number;
   totalSteps: number;
   pct: number;
-  index: number;
 }) {
   const cfg = stateConfig[state];
 
   const card = (
     <div
-      className={`group relative flex items-center gap-3 sm:gap-6 p-4 sm:p-5 rounded-2xl border transition-all duration-300 ${
-        state === "available" ? "bg-edu-surface1 border-edu-primary hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(99,102,241,0.2)] cursor-pointer" : ""
-      } ${
-        state === "completed" ? "bg-edu-surface1 border-edu-success hover:-translate-y-1 hover:shadow-[0_10px_30px_-10px_rgba(16,185,129,0.1)] cursor-pointer" : ""
-      } ${
-        state === "locked" ? "bg-edu-bg border-edu-border opacity-75 cursor-not-allowed" : ""
-      }`}
+      className={`group relative flex items-center gap-5 p-6 rounded-[2rem] border transition-all duration-500 ${
+        state !== "locked" 
+          ? "bg-white dark:bg-zinc-950 hover:bg-white dark:hover:bg-zinc-900 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-indigo-500/10 cursor-pointer" 
+          : "bg-gray-50/40 dark:bg-zinc-900/20 border-dashed opacity-60 cursor-not-allowed"
+      } ${cfg.border} overflow-hidden`}
     >
+      {/* State Indicator Bar */}
+      {state !== 'locked' && (
+        <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${state === 'completed' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+      )}
+
       {/* Icon Circle */}
-      <div className={`flex shrink-0 items-center justify-center w-10 h-10 sm:w-14 sm:h-14 rounded-full border ${cfg.bg} ${cfg.border}`}>
-        {state === "available" ? <Play size={18} fill="currentColor" strokeWidth={0} className="text-edu-primary sm:w-5 sm:h-5" /> : 
-         state === "completed" ? <CheckCircle2 size={20} className="text-edu-success sm:w-6 sm:h-6" /> :
-         <Lock size={16} className="text-edu-textMuted sm:w-[18px] sm:h-[18px]" />}
+      <div className={`flex shrink-0 items-center justify-center w-14 h-14 rounded-2xl border transition-transform duration-500 group-hover:scale-110 ${cfg.bg} ${cfg.border}`}>
+        {cfg.icon}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <div className="flex flex-col sm:flex-row sm:items-center py-0.5 justify-between gap-1 sm:gap-2 mb-1.5 sm:mb-2">
-          <h3 className="text-sm sm:text-lg font-bold text-edu-textPrimary truncate transition-colors group-hover:text-black">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <h3 className="text-lg font-black text-gray-900 dark:text-white truncate tracking-tight transition-colors group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
             {lesson.title}
           </h3>
-          <span className={`inline-flex self-start shrink-0 px-2 py-0.5 rounded-full border text-[10px] sm:text-xs font-bold uppercase tracking-wider ${cfg.badgeText}`}>
-            {cfg.textLabel}
+          <span className={`px-2.5 py-0.5 rounded-full border text-[9px] font-black uppercase tracking-[0.15em] shrink-0 ${cfg.badge}`}>
+            {cfg.label}
           </span>
         </div>
         
-        <div className="flex items-center justify-between text-xs font-semibold text-edu-textSecondary uppercase tracking-widest mb-3 transition-colors group-hover:text-black/80">
-           <span>{completedSteps}/{totalSteps} Steps</span>
-           <span>{pct}%</span>
+        <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+           <span className="flex items-center gap-1.5">
+             <div className={`w-1 h-1 rounded-full ${state === 'completed' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+             {completedSteps} / {totalSteps} Tasks
+           </span>
+           <span className={state === 'completed' ? 'text-emerald-500' : state === 'available' ? 'text-indigo-600' : ''}>
+             {pct}% Complete
+           </span>
         </div>
 
-        {/* Progress Bar */}
-        <div className="h-1.5 w-full rounded-full bg-edu-surface2 overflow-hidden">
+        {/* Progress Bar Container */}
+        <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden shadow-inner">
           <div
-            className={`h-full transition-all duration-700 ease-out rounded-full ${
-              state === "completed" ? "bg-edu-success" : "bg-edu-primary"
-            }`}
+            className={`h-full transition-all duration-1000 ease-out rounded-full ${cfg.progressBg}`}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -111,7 +111,7 @@ export function PathMap() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-20 pb-20 max-w-5xl mx-auto">
       {units.map((unit) => {
         const lessons = unit.lessonIds
           .map((lid) => content.lessons[lid])
@@ -129,62 +129,56 @@ export function PathMap() {
         return (
           <section
             key={unit.id}
-            className="bg-edu-surface1 border border-edu-border rounded-2xl sm:rounded-3xl p-4 sm:p-10"
+            className="group/unit relative"
           >
-            {/* Unit Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6 mb-8 sm:mb-10 pb-6 sm:pb-8 border-b border-edu-border">
-              <div className="min-w-0">
-                <div className="flex items-center gap-3 mb-1.5 sm:mb-2">
-                  <span className="text-[10px] sm:text-sm font-bold text-edu-primary uppercase tracking-[0.1em]">
-                    Unit {unit.order}
-                  </span>
-                  {unitDone && (
-                    <span className="px-1.5 py-0.5 rounded bg-edu-success/10 text-edu-success text-[10px] font-bold uppercase tracking-wider">
-                      Cleared
-                    </span>
-                  )}
+            {/* Unit Header Section */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-10 px-4">
+              <div className="flex-1 space-y-3">
+                <div className="flex items-center gap-3">
+                   <div className="p-2.5 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
+                      <GraduationCap size={20} />
+                   </div>
+                   <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-[0.2em]">
+                     Unit 0{unit.order}
+                   </span>
                 </div>
-                <h2 className="text-xl sm:text-3xl font-extrabold text-edu-textPrimary leading-tight">
+                <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
                   {unit.title}
                 </h2>
+                <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" />
               </div>
 
-              {/* Unit Progress Display */}
-              <div className="flex flex-col w-full md:w-48 gap-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-edu-textSecondary uppercase tracking-widest">
-                  <span>Progress</span>
-                  <span className={unitDone ? "text-edu-success" : "text-edu-textPrimary"}>{unitPct}%</span>
+              {/* Unit Progress Card */}
+              <div className="bg-white/50 dark:bg-zinc-900/50 backdrop-blur-sm border border-gray-100 dark:border-zinc-800 p-5 rounded-3xl min-w-[240px] shadow-sm">
+                <div className="flex items-center justify-between text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  <span>Unit Completion</span>
+                  <span className={unitDone ? "text-emerald-500" : "text-indigo-600"}>{unitPct}%</span>
                 </div>
-                <div className="h-2 w-full rounded-full bg-edu-surface2 overflow-hidden border border-edu-border">
+                <div className="h-2 w-full rounded-full bg-gray-100 dark:bg-zinc-800 overflow-hidden shadow-inner">
                   <div
-                    className={`h-full transition-all duration-1000 ease-out rounded-full ${unitDone ? "bg-edu-success" : "bg-edu-primary"}`}
+                    className={`h-full transition-all duration-1000 ease-out rounded-full ${unitDone ? "bg-emerald-500" : "bg-indigo-600"}`}
                     style={{ width: `${unitPct}%` }}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Lessons */}
-            {lessons.length === 0 ? (
-              <div className="rounded-2xl border-2 border-dashed border-edu-border bg-edu-surface2/50 p-12 text-center text-sm font-semibold text-edu-textMuted uppercase tracking-widest">
-                Stages Coming Soon...
-              </div>
-            ) : (
-              <div className="grid gap-6">
-                {lessons.map((lesson, idx) => {
+            {/* Lessons Grid */}
+            <div className="grid gap-6 px-4">
+              {lessons.length === 0 ? (
+                <div className="rounded-[2.5rem] border-2 border-dashed border-gray-200 dark:border-zinc-800 bg-gray-50/50 dark:bg-zinc-900/20 p-16 text-center">
+                  <span className="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Curriculum Pending...</span>
+                </div>
+              ) : (
+                lessons.map((lesson, idx) => {
                   const totalSteps = lesson.steps.length;
                   const completedSteps = lesson.steps.filter((s) => p.completedStepIds[s.id]).length;
                   const done = completedSteps === totalSteps;
 
                   const prev = lessons[idx - 1];
-                  const prevDone = !prev
-                    ? true
-                    : prev.steps.every((s) => p.completedStepIds[s.id]);
-
+                  const prevDone = !prev ? true : prev.steps.every((s) => p.completedStepIds[s.id]);
                   const state: NodeState = done ? "completed" : prevDone ? "available" : "locked";
-
-                  const pct =
-                    totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
+                  const pct = totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
 
                   return (
                     <LessonNode
@@ -194,12 +188,16 @@ export function PathMap() {
                       completedSteps={completedSteps}
                       totalSteps={totalSteps}
                       pct={pct}
-                      index={idx}
                     />
                   );
-                })}
-              </div>
-            )}
+                })
+              )}
+            </div>
+            
+            {/* Decorative background number */}
+            <div className="absolute -top-12 -left-12 text-[12rem] font-black text-gray-100 dark:text-zinc-900/20 -z-10 select-none pointer-events-none">
+              {unit.order}
+            </div>
           </section>
         );
       })}

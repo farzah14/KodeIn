@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Book } from "lucide-react";
+import { Book, CodeIcon, Terminal, RotateCcw, PlayCircle, CheckCircle2 } from "lucide-react";
 import { CodeEditor } from "@/components/CodeEditor";
 import { runWithPiston } from "@/lib/runner/pistonRunner";
 import { LessonStep } from "@/lib/types";
@@ -19,15 +19,12 @@ export function CodeStep({
   onPassed: () => void;
   isCompleted?: boolean;
   locked?: boolean;
-
-  // === BARU ===
   showBack?: boolean;
   onBack?: () => void;
 }) {
   const isReadOnly = locked || isCompleted;
-
+  const [editorTheme, setEditorTheme] = useState("system");
   const [code, setCode] = useState(() => step.starterCode);
-
   const [status, setStatus] = useState<"idle" | "checking" | "pass" | "fail">(
     () => (isReadOnly ? "pass" : "idle")
   );
@@ -35,8 +32,6 @@ export function CodeStep({
   const [hintIndex, setHintIndex] = useState(0);
   const [message, setMessage] = useState("");
   const [stdoutStr, setStdoutStr] = useState("");
-  const [isEngineError, setIsEngineError] = useState(false);
-
   const [shakeKey, setShakeKey] = useState(0);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -52,7 +47,6 @@ export function CodeStep({
     setStatus("checking");
     setMessage("");
     setStdoutStr("");
-    setIsEngineError(false);
 
     const res = await runWithPiston({
       language: "python",
@@ -73,7 +67,7 @@ export function CodeStep({
     }
 
     setStatus("fail");
-    setMessage(res.friendlyMessage || "Ada error yang tidak diketahui.");
+    setMessage(res.friendlyMessage || "Ada error pada kodemu. Silakan periksa kembali.");
     setHintIndex((i: number) => Math.min(i + 1, Math.max(step.hints.length - 1, 0)));
     setShakeKey((k: number) => k + 1);
   }
@@ -84,7 +78,6 @@ export function CodeStep({
     setStatus("idle");
     setMessage("");
     setStdoutStr("");
-    setIsEngineError(false);
     setHintIndex(0);
     setShowSuccess(false);
   }
@@ -95,165 +88,202 @@ export function CodeStep({
   }
 
   return (
-    <div className="space-y-6 font-pixel">
-      {/* Prompt card - Quest Book Style */}
-      <div className="pixel-border border-4 bg-white p-6 dark:bg-zinc-900">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-[8px] text-gray-400 mb-2 uppercase">
-              <Book size={12} /> MISSION OBJECTIVE
-            </div>
-            <h3 className="text-lg text-gray-900 dark:text-white leading-tight">
+    <div className="w-full max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
+      {/* Premium Prompt Card */}
+      <div className="rounded-3xl border border-gray-200 bg-white/50 backdrop-blur-xl p-8 dark:border-zinc-800 dark:bg-zinc-950/50 shadow-sm overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-3">
+           <div className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-widest dark:bg-indigo-900/30 dark:text-indigo-400">
+             Python 3.10
+           </div>
+        </div>
+
+        <div className="flex flex-col gap-6">
+          <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400">
+             <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20">
+               <Book size={20} />
+             </div>
+             <span className="text-xs font-black uppercase tracking-[0.1em]">Mission Objective</span>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight">
               {step.title}
             </h3>
-            <div className="mt-4 text-[10px] leading-relaxed text-gray-600 dark:text-gray-300">
+            <div className="text-xl leading-relaxed text-gray-700 dark:text-zinc-300 bg-gray-50/80 dark:bg-zinc-900/50 p-6 rounded-2xl border-l-4 border-indigo-500 shadow-inner">
               {step.prompt}
             </div>
-          </div>
-          <div className="pixel-border border-2 bg-retro-primary text-white px-3 py-1 text-[8px] shrink-0">
-            PYTHON
           </div>
         </div>
       </div>
 
-      {/* Editor & Console Container */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      {/* Editor & Console Workspaces */}
+      <div className="grid lg:grid-cols-2 gap-8 items-stretch">
         
         {/* Editor Side */}
         <div
           key={shakeKey}
-          className={`pixel-border border-4 bg-white p-4 dark:bg-zinc-900 ${
-            status === "fail" ? "animate-shake border-red-500" : ""
+          className={`flex flex-col rounded-3xl border border-gray-200 bg-white shadow-xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden transition-all duration-300 ${
+            status === "fail" ? "animate-shake ring-2 ring-red-500/50" : ""
           }`}
         >
-          <div className="mb-4 flex items-center justify-between border-b-2 border-black/5 pb-2">
-            <div className="text-[10px] text-gray-400 uppercase">EDITOR.EXE</div>
-            <button
-              className="pixel-border border-2 bg-gray-50 px-2 py-1 text-[8px] hover:bg-gray-100 disabled:opacity-50"
-              onClick={onReset}
-              disabled={isReadOnly}
-            >
-              RESET_CODE
-            </button>
+          <div className="px-6 py-4 flex items-center justify-between bg-gray-50/50 dark:bg-zinc-900/50 border-b border-gray-200 dark:border-zinc-800">
+            <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-widest">
+              <CodeIcon size={14} /> Editor
+            </div>
+            <div className="flex items-center gap-4">
+              <select 
+                value={editorTheme}
+                onChange={e => setEditorTheme(e.target.value)}
+                className="appearance-none rounded-lg bg-transparent px-3 py-1 text-[10px] font-black text-gray-400 dark:text-zinc-600 outline-none cursor-pointer hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors uppercase tracking-widest border border-transparent hover:border-gray-200 dark:hover:border-zinc-700"
+              >
+                 <option value="system">Theme: Auto</option>
+                 <option value="dark-pro">Dark Pro</option>
+                 <option value="monokai-pro">Monokai Pro</option>
+                 <option value="monokai-pro-light">Monokai Light</option>
+                 <option value="vs-dark">VS Dark</option>
+              </select>
+              <button
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-500 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                onClick={onReset}
+                disabled={isReadOnly}
+              >
+                <RotateCcw size={12} /> Reset
+              </button>
+            </div>
           </div>
 
-          <div className="h-[400px] pixel-border border-2 overflow-hidden bg-black">
+          <div className="h-[450px] relative">
             <CodeEditor
               value={code}
               onChange={isReadOnly ? () => {} : setCode}
               invertOnDark={false}
+              editorTheme={editorTheme}
             />
           </div>
         </div>
 
-        {/* Output/Console Side - CRT Screen */}
-        <div className="pixel-border border-4 bg-black p-4 text-retro-secondary relative overflow-hidden group">
-           {/* CRT Overlay Effects */}
-           <div className="absolute inset-0 scanlines opacity-10 pointer-events-none"></div>
-           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-retro-secondary/5 to-transparent animate-pulse pointer-events-none"></div>
-           
-           <div className="mb-4 flex items-center justify-between border-b-2 border-white/10 pb-2">
-              <div className="text-[10px] text-white/40 uppercase">CONSOLE_OUTPUT</div>
-              <div className="flex gap-1">
-                 <div className="h-2 w-2 rounded-full bg-red-500/40"></div>
-                 <div className="h-2 w-2 rounded-full bg-retro-accent/40 animate-pulse"></div>
-                 <div className="h-2 w-2 rounded-full bg-retro-secondary/40"></div>
+        {/* Output/Console Side */}
+        <div className="flex flex-col rounded-3xl border border-zinc-800 bg-[#0c0c0e] shadow-2xl overflow-hidden group">
+           <div className="px-6 py-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50">
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 uppercase tracking-widest">
+                 <Terminal size={14} /> Console Output
+              </div>
+              <div className="flex gap-1.5">
+                 <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
+                 <div className="h-2 w-2 rounded-full bg-zinc-700"></div>
+                 <div className={`h-2 w-2 rounded-full ${status === 'checking' ? 'bg-indigo-500 animate-pulse' : 'bg-zinc-700'}`}></div>
               </div>
            </div>
 
-           <div className="h-[400px] overflow-auto font-mono text-sm space-y-4 pr-2">
+           <div className="flex-1 p-8 font-mono text-base space-y-6 overflow-auto custom-scrollbar">
               {status === "idle" && (
-                <div className="text-white/20 animate-pulse">
-                  READY TO EXECUTE... <br />
-                  AWAITING INPUT_
+                <div className="text-zinc-600 flex flex-col items-center justify-center h-full text-center gap-4">
+                  <div className="p-4 rounded-full bg-zinc-900/50">
+                    <PlayCircle size={32} className="opacity-20" />
+                  </div>
+                  <p className="text-sm font-medium opacity-50 uppercase tracking-wider">Awaiting execution...</p>
                 </div>
               )}
 
               {status === "checking" && (
-                <div className="flex items-center gap-3">
-                   <div className="h-3 w-3 border-2 border-retro-secondary border-t-transparent animate-spin"></div>
-                   <span>EXECUTING MISSION...</span>
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-indigo-400">
+                   <div className="h-10 w-10 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin"></div>
+                   <span className="text-sm font-bold uppercase tracking-widest">Running tests...</span>
                 </div>
               )}
 
               {stdoutStr && (
-                <div className="space-y-2">
-                  <div className="text-[8px] text-white/40">-- STDOUT --</div>
-                  <pre className="whitespace-pre-wrap break-all opacity-80">{stdoutStr}</pre>
+                <div className="space-y-3">
+                  <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest opacity-50">Standard Output</div>
+                  <pre className="text-emerald-400 whitespace-pre-wrap break-all leading-relaxed drop-shadow-[0_0_8px_rgba(52,211,153,0.2)]">{stdoutStr}</pre>
                 </div>
               )}
 
               {status === "fail" && (
-                <div className="pixel-border border-2 border-red-500 bg-red-500/10 p-4 text-red-500">
-                  <div className="text-[8px] uppercase mb-1">SYSTEM_ERROR</div>
-                  <p className="text-xs">{message}</p>
-                </div>
-              )}
+                <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
+                  <div className="p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                    <div className="text-[10px] font-black uppercase mb-2 flex items-center gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" /> System Error
+                    </div>
+                    <p className="text-sm font-medium leading-relaxed">{message}</p>
+                  </div>
 
-              {currentHint && status === "fail" && (
-                <div className="pixel-border border-2 border-retro-accent bg-retro-accent/10 p-4 text-retro-accent">
-                   <div className="text-[8px] uppercase mb-1">TIP_FROM_HQ</div>
-                   <p className="text-xs">{currentHint}</p>
+                  {currentHint && (
+                    <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                       <div className="text-[10px] font-black uppercase mb-2 tracking-widest">Hint from HQ</div>
+                       <p className="text-sm font-medium leading-relaxed">{currentHint}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {status === "pass" && (
-                <div className="text-retro-secondary">
-                   <div className="text-[10px] mb-2 font-pixel">MISSION CLEAR!</div>
-                   <p className="opacity-60 text-xs">All test cases passed. Code execution successful.</p>
+                <div className="flex flex-col items-center justify-center h-full gap-4 text-emerald-400 animate-in zoom-in duration-500">
+                   <div className="p-4 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                     <CheckCircle2 size={48} />
+                   </div>
+                   <div className="text-center">
+                     <div className="text-xl font-black tracking-tight mb-1">MISSION CLEAR!</div>
+                     <p className="text-sm text-emerald-500/60 font-medium">Semua test case berhasil dilewati.</p>
+                   </div>
                 </div>
               )}
            </div>
         </div>
       </div>
 
-      {/* Action Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 py-6 border-t-4 border-black/5 dark:border-white/5">
-         <div className="text-[8px] text-gray-400">
-           {status === "pass" ? "[STABLE]" : "[AWAITING_RUN]"}
+      {/* Modern Action Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-8 px-4">
+         <div className="hidden sm:flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 dark:text-zinc-700">
+            <div className={`w-2 h-2 rounded-full ${status === 'pass' ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' : 'bg-gray-300 dark:bg-zinc-800'}`} />
+            System Status: {status === "pass" ? "STABLE" : "READY"}
          </div>
          
-         <div className="flex items-center gap-4">
+         <div className="flex items-center gap-4 w-full sm:w-auto">
             {showBack && onBack && (
-              <button onClick={onBack} className="pixel-btn px-6 py-2 text-[10px]">BACK</button>
+              <button 
+                onClick={onBack} 
+                className="flex-1 sm:flex-none px-8 py-3.5 rounded-2xl border border-gray-200 dark:border-zinc-800 text-sm font-bold hover:bg-gray-50 dark:hover:bg-zinc-900 transition-all active:scale-95"
+              >
+                BACK
+              </button>
             )}
             
             <button
                onClick={onCheck}
                disabled={status === "checking" || status === "pass" || isReadOnly}
-               className={`pixel-btn px-10 py-3 text-[10px] ${
-                 status === "pass" ? "bg-retro-secondary text-white border-retro-secondary" : "bg-retro-primary text-white border-retro-primary"
-               } disabled:opacity-50`}
+               className={`flex-1 sm:flex-none px-12 py-3.5 rounded-2xl text-sm font-black tracking-wide shadow-xl transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${
+                 status === "pass" 
+                  ? "bg-emerald-500 text-white shadow-emerald-500/25" 
+                  : "bg-indigo-600 text-white shadow-indigo-600/25 hover:bg-indigo-700 hover:shadow-indigo-700/40"
+               }`}
             >
-               {status === "checking" ? "CHECKING..." : status === "pass" ? "MISSION_CLEAR" : "CHECK_CODE"}
+               {status === "checking" ? (
+                 <div className="flex items-center gap-2">
+                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   CHECKING...
+                 </div>
+               ) : status === "pass" ? "MISSION CLEAR" : "RUN TESTS"}
             </button>
 
             {status === "pass" && !locked && (
               <button 
                 onClick={onPassed}
-                className="pixel-btn bg-black text-white px-10 py-3 text-[10px] animate-bounce"
+                className="flex-1 sm:flex-none px-12 py-3.5 rounded-2xl bg-gray-900 text-white dark:bg-white dark:text-black text-sm font-black tracking-wide shadow-xl transition-all hover:-translate-y-1 active:scale-95 animate-in slide-in-from-right-4"
               >
-                CONTINUE &gt;&gt;
+                CONTINUE
               </button>
             )}
          </div>
       </div>
-
-      {/* Mini Success Popover */}
-      {showSuccess && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
-           <div className="pixel-border border-4 border-retro-secondary bg-white p-6 shadow-pixel anim-slide-up">
-              <div className="flex items-center gap-6">
-                 <div className="h-12 w-12 bg-retro-secondary text-white grid place-items-center font-pixel text-xl">✓</div>
-                 <div>
-                    <div className="font-pixel text-[10px] text-retro-secondary">LEGENDARY!</div>
-                    <div className="font-pixel text-[8px] text-gray-400 mt-1">+10 XP EARNED</div>
-                 </div>
-                 <button onClick={onContinueAfterSuccess} className="pixel-btn px-4 py-2 text-[8px] bg-black text-white">CONTINUE</button>
-              </div>
-           </div>
-        </div>
-      )}
+      
+      <style jsx>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #444; }
+      `}</style>
     </div>
   );
 }

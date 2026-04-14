@@ -27,7 +27,9 @@ export async function POST(req: NextRequest) {
     if (language === "python" || language === "py") {
       filePath = path.join(tmpDir, `main_${sessionId}.py`);
       fs.writeFileSync(filePath, content);
-      runCmd = `python "${filePath}"`;
+      
+      // Coba python3 dulu, jika tidak ada baru python
+      runCmd = `python3 "${filePath}" || python "${filePath}"`;
     } else if (language === "javascript" || language === "js") {
       filePath = path.join(tmpDir, `main_${sessionId}.js`);
       fs.writeFileSync(filePath, content);
@@ -88,7 +90,7 @@ except Exception as e:
 `;
       filePath = path.join(tmpDir, `main_${sessionId}.py`);
       fs.writeFileSync(filePath, sqlHarness);
-      runCmd = `python "${filePath}"`;
+      runCmd = `python3 "${filePath}" || python "${filePath}"`;
     } else {
       return NextResponse.json({
         run: {

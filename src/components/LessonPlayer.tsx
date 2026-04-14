@@ -8,6 +8,7 @@ import { ExplainStep } from "@/components/steps/ExplainStep";
 import { CodeStep } from "@/components/steps/CodeStep";
 import { useProgress } from "@/lib/useProgress";
 import { completeStep } from "@/lib/progressStore";
+import { content } from "@/lib/content";
 
 export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const router = useRouter();
@@ -36,6 +37,34 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   const [isSaving, setIsSaving] = useState(false);
   const [isFinishing, setIsFinishing] = useState(false);
+
+  // === NEXT LESSON LOGIC ===
+  const nextLessonId = useMemo(() => {
+    // Collect all lesson IDs in order
+    const allLessonIds: string[] = [];
+    content.course.unitIds.forEach(uId => {
+      content.units[uId].lessonIds.forEach(lId => {
+        allLessonIds.push(lId);
+      });
+    });
+
+    const currentPos = allLessonIds.indexOf(lesson.id);
+    if (currentPos !== -1 && currentPos < allLessonIds.length - 1) {
+      return allLessonIds[currentPos + 1];
+    }
+    return null;
+  }, [lesson.id]);
+
+  const handleNextLesson = () => {
+    if (nextLessonId) {
+      router.push(`/learn/${nextLessonId}`);
+      setIdx(0);
+      setHasUserNavigated(false);
+      setIsFinishing(false);
+    } else {
+      router.push("/learn");
+    }
+  };
 
   useEffect(() => {
     if (isLessonCompleted) {
@@ -133,11 +162,30 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
             <div className="text-xs font-bold uppercase tracking-widest text-edu-success mb-2">Lesson Completed</div>
             <h2 className="text-3xl font-bold text-white mb-8">{lesson.title}</h2>
             
-            <div className="w-64 max-w-full">
-              <div className="h-2 w-full rounded-full bg-edu-surface2 overflow-hidden">
-                <div className="finish-bar h-full bg-edu-success rounded-full" />
-              </div>
-              <div className="mt-3 text-center text-xs font-medium text-edu-textSecondary">Returning to map...</div>
+            <div className="mt-3 text-center text-xs font-medium text-edu-textSecondary italic opacity-60">Lesson mastery complete!</div>
+
+            <div className="mt-10 flex flex-col sm:flex-row gap-4">
+              <button 
+                onClick={() => router.push("/learn")}
+                className="px-8 py-3 rounded-2xl border border-white/20 text-white/60 font-black text-sm hover:bg-white/5 transition-all"
+              >
+                BACK TO MAP
+              </button>
+              {nextLessonId ? (
+                <button 
+                  onClick={handleNextLesson}
+                  className="px-12 py-3 rounded-2xl bg-white text-black font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all"
+                >
+                  NEXT LESSON
+                </button>
+              ) : (
+                <button 
+                  onClick={() => router.push("/learn")}
+                  className="px-12 py-3 rounded-2xl bg-indigo-500 text-white font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all"
+                >
+                  FINISH COURSE
+                </button>
+              )}
             </div>
           </div>
           <style jsx>{`
@@ -150,31 +198,31 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
       )}
 
       {/* Lesson Progress Header */}
-      <div className="w-full max-w-5xl mx-auto bg-edu-surface1 border border-edu-border rounded-xl p-6 md:p-8 mt-6">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div className="w-full max-w-5xl mx-auto bg-white/50 backdrop-blur-md border border-gray-200 dark:border-zinc-800 rounded-3xl p-8 md:p-10 shadow-sm mt-8">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
           
           <div className="flex-1">
-             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.08em] text-edu-primary mb-2">
+             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-3">
                 <Code2 size={16} /> Current Lesson
              </div>
-             <h1 className="text-2xl md:text-3xl font-bold text-edu-textPrimary leading-tight">
+             <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white leading-tight tracking-tight">
                {lesson.title}
              </h1>
           </div>
 
-          <div className="w-full md:w-auto flex flex-col items-start md:items-end gap-3 min-w-[200px]">
+          <div className="w-full md:w-auto flex flex-col items-start md:items-end gap-3 min-w-[240px]">
              <div className="flex items-center justify-between w-full">
-                <div className="text-xs font-semibold text-edu-textSecondary uppercase tracking-widest">Progress</div>
-                <div className="text-sm font-bold text-edu-textPrimary">{header.pct}%</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mastery Progress</div>
+                <div className="text-sm font-black text-indigo-600 dark:text-indigo-400">{header.pct}%</div>
              </div>
-             <div className="h-2.5 w-full rounded-full bg-edu-surface2 border border-edu-border overflow-hidden">
+             <div className="h-3 w-full rounded-full bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 overflow-hidden shadow-inner">
                 <div 
-                  className="h-full bg-edu-xp transition-all duration-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-700 rounded-full shadow-[0_0_12px_rgba(99,102,241,0.4)]"
                   style={{ width: `${header.pct}%` }}
                 />
              </div>
-             <div className="text-xs text-edu-textMuted font-medium w-full text-right">
-               Step {header.currentIndex} of {header.total}
+             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider w-full text-right">
+               Step {header.currentIndex} <span className="opacity-30">/</span> {header.total}
              </div>
           </div>
         </div>
@@ -188,16 +236,24 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
             <div className="flex items-center justify-end w-full max-w-5xl mx-auto">
               {isLessonCompleted ? (
-                <div className="px-6 py-3 rounded-lg bg-edu-success/10 border border-edu-success/30 text-edu-success font-semibold text-sm">
-                  Lesson Cleared
+                <div className="flex items-center gap-4">
+                  <div className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-black text-xs uppercase tracking-widest hidden sm:block">
+                    Lesson Cleared
+                  </div>
+                  <button
+                    onClick={handleNextLesson}
+                    className="px-10 py-4 rounded-2xl bg-emerald-500 text-white font-black text-sm tracking-wide shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all active:scale-95"
+                  >
+                    {nextLessonId ? "NEXT LESSON" : "BACK TO MAP"}
+                  </button>
                 </div>
               ) : (
                 <button
                   onClick={handleContinueExplain}
                   disabled={isSaving || isFinishing}
-                  className="px-8 py-3 rounded-lg bg-edu-primary text-white font-semibold hover:bg-edu-primaryHover focus:ring-2 focus:ring-offset-2 focus:ring-offset-edu-bg focus:ring-edu-primary transition-colors disabled:opacity-50"
+                  className="px-12 py-4 rounded-2xl bg-indigo-600 text-white font-black text-sm tracking-wide shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {isSaving ? "Saving..." : isLastStep ? "Finish Lesson" : "Continue"}
+                  {isSaving ? "SAVING..." : isLastStep ? "FINISH LESSON" : "CONTINUE MISSION"}
                 </button>
               )}
             </div>
