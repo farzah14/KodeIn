@@ -332,37 +332,7 @@ export default function ProfileClient() {
                </div>
             </div>
 
-            {/* UI Theme Panel */}
-            <div className="bg-edu-surface1 border border-edu-border rounded-xl p-8">
-               <div className="flex items-center gap-3 mb-8 border-b border-edu-border pb-4">
-                  <Palette size={22} className="text-edu-streak" />
-                  <h3 className="text-xl font-bold text-edu-textPrimary">App Appearance</h3>
-               </div>
 
-               <div className="grid sm:grid-cols-3 gap-4">
-                  {[
-                    { id: "light", label: "Light Mode", icon: <Sun size={20} /> },
-                    { id: "dark", label: "Dark Mode", icon: <Moon size={20} /> },
-                    { id: "system", label: "System Sync", icon: <Monitor size={20} /> },
-                  ].map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={async () => {
-                        const next = t.id as typeof theme;
-                        setTheme(next);
-                        persistTheme(next);
-                        await saveTheme(next);
-                      }}
-                      className={`flex flex-col items-center justify-center gap-3 p-5 rounded-xl border transition-all ${
-                        theme === t.id ? "bg-edu-primary/10 border-edu-primary text-edu-primary shadow-sm" : "bg-edu-surface2 border-edu-border text-edu-textSecondary hover:text-edu-textPrimary hover:bg-edu-surface2/80"
-                      }`}
-                    >
-                      {t.icon}
-                      <span className="text-xs font-bold uppercase tracking-widest">{t.label}</span>
-                    </button>
-                  ))}
-               </div>
-            </div>
 
             {/* Logout Panel */}
             <div className="bg-edu-surface1 border border-edu-error/30 rounded-xl p-8">

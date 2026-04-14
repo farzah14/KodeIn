@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Menu, X, LogOut, Map, Flame, Trophy, Code2 } from "lucide-react";
+import { Menu, X, LogOut, Map, Flame, Trophy, Code2, Sun, Moon } from "lucide-react";
 
 import { useProgress } from "@/lib/useProgress";
 import { resetProgressStore } from "@/lib/progressStore";
@@ -14,6 +14,40 @@ export function Topbar() {
   const p = useProgress();
   const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [theme, setThemeState] = useState<"light" | "dark" | "system">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
+    }
+    return "system";
+  });
+
+  useEffect(() => {
+    const handle = () => {
+      const next = (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
+      setThemeState(next);
+    };
+    window.addEventListener("kodeln-theme", handle);
+    return () => window.removeEventListener("kodeln-theme", handle);
+  }, []);
+
+  const toggleTheme = async () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setThemeState(next);
+    localStorage.setItem("kodeln_theme", next);
+    window.dispatchEvent(new Event("kodeln-theme"));
+
+    if (isAuthed) {
+      try {
+        await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ theme: next }),
+        });
+      } catch (e) {
+        console.error("Failed to sync theme", e);
+      }
+    }
+  };
 
   const isAuthed = status === "authenticated";
   const isAuthLoading = status === "loading";
@@ -41,6 +75,14 @@ export function Topbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-end gap-8">
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl bg-gray-50 dark:bg-zinc-900 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-100 dark:border-zinc-800 transition-all active:scale-95"
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
           {isAuthed && (
             <div className="flex items-center gap-8 mr-4">
                <Link href="/learn" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest">
@@ -105,6 +147,12 @@ export function Topbar() {
                <span className={`text-sm font-black ${p.streak.current > 0 ? "text-orange-500" : "text-gray-400"}`}>{p.streak.current}</span>
              </Link>
            )}
+          <button
+            onClick={toggleTheme}
+            className="p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 text-gray-500 transition-colors"
+          >
+            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 text-gray-500 transition-colors"

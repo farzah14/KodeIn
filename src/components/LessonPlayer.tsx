@@ -198,8 +198,9 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
       )}
 
       {/* Lesson Progress Header */}
-      <div className="w-full max-w-5xl mx-auto bg-white/50 backdrop-blur-md border border-gray-200 dark:border-zinc-800 rounded-3xl p-8 md:p-10 shadow-sm mt-8">
+      <div className="w-full max-w-5xl mx-auto bg-gray-50 dark:bg-zinc-900/40 border border-gray-100 dark:border-zinc-800/80 rounded-[2rem] p-8 md:p-12 mt-8 shadow-sm">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+
           
           <div className="flex-1">
              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-3">
