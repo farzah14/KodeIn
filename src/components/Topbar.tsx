@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { Menu, X, LogOut, Map, Flame, Trophy, Code2, Sun, Moon } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 import { useProgress } from "@/lib/useProgress";
 import { resetProgressStore } from "@/lib/progressStore";
@@ -12,6 +13,7 @@ import { getLevelInfo } from "@/components/XPBar";
 
 export function Topbar() {
   const p = useProgress();
+  const { t, locale, setLocale } = useTranslation();
   const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [theme, setThemeState] = useState<"light" | "dark" | "system">(() => {
@@ -75,21 +77,16 @@ export function Topbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center justify-end gap-8">
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-xl bg-gray-50 dark:bg-zinc-900 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-100 dark:border-zinc-800 transition-all active:scale-95"
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-
           {isAuthed && (
             <div className="flex items-center gap-8 mr-4">
                <Link href="/learn" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest">
-                  Map
+                  {t("topbar.map")}
                </Link>
                <Link href="/practice" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest">
-                  Practice
+                  {t("topbar.practice")}
+               </Link>
+               <Link href="/leaderboard" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest">
+                  {t("topbar.leaderboard")}
                </Link>
             </div>
           )}
@@ -102,7 +99,7 @@ export function Topbar() {
                     <Trophy size={16} className="text-indigo-600" />
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Level</span>
+                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">{t("topbar.level")}</span>
                     <span className="text-sm font-black text-gray-900 dark:text-white leading-none">{getLevelInfo(p.xp).level}</span>
                   </div>
                 </Link>
@@ -112,31 +109,48 @@ export function Topbar() {
                     <Flame size={16} className={p.streak.current > 0 ? "text-orange-500" : "text-gray-400"} />
                   </div>
                    <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">Streak</span>
+                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">{t("topbar.streak")}</span>
                     <span className={`text-sm font-black leading-none ${p.streak.current > 0 ? "text-orange-500" : "text-gray-400"}`}>{p.streak.current}</span>
                   </div>
                 </div>
              </div>
           )}
 
-          {/* Auth Button */}
-          {isAuthLoading ? (
-            <div className="h-10 w-10 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
-          ) : isAuthed && session?.user ? (
-            <div className="pl-6 ml-2 border-l border-gray-100 dark:border-zinc-800">
+          {/* Auth Button & Global Toggles */}
+          <div className="flex items-center gap-4 pl-6 ml-2 border-l border-gray-100 dark:border-zinc-800">
+            {isAuthLoading ? (
+              <div className="h-10 w-10 rounded-2xl bg-gray-100 dark:bg-zinc-800 animate-pulse" />
+            ) : isAuthed && session?.user ? (
               <Link href="/profile" className="block active:scale-90 transition-transform p-0.5 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-500">
                 <div className="p-0.5 bg-white dark:bg-zinc-950 rounded-[calc(1rem-2px)]">
                   <UserAvatar src={userSeed} size={36} className="h-9 w-9 rounded-[calc(1rem-4px)] shadow-sm" />
                 </div>
               </Link>
-            </div>
-          ) : (
-            <div className="flex items-center gap-4 pl-6 ml-2 border-l border-gray-100 dark:border-zinc-800">
+            ) : (
               <Link href="/login" className="px-6 py-2.5 text-xs font-black bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all uppercase tracking-widest active:scale-95">
-                Get Started
+                {t("topbar.login")}
               </Link>
+            )}
+
+            {/* Vertical Stack: Translate & Theme */}
+            <div className="flex flex-col gap-1 ml-2">
+              <button
+                onClick={() => setLocale(locale === "en" ? "id" : "en")}
+                className="flex items-center justify-center h-6 w-10 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-[9px] font-black text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-95 uppercase"
+                title={t("topbar.switcher")}
+              >
+                {locale}
+              </button>
+
+              <button
+                onClick={toggleTheme}
+                className="flex items-center justify-center h-6 w-10 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-95"
+                title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              >
+                {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />}
+              </button>
             </div>
-          )}
+          </div>
         </div>
 
         {/* Mobile Toggle */}
@@ -147,6 +161,12 @@ export function Topbar() {
                <span className={`text-sm font-black ${p.streak.current > 0 ? "text-orange-500" : "text-gray-400"}`}>{p.streak.current}</span>
              </Link>
            )}
+          <button
+            onClick={() => setLocale(locale === "en" ? "id" : "en")}
+            className="p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 text-[10px] font-black text-gray-500 transition-colors uppercase"
+          >
+            {locale}
+          </button>
           <button
             onClick={toggleTheme}
             className="p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 text-gray-500 transition-colors"
@@ -177,7 +197,7 @@ export function Topbar() {
               </Link>
             ) : (
               <Link href="/login" onClick={() => setIsMenuOpen(false)} className="w-full px-4 py-4 text-sm text-center font-black bg-indigo-600 text-white rounded-3xl mb-4 shadow-lg shadow-indigo-600/20 uppercase tracking-widest">
-                Get Started
+                {t("topbar.login")}
               </Link>
             )}
 
@@ -187,7 +207,10 @@ export function Topbar() {
                     <Map size={20} /> Course Map
                  </Link>
                  <Link href="/practice" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-2xl transition-colors uppercase tracking-widest">
-                    <Code2 size={20} /> Practice
+                    <Code2 size={20} /> {t("topbar.practice")}
+                 </Link>
+                 <Link href="/leaderboard" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-2xl transition-colors uppercase tracking-widest">
+                    <Trophy size={20} /> {t("topbar.leaderboard")}
                  </Link>
                  <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
                  <button

@@ -1,8 +1,13 @@
+"use client";
+
 import { Topbar } from "@/components/Topbar";
 import { HeroCTA, BottomCTA } from "@/components/SmartCTA";
 import { TerminalSquare, Flame, Code2, Users } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function Page() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-edu-bg text-edu-textPrimary font-sans">
       <Topbar />
@@ -18,18 +23,18 @@ export default function Page() {
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 rounded-full border border-edu-border px-3 py-1 mb-8">
                   <Users size={14} className="text-edu-textSecondary" />
-                  <span className="text-xs font-medium text-edu-textSecondary uppercase tracking-widest">+2k students</span>
+                  <span className="text-xs font-medium text-edu-textSecondary uppercase tracking-widest">{t("hero.badge")}</span>
                 </div>
 
                 {/* Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight mb-6 text-edu-textPrimary">
-                  Master Code Faster <br />
+                  {t("hero.title")} <br />
                   <span className="text-edu-primary">Interactive Learning</span>
                 </h1>
 
                 {/* Subtext */}
                 <p className="text-base text-edu-textSecondary max-w-lg mb-8 leading-relaxed">
-                  Forget boring video tutorials. Write real code directly in your browser, earn XP, and climb the leaderboard as you build practical skills.
+                  {t("hero.subtitle")}
                 </p>
 
                 {/* CTA */}
@@ -100,9 +105,9 @@ export default function Page() {
                  <div className="w-10 h-10 rounded-lg bg-edu-primary/10 text-edu-primary flex items-center justify-center mb-6">
                     <TerminalSquare size={20} />
                  </div>
-                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">Instant Execution</h3>
+                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">{t("features.instant.title")}</h3>
                  <p className="text-[14px] text-edu-textSecondary leading-relaxed">
-                   Run code directly in your browser with our remote execution environments. Zero configuration needed.
+                   {t("features.instant.desc")}
                  </p>
               </div>
 
@@ -111,9 +116,9 @@ export default function Page() {
                  <div className="w-10 h-10 rounded-lg bg-edu-xp/10 text-edu-xp flex items-center justify-center mb-6">
                     <Code2 size={20} />
                  </div>
-                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">Bite-Sized Lessons</h3>
+                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">{t("features.bite.title")}</h3>
                  <p className="text-[14px] text-edu-textSecondary leading-relaxed">
-                   Short, actionable lessons designed to teach practical, real-world development skills effectively.
+                   {t("features.bite.desc")}
                  </p>
               </div>
 
@@ -122,9 +127,9 @@ export default function Page() {
                  <div className="w-10 h-10 rounded-lg bg-edu-streak/10 text-edu-streak flex items-center justify-center mb-6">
                     <Flame size={20} />
                  </div>
-                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">Build the Habit</h3>
+                 <h3 className="text-[18px] font-semibold text-edu-textPrimary mb-3">{t("features.habit.title")}</h3>
                  <p className="text-[14px] text-edu-textSecondary leading-relaxed">
-                   Maintain your daily streak and earn experience points to unlock exclusive developer badges.
+                   {t("features.habit.desc")}
                  </p>
               </div>
 
@@ -135,9 +140,9 @@ export default function Page() {
         {/* BOTTOM CTA SECTION */}
         <section className="py-24 px-6 border-t border-edu-border bg-edu-bg">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-3xl font-bold text-edu-textPrimary mb-6">Ready to upskill?</h2>
+            <h2 className="text-3xl font-bold text-edu-textPrimary mb-6">{t("cta.ready")}</h2>
             <p className="text-edu-textSecondary mb-8 text-base">
-              Join thousands of developers leveling up their careers on KodeIn. Always free to start.
+              {t("cta.join")}
             </p>
             <BottomCTA />
           </div>

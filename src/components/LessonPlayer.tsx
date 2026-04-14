@@ -9,9 +9,11 @@ import { CodeStep } from "@/components/steps/CodeStep";
 import { useProgress } from "@/lib/useProgress";
 import { completeStep } from "@/lib/progressStore";
 import { content } from "@/lib/content";
+import { useTranslation } from "@/lib/i18n";
 
 export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const router = useRouter();
+  const { t } = useTranslation();
   const p = useProgress();
 
   const totalSteps = lesson.steps.length;
@@ -159,31 +161,31 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-edu-success/10 text-edu-success mb-6">
               <Check size={40} strokeWidth={3} />
             </div>
-            <div className="text-xs font-bold uppercase tracking-widest text-edu-success mb-2">Lesson Completed</div>
+            <div className="text-xs font-bold uppercase tracking-widest text-edu-success mb-2">{t("lesson.completedTitle")}</div>
             <h2 className="text-3xl font-bold text-white mb-8">{lesson.title}</h2>
             
-            <div className="mt-3 text-center text-xs font-medium text-edu-textSecondary italic opacity-60">Lesson mastery complete!</div>
+            <div className="mt-3 text-center text-xs font-medium text-edu-textSecondary italic opacity-60">{t("lesson.masteryComplete")}</div>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <button 
                 onClick={() => router.push("/learn")}
                 className="px-8 py-3 rounded-2xl border border-white/20 text-white/60 font-black text-sm hover:bg-white/5 transition-all"
               >
-                BACK TO MAP
+                {t("topbar.map").toUpperCase()}
               </button>
               {nextLessonId ? (
                 <button 
                   onClick={handleNextLesson}
                   className="px-12 py-3 rounded-2xl bg-white text-black font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all"
                 >
-                  NEXT LESSON
+                  {t("lesson.next").toUpperCase()}
                 </button>
               ) : (
                 <button 
                   onClick={() => router.push("/learn")}
                   className="px-12 py-3 rounded-2xl bg-indigo-500 text-white font-black text-sm shadow-xl hover:scale-105 active:scale-95 transition-all"
                 >
-                  FINISH COURSE
+                  {t("lesson.finishCourse").toUpperCase()}
                 </button>
               )}
             </div>
@@ -204,7 +206,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
           
           <div className="flex-1">
              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-indigo-500 mb-3">
-                <Code2 size={16} /> Current Lesson
+                <Code2 size={16} /> {t("lesson.current")}
              </div>
              <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white leading-tight tracking-tight">
                {lesson.title}
@@ -213,7 +215,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
           <div className="w-full md:w-auto flex flex-col items-start md:items-end gap-3 min-w-[240px]">
              <div className="flex items-center justify-between w-full">
-                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mastery Progress</div>
+                <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("lesson.mastery")}</div>
                 <div className="text-sm font-black text-indigo-600 dark:text-indigo-400">{header.pct}%</div>
              </div>
              <div className="h-3 w-full rounded-full bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 overflow-hidden shadow-inner">
@@ -223,7 +225,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                 />
              </div>
              <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider w-full text-right">
-               Step {header.currentIndex} <span className="opacity-30">/</span> {header.total}
+               {t("lesson.step")} {header.currentIndex} <span className="opacity-30">/</span> {header.total}
              </div>
           </div>
         </div>
@@ -245,7 +247,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                     onClick={handleNextLesson}
                     className="px-10 py-4 rounded-2xl bg-emerald-500 text-white font-black text-sm tracking-wide shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 hover:-translate-y-0.5 transition-all active:scale-95"
                   >
-                    {nextLessonId ? "NEXT LESSON" : "BACK TO MAP"}
+                    {nextLessonId ? t("lesson.next") : t("topbar.map")}
                   </button>
                 </div>
               ) : (
@@ -254,7 +256,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                   disabled={isSaving || isFinishing}
                   className="px-12 py-4 rounded-2xl bg-indigo-600 text-white font-black text-sm tracking-wide shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {isSaving ? "SAVING..." : isLastStep ? "FINISH LESSON" : "CONTINUE MISSION"}
+                  {isSaving ? "SAVING..." : isLastStep ? t("lesson.finish") : t("lesson.continue")}
                 </button>
               )}
             </div>
