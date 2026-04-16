@@ -6,11 +6,6 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const leaderboard = await prisma.user.findMany({
-      where: {
-        progress: {
-          isNot: null,
-        },
-      },
       select: {
         id: true,
         name: true,
@@ -32,7 +27,7 @@ export async function GET() {
       take: 100, // Increase slightly for more comprehensive rankings
     });
 
-    const formattedLeaderboard = leaderboard.map((user) => {
+    const formattedLeaderboard = leaderboard.map((user: any) => {
       let solvedPracticeCount = 0;
       try {
         const completed = JSON.parse(user.progress?.completedJson || "{}");

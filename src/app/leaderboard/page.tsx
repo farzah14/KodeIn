@@ -52,9 +52,8 @@ export default function LeaderboardPage() {
   }, [data, activeTab]);
 
   const topThree = useMemo(() => sortedData.slice(0, 3), [sortedData]);
-  const others = useMemo(() => sortedData.slice(3), [sortedData]);
 
-  const currentUserId = session?.user?.email;
+  const currentUserId = session?.user?.id;
 
   if (loading) {
     return (
@@ -217,7 +216,7 @@ export default function LeaderboardPage() {
           </div>
 
           <div className="divide-y divide-edu-border">
-            {others.length > 0 ? others.map((u) => {
+            {sortedData.length > 0 ? sortedData.map((u) => {
               const info = getLevelInfo(u.xp);
               const isUser = u.id === currentUserId || u.name === session?.user?.name;
 

@@ -14,10 +14,12 @@ const authConfig: NextAuthConfig = {
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: { params: { prompt: "select_account" } },
     }),
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,
       clientSecret: process.env.AUTH_GITHUB_SECRET,
+      authorization: { params: { prompt: "select_account" } },
     }),
   ],
   callbacks: {

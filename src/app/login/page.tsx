@@ -73,7 +73,7 @@ export default function LoginPage() {
               
               {/* Google Button */}
               <button
-                onClick={() => signIn("google", { callbackUrl: "/learn" })}
+                onClick={() => signIn("google", { callbackUrl: "/learn", prompt: "select_account" })}
                 className="group relative flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 text-sm font-semibold tracking-wide text-gray-800 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
               >
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,7 +87,7 @@ export default function LoginPage() {
 
               {/* GitHub Button */}
               <button
-                onClick={() => signIn("github", { callbackUrl: "/learn" })}
+                onClick={() => signIn("github", { callbackUrl: "/learn", prompt: "select_account" })}
                 className="group relative flex w-full items-center justify-center gap-3 rounded-2xl bg-gray-900 px-5 py-4 text-sm font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-gray-800 hover:shadow-lg dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
                 <Github size={20} className="text-white dark:text-black" />

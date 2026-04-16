@@ -8,8 +8,6 @@ declare global {
 
 function createPrismaClient() {
   const dbPath = path.join(process.cwd(), "prisma/dev.db");
-  console.log("Initializing Prisma with SQLite at:", dbPath);
-  
   const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` });
   
   return new PrismaClient({
@@ -18,6 +16,6 @@ function createPrismaClient() {
   });
 }
 
-// Gunakan key berbeda (prismaV7) untuk memastikan tidak ambil instance lama dari cache global
-export const prisma = (global as any).prismaV7 ?? createPrismaClient();
-if (process.env.NODE_ENV !== "production") (global as any).prismaV7 = prisma;
+export const prisma = (globalThis as unknown as { prismaV7: PrismaClient | undefined }).prismaV7 || createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") (globalThis as unknown as { prismaV7: PrismaClient | undefined }).prismaV7 = prisma;
