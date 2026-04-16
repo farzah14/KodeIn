@@ -29,7 +29,7 @@ export default function Page() {
                 {/* Headline */}
                 <h1 className="text-4xl sm:text-5xl lg:text-5xl font-extrabold leading-[1.1] tracking-tight mb-6 text-edu-textPrimary">
                   {t("hero.title")} <br />
-                  <span className="text-edu-primary">Interactive Learning</span>
+                  <span className="text-edu-primary">{t("hero.interactive")}</span>
                 </h1>
 
                 {/* Subtext */}

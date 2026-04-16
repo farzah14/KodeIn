@@ -49,10 +49,10 @@ export async function POST(req: NextRequest) {
     const result = await pistonRes.json();
     return NextResponse.json(result);
 
-  } catch (error: any) {
+  } catch (error) {
     console.error("Run Code API Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: error.message },
+      { error: "Internal Server Error", details: (error as Error).message },
       { status: 500 }
     );
   }

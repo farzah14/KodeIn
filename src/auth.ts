@@ -1,42 +1,35 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
-import GitHubProvider from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
+import type { NextAuthConfig } from "next-auth";
 
-const getEnv = (key: string) => {
-  const value = process.env[key];
-  if (!value && process.env.NODE_ENV !== "production") {
-    console.warn(`Warning: Missing env: ${key}`);
-  }
-  return value ?? "";
-};
-
-const authOptions = {
+const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  secret: getEnv("AUTH_SECRET"),
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
+  session: { strategy: "jwt" },
   providers: [
-    GoogleProvider({
-      clientId: getEnv("AUTH_GOOGLE_ID"),
-      clientSecret: getEnv("AUTH_GOOGLE_SECRET"),
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
     }),
-    GitHubProvider({
-      clientId: getEnv("AUTH_GITHUB_ID"),
-      clientSecret: getEnv("AUTH_GITHUB_SECRET"),
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
     }),
   ],
   callbacks: {
-    async session({ session, user }: { session: any; user: any }) {
-      if (session.user && user) {
-        session.user.id = user.id;
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
       }
       return session;
     },
@@ -47,4 +40,4 @@ const authOptions = {
   debug: true,
 };
 
-export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

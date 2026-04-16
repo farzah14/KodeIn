@@ -14,11 +14,12 @@ export async function GET(
   const stream = new ReadableStream({
     async start(controller) {
       let isClosed = false;
+      let interval: NodeJS.Timeout | null = null;
 
       const safeClose = () => {
         if (isClosed) return;
         isClosed = true;
-        try { controller.close(); } catch (e) {}
+        try { controller.close(); } catch {}
       };
 
       const sendState = async () => {
@@ -50,6 +51,7 @@ export async function GET(
           }
         } catch (e) {
           console.error("SSE Stream Error:", e);
+          if (interval) clearInterval(interval);
           safeClose();
         }
       };
@@ -58,12 +60,16 @@ export async function GET(
       await sendState();
 
       // Poll matching periodically
-      const interval = setInterval(async () => {
+      interval = setInterval(async () => {
+        if (isClosed) {
+          if (interval) clearInterval(interval);
+          return;
+        }
         await sendState();
       }, 2000);
 
       req.signal.addEventListener("abort", () => {
-        clearInterval(interval);
+        if (interval) clearInterval(interval);
         safeClose();
       });
     },

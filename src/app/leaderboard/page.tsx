@@ -5,17 +5,17 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Topbar } from "@/components/Topbar";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Flame, Zap, RefreshCw, Crown, Trophy as TrophyIcon } from "lucide-react";
+import { Flame, Zap, RefreshCw, Crown, Trophy as TrophyIcon, CheckCircle } from "lucide-react";
 import { getLevelInfo } from "@/components/XPBar";
 import { useTranslation } from "@/lib/i18n";
 
 type LeaderboardEntry = {
-  rank: number;
   id: string;
   name: string;
   image: string;
   xp: number;
   streak: number;
+  solvedPractice: number;
 };
 
 export default function LeaderboardPage() {
@@ -24,6 +24,7 @@ export default function LeaderboardPage() {
   const [data, setData] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState<"xp" | "practice">("xp");
 
   async function fetchLeaderboard() {
     setRefreshing(true);
@@ -43,8 +44,15 @@ export default function LeaderboardPage() {
     fetchLeaderboard();
   }, []);
 
-  const topThree = useMemo(() => data.slice(0, 3), [data]);
-  const others = useMemo(() => data.slice(3), [data]);
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => {
+      if (activeTab === "xp") return b.xp - a.xp;
+      return b.solvedPractice - a.solvedPractice;
+    }).map((item, idx) => ({ ...item, rank: idx + 1 }));
+  }, [data, activeTab]);
+
+  const topThree = useMemo(() => sortedData.slice(0, 3), [sortedData]);
+  const others = useMemo(() => sortedData.slice(3), [sortedData]);
 
   const currentUserId = session?.user?.email;
 
@@ -67,8 +75,8 @@ export default function LeaderboardPage() {
       <main className="mx-auto max-w-5xl px-6 py-12 md:py-20 lg:py-24">
         
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row items-end justify-between gap-8 mb-16">
-           <div className="space-y-4">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-16">
+           <div className="space-y-4 text-center md:text-left">
               <div className="inline-flex items-center gap-2 rounded-full bg-edu-xp/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-edu-xp border border-edu-xp/20">
                 <TrophyIcon size={12} strokeWidth={3} /> {t("leaderboard.ranking")}
               </div>
@@ -77,9 +85,22 @@ export default function LeaderboardPage() {
                    i === arr.length - 1 ? <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-edu-primary via-edu-streak to-edu-xp">{word}</span> : word + " "
                  ))}
               </h1>
-              <p className="text-edu-textSecondary font-medium max-w-xl leading-relaxed">
-                {t("leaderboard.subtitle")}
-              </p>
+              
+              {/* CATEGORY SWITCHER */}
+              <div className="flex items-center justify-center md:justify-start gap-1 p-1 bg-edu-surface2 border border-edu-border rounded-xl w-fit mx-auto md:mx-0">
+                 <button 
+                   onClick={() => setActiveTab("xp")}
+                   className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'xp' ? 'bg-edu-primary text-white shadow-md' : 'text-edu-textSecondary hover:text-edu-textPrimary'}`}
+                 >
+                   {t("leaderboard.tabs.xp")}
+                 </button>
+                 <button 
+                   onClick={() => setActiveTab("practice")}
+                   className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${activeTab === 'practice' ? 'bg-edu-primary text-white shadow-md' : 'text-edu-textSecondary hover:text-edu-textPrimary'}`}
+                 >
+                   {t("leaderboard.tabs.practice")}
+                 </button>
+              </div>
            </div>
            
            <button 
@@ -108,9 +129,17 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="w-full max-w-[180px] h-[100px] bg-gradient-to-t from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 rounded-t-3xl flex flex-col items-center justify-center gap-1 shadow-lg border-x border-t border-gray-200 dark:border-zinc-700">
                      <div className="flex items-center gap-1.5 text-edu-textPrimary font-black">
-                        <Zap size={14} className="text-edu-primary" /> {topThree[1].xp}
+                        {activeTab === 'xp' ? (
+                           <>
+                              <Zap size={14} className="text-edu-primary" /> {topThree[1].xp}
+                           </>
+                        ) : (
+                           <>
+                              <CheckCircle size={14} className="text-emerald-500" /> {topThree[1].solvedPractice}
+                           </>
+                        )}
                      </div>
-                     <span className="text-[9px] font-bold text-edu-textSecondary uppercase tracking-widest">{t("leaderboard.experience")}</span>
+                     <span className="text-[9px] font-bold text-edu-textSecondary uppercase tracking-widest">{activeTab === 'xp' ? t("leaderboard.experience") : t("leaderboard.stats.solved")}</span>
                   </div>
                </div>
             )}
@@ -134,9 +163,17 @@ export default function LeaderboardPage() {
                      <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                      
                      <div className="flex items-center gap-2 text-white text-xl font-black">
-                        <Zap size={20} className="text-white fill-white/20" /> {topThree[0].xp}
+                        {activeTab === 'xp' ? (
+                           <>
+                              <Zap size={20} className="text-white fill-white/20" /> {topThree[0].xp}
+                           </>
+                        ) : (
+                           <>
+                              <CheckCircle size={20} className="text-white fill-white/20" /> {topThree[0].solvedPractice}
+                           </>
+                        )}
                      </div>
-                     <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{t("leaderboard.master")}</span>
+                     <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{activeTab === 'xp' ? t("leaderboard.master") : t("leaderboard.stats.elite")}</span>
                   </div>
                </div>
             )}
@@ -154,9 +191,17 @@ export default function LeaderboardPage() {
                   </div>
                   <div className="w-full max-w-[180px] h-[80px] bg-gradient-to-t from-gray-100 to-gray-200 dark:from-zinc-800 dark:to-zinc-900 rounded-t-3xl flex flex-col items-center justify-center gap-1 shadow-lg border-x border-t border-gray-200 dark:border-zinc-700">
                      <div className="flex items-center gap-1.5 text-edu-textPrimary font-black text-sm">
-                        <Zap size={14} className="text-edu-primary" /> {topThree[2].xp}
+                        {activeTab === 'xp' ? (
+                           <>
+                              <Zap size={14} className="text-edu-primary" /> {topThree[2].xp}
+                           </>
+                        ) : (
+                           <>
+                              <CheckCircle size={14} className="text-emerald-500" /> {topThree[2].solvedPractice}
+                           </>
+                        )}
                      </div>
-                     <span className="text-[9px] font-bold text-edu-textSecondary uppercase tracking-widest">{t("leaderboard.progress")}</span>
+                     <span className="text-[9px] font-bold text-edu-textSecondary uppercase tracking-widest">{activeTab === 'xp' ? t("leaderboard.progress") : t("leaderboard.stats.solved")}</span>
                   </div>
                </div>
             )}
@@ -199,8 +244,12 @@ export default function LeaderboardPage() {
 
                   <div className="flex items-center gap-8 pl-14 sm:pl-0">
                     <div className="hidden sm:flex flex-col items-end">
-                       <span className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest leading-none mb-1">{t("leaderboard.points")}</span>
-                       <div className="text-lg font-black text-edu-textPrimary leading-none">{u.xp}</div>
+                       <span className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest leading-none mb-1">
+                         {activeTab === 'xp' ? t("leaderboard.points") : t("leaderboard.stats.solved")}
+                       </span>
+                       <div className="text-lg font-black text-edu-textPrimary leading-none">
+                         {activeTab === 'xp' ? u.xp : u.solvedPractice}
+                       </div>
                     </div>
                     <div className="flex flex-col items-end min-w-[70px]">
                        <span className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest leading-none mb-1">Streak</span>

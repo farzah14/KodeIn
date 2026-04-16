@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import type { Progress as ProgressModel } from "@/generated/prisma/client";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 type ProgressDTO = {
-  completedStepIds: Record<string, boolean>;
+  completedStepIds: Record<string, boolean | string[]>;
   xp: number;
   streak: {
     current: number;
@@ -14,10 +15,10 @@ type ProgressDTO = {
   };
 };
 
-function safeParseCompleted(json: string | null | undefined): Record<string, boolean> {
+function safeParseCompleted(json: string | null | undefined): Record<string, boolean | string[]> {
   try {
     const obj = JSON.parse(json || "{}");
-    return typeof obj === "object" && obj ? (obj as Record<string, boolean>) : {};
+    return typeof obj === "object" && obj ? (obj as Record<string, boolean | string[]>) : {};
   } catch {
     return {};
   }
@@ -63,12 +64,12 @@ function updateStreak(row: {
   return { todayISO, current, longest };
 }
 
-export async function POST(req: Request): Promise<Response> {
+export async function POST(req: Request): Promise<NextResponse> {
   const session = await auth();
   const email = session?.user?.email;
 
   if (!email) {
-    return Response.json({ error: "UNAUTHORIZED" }, { status: 401 });
+    return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
   const body = (await req.json()) as { stepId?: string; xpEarned?: number };
@@ -76,7 +77,7 @@ export async function POST(req: Request): Promise<Response> {
   const xpEarned = Number(body.xpEarned ?? 0);
 
   if (!stepId) {
-    return Response.json({ error: "stepId is required" }, { status: 400 });
+    return NextResponse.json({ error: "stepId is required" }, { status: 400 });
   }
 
   const user = await prisma.user.findUnique({
@@ -85,7 +86,7 @@ export async function POST(req: Request): Promise<Response> {
   });
 
   if (!user) {
-    return Response.json({ error: "USER_NOT_FOUND" }, { status: 404 });
+    return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
   }
 
   const row =
@@ -117,5 +118,5 @@ export async function POST(req: Request): Promise<Response> {
     },
   });
 
-  return Response.json(normalize(updated));
+  return NextResponse.json(normalize(updated));
 }

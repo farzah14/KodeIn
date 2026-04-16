@@ -6,8 +6,21 @@ import { Topbar } from "@/components/Topbar";
 import { UserAvatar } from "@/components/UserAvatar";
 import { battleChallenges } from "@/lib/battleChallenges";
 import Editor from "@monaco-editor/react";
-import { Sword, Zap, Flame, Trophy, Copy, Check, X, Loader2, Info } from "lucide-react";
+import { Sword, Zap, Trophy, Copy, Check, X, Loader2, Info } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
+
+interface PyodideInstance {
+  runPython: (code: string) => string;
+  runPythonAsync: (code: string) => Promise<void>;
+}
+
+declare global {
+  interface Window {
+    loadPyodide?: () => Promise<PyodideInstance>;
+    pyodideInstance?: PyodideInstance;
+  }
+}
 
 type RoomState = {
   id: string;
@@ -27,6 +40,7 @@ type RoomState = {
 export default function BattleArena({ params: paramsPromise }: { params: Promise<{ roomId: string }> }) {
   const { roomId } = use(paramsPromise);
   const { data: session } = useSession();
+  const { t } = useTranslation();
   const [room, setRoom] = useState<RoomState | null>(null);
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -65,17 +79,13 @@ export default function BattleArena({ params: paramsPromise }: { params: Promise
 
     try {
       // 1. Initialize Pyodide if not already there
-      // @ts-ignore
       if (!window.loadPyodide) {
         throw new Error("Sistem eksekusi belum siap. Tunggu sebentar.");
       }
       
-      // @ts-ignore
       let py = window.pyodideInstance;
       if (!py) {
-        // @ts-ignore
         py = await window.loadPyodide();
-        // @ts-ignore
         window.pyodideInstance = py;
       }
 
@@ -85,21 +95,21 @@ export default function BattleArena({ params: paramsPromise }: { params: Promise
         try {
           // Prepare Python environment
           py.runPython(`
-import json
-import io
 import sys
+import io
 sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
+sys.stdout = io.StringIO()
           `);
           
           await py.runPythonAsync(code);
-          const result = py.runPython("str(solve(json.loads(sys.stdin.getvalue())))").trim();
+          const result = py.runPython("sys.stdout.getvalue()").trim();
           
           if (result !== tc.expectedOutput.trim()) {
             allPassed = false;
             break;
           }
-        } catch (e) {
-          console.error("Test Case Error:", e);
+        } catch (err) {
+          console.error("Test Case Error:", err);
           allPassed = false;
           break;
         }
@@ -114,11 +124,11 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
 
       if (!res.ok) {
         const err = await res.json();
-        setError(err.error || "Gagal sinkronisasi hasil.");
+        setError(err.error || t("common.error"));
       }
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message || "Kesalahan eksekusi lokal.");
+    } catch (err) {
+      console.error(err);
+      setError((err as Error).message || "Kesalahan eksekusi lokal.");
     } finally {
       setSubmitting(false);
     }
@@ -130,7 +140,7 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
         <Topbar />
         <div className="flex flex-col items-center justify-center pt-32 animate-pulse">
            <Zap size={48} className="text-edu-primary mb-4 animate-bounce" />
-           <div className="text-edu-textSecondary font-black uppercase tracking-widest text-xs">Menyambungkan Arena...</div>
+           <div className="text-edu-textSecondary font-black uppercase tracking-widest text-xs">{t("battle.status.connecting")}</div>
         </div>
       </div>
     );
@@ -146,13 +156,13 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
          <div className={`flex items-center gap-4 p-3 rounded-2xl border transition-all ${isPlayer1 ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/20" : "bg-gray-50 border-gray-100 dark:bg-zinc-900 dark:border-zinc-800"}`}>
             <UserAvatar src={room.player1?.image || ""} size={48} className="rounded-xl shadow-md" />
             <div className="flex flex-col">
-               <span className="text-[10px] font-black uppercase text-gray-400">Player 1</span>
-               <span className="text-sm font-black text-gray-900 dark:text-white truncate max-w-[120px]">{room.player1?.name || "Player 1"}</span>
+               <span className="text-[10px] font-black uppercase text-gray-400">{t("leaderboard.ranking") === "Peta" ? "Pemain 1" : "Player 1"}</span>
+               <span className="text-sm font-black text-gray-900 dark:text-white truncate max-w-[120px]">{room.player1?.name || (t("leaderboard.ranking") === "Peta" ? "Pemain 1" : "Player 1")}</span>
                <div className="flex items-center gap-2 mt-1">
                   {room.player1Done ? (
                     room.player1Result === "success" ? <Check size={14} className="text-emerald-500" /> : <X size={14} className="text-rose-500" />
                   ) : <div className="h-1.5 w-1.5 rounded-full bg-yellow-500 animate-pulse" />}
-                  <span className="text-[9px] font-bold uppercase text-gray-400 tracking-widest">{room.player1Done ? "Submitted" : "Coding..."}</span>
+                  <span className="text-[9px] font-bold uppercase text-gray-400 tracking-widest">{room.player1Done ? t("battle.submitted") : t("battle.status.coding")}</span>
                </div>
             </div>
          </div>
@@ -167,22 +177,22 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                      </button>
                   </div>
-                  <div className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest animate-pulse">Menunggu Lawan...</div>
+                  <div className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest animate-pulse">{t("battle.status.waiting")}</div>
                </div>
             ) : room.status === "active" ? (
                <div className="flex flex-col items-center gap-1">
                   <div className="flex items-center gap-4 text-edu-error">
                      <Sword size={24} className="animate-pulse" />
-                     <span className="text-2xl font-black italic tracking-tighter">VERSUS</span>
+                     <span className="text-2xl font-black italic tracking-tighter">{t("battle.versus")}</span>
                      <Sword size={24} className="scale-x-[-1] animate-pulse" />
                   </div>
-                  <div className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20">Pertempuran Dimulai!</div>
+                  <div className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20">{t("battle.status.started")}</div>
                </div>
             ) : (
                <div className="flex flex-col items-center gap-1">
                   <Trophy size={28} className="text-orange-400 mb-1" />
-                  <div className="text-lg font-black text-edu-textPrimary">Pertempuran Selesai</div>
-                  <Link href="/battle" className="text-[9px] font-black text-edu-primary uppercase tracking-widest hover:underline underline-offset-4">Kembali ke Lobby</Link>
+                  <div className="text-lg font-black text-edu-textPrimary">{t("battle.loser")}</div>
+                  <Link href="/battle" className="text-[9px] font-black text-edu-primary uppercase tracking-widest hover:underline underline-offset-4">{t("battle.lobby.back")}</Link>
                </div>
             )}
          </div>
@@ -190,10 +200,10 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
          {/* Player 2 */}
          <div className={`flex items-center gap-4 p-3 rounded-2xl border transition-all ${isPlayer2 ? "bg-indigo-50 border-indigo-200 dark:bg-indigo-950/20" : "bg-gray-50 border-gray-100 dark:bg-zinc-900 dark:border-zinc-800"}`}>
             <div className="flex flex-col text-right">
-               <span className="text-[10px] font-black uppercase text-gray-400">Player 2</span>
+               <span className="text-[10px] font-black uppercase text-gray-400">{t("leaderboard.ranking") === "Peta" ? "Pemain 2" : "Player 2"}</span>
                <span className="text-sm font-black text-gray-900 dark:text-white truncate max-w-[120px]">{room.player2?.name || "???"}</span>
                <div className="flex items-center justify-end gap-2 mt-1">
-                  <span className="text-[9px] font-bold uppercase text-gray-400 tracking-widest">{room.player2Done ? "Submitted" : room.player2 ? "Coding..." : "Kosong"}</span>
+                  <span className="text-[9px] font-bold uppercase text-gray-400 tracking-widest">{room.player2Done ? t("battle.submitted") : room.player2 ? t("battle.status.coding") : (t("leaderboard.ranking") === "Peta" ? "Kosong" : "Empty")}</span>
                   {room.player2 ? (
                     room.player2Done ? (
                       room.player2Result === "success" ? <Check size={14} className="text-emerald-500" /> : <X size={14} className="text-rose-500" />
@@ -229,7 +239,7 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
                      </h4>
                      <div className="space-y-3">
                         {challenge.testCases.map((tc, idx) => (
-                           <div key={idx} className="p-4 rounded-2xl bg-gray-100/50 dark:bg-zinc-800/50 border border-transparent font-mono text-[11px] space-y-2">
+                           <div key={idx} className="p-4 rounded-2xl bg-gray-100/50 dark:bg-zinc-800/50 border border-transparent font-mono text-[13px] space-y-2">
                               <div className="flex items-center gap-2">
                                  <span className="text-gray-400 font-bold uppercase tracking-widest text-[8px]">In:</span> {tc.input}
                               </div>
@@ -244,7 +254,7 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
             ) : (
                <div className="h-full flex flex-col items-center justify-center text-center opacity-50 space-y-4">
                   <Sword size={48} className="text-gray-400" />
-                  <p className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em]">Menunggu Battle Dimulai...</p>
+                  <p className="text-sm font-bold text-gray-400 uppercase tracking-[0.2em]">{t("battle.status.empty")}</p>
                </div>
             )}
          </div>
@@ -280,7 +290,7 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
                            className="flex items-center gap-3 px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 active:scale-95 transition-all disabled:opacity-50"
                         >
                            {submitting ? <Loader2 size={16} className="animate-spin" /> : <Zap size={16} />} 
-                           {done ? "Submitted" : "Submit Code"}
+                           {done ? t("battle.submitted") : t("battle.submit")}
                         </button>
                      </div>
                   </div>
@@ -294,13 +304,15 @@ sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
                      </div>
                      <div>
                         <h2 className="text-4xl font-black text-white tracking-tighter mb-2">
-                           {room.winnerId === session?.user?.id ? "YOU TRIUMPHED!" : "BATTLE ENDED"}
+                           {room.winnerId === session?.user?.id ? t("battle.winner") : t("battle.loser")}
                         </h2>
                         <p className="text-white/60 font-bold uppercase tracking-widest text-xs">
-                           {room.winnerId === session?.user?.id ? "Lawan Anda telah tumbang oleh logika tajam Anda." : `Pemenang: ${room.winnerId === room.player1Id ? room.player1?.name : room.player2?.name}`}
+                           {room.winnerId === session?.user?.id 
+                               ? (t("leaderboard.ranking") === "Peta" ? "Lawan Anda telah tumbang oleh logika tajam Anda." : "Your opponent has fallen to your sharp logic.")
+                               : `${t("leaderboard.ranking") === "Peta" ? "Pemenang" : "Winner"}: ${room.winnerId === room.player1Id ? room.player1?.name : room.player2?.name}`}
                         </p>
                      </div>
-                     <Link href="/battle" className="inline-block mt-8 py-4 px-10 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95">Main Lagi</Link>
+                     <Link href="/battle" className="inline-block mt-8 py-4 px-10 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95">{t("battle.playAgain")}</Link>
                   </div>
                </div>
             ) : (

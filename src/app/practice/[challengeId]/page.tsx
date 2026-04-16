@@ -1,18 +1,19 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
-import { useSession } from "next-auth/react";
 import { Topbar } from "@/components/Topbar";
 import { practiceChallenges } from "@/lib/practiceChallenges";
 import Editor from "@monaco-editor/react";
 import { Zap, Play, Check, X, RotateCcw, Layout, Info, Trophy, Loader2, Code2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
+import { completePractice } from "@/lib/progressStore";
 
 export default function PracticeSolverPage({ params: paramsPromise }: { params: Promise<{ challengeId: string }> }) {
   const { challengeId } = use(paramsPromise);
-  const { data: session } = useSession();
   const router = useRouter();
+  const { t } = useTranslation();
   
   const challenge = practiceChallenges.find(c => c.id === challengeId);
   const [code, setCode] = useState(challenge?.starterCode || "");
@@ -38,17 +39,13 @@ export default function PracticeSolverPage({ params: paramsPromise }: { params: 
     setError("");
     
     try {
-      // @ts-expect-error window.loadPyodide is globally loaded in layout
       if (!window.loadPyodide) {
         throw new Error("Sistem pendukung coding sedang dimuat. Harap tunggu beberapa detik lalu coba lagi.");
       }
       
-      // @ts-expect-error window.pyodideInstance is stored for reuse
       let py = window.pyodideInstance;
       if (!py) {
-        // @ts-expect-error window.loadPyodide is globally loaded
         py = await window.loadPyodide();
-        // @ts-expect-error window.pyodideInstance is stored for reuse
         window.pyodideInstance = py;
       }
 
@@ -81,12 +78,12 @@ sys.stdout = io.StringIO()
             actual: finalResult,
             passed
           });
-        } catch (e: any) {
+        } catch (err) {
           allPassed = false;
           testResults.push({
              input: tc.input,
              expected: tc.expectedOutput.trim(),
-             actual: e.message,
+             actual: (err as Error).message,
              passed: false
           });
         }
@@ -95,19 +92,15 @@ sys.stdout = io.StringIO()
       setResults(testResults);
       if (allPassed) {
         setIsSuccess(true);
-        // Persist to database
+        // Persist to database & update local store
         try {
-          await fetch("/api/progress/complete-practice", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ challengeId, xp: challenge.xp })
-          });
+          await completePractice(challengeId, challenge.xp);
         } catch (e) {
           console.error("Failed to sync progress:", e);
         }
       }
-    } catch (e: any) {
-      setError(e.message || "Gagal menjalankan kode.");
+    } catch (err) {
+      setError((err as Error).message || "Gagal menjalankan kode.");
     } finally {
       setRunning(false);
     }
@@ -126,7 +119,7 @@ sys.stdout = io.StringIO()
            <div className="space-y-8">
               <div className="flex items-center justify-between">
                  <Link href="/practice" className="text-[10px] font-black uppercase text-indigo-600 tracking-widest hover:underline flex items-center gap-1">
-                    ← Kembali ke Daftar
+                    ← {t("common.back")}
                  </Link>
                  <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${challenge.difficulty === 'Easy' ? 'bg-emerald-50 text-emerald-500 border-emerald-500/10' : 'bg-amber-50 text-amber-500 border-amber-500/10'}`}>
                     {challenge.difficulty}
@@ -134,7 +127,7 @@ sys.stdout = io.StringIO()
               </div>
 
               <div>
-                 <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-4">{challenge.title}</h1>
+                 <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight mb-4"><span className="text-gray-300 dark:text-zinc-700 mr-2">#{challenge.number}.</span>{challenge.title}</h1>
                  <div className="flex items-center gap-4 text-xs font-bold text-gray-400">
                     <span className="flex items-center gap-1.5"><Layout size={14} /> {challenge.category}</span>
                     <span className="flex items-center gap-1.5 text-edu-xp"><Zap size={14} fill="currentColor" /> {challenge.xp} XP</span>
@@ -150,15 +143,15 @@ sys.stdout = io.StringIO()
               {/* Test Cases Preview */}
               <div className="space-y-4 pt-4">
                  <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                    <Info size={12} className="text-indigo-500" /> Contoh Test Cases
+                    <Info size={12} className="text-indigo-500" /> {t("practice.cases.example")}
                  </h3>
                  <div className="grid gap-3">
                     {challenge.testCases.slice(0, 2).map((tc, idx) => (
-                       <div key={idx} className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 font-mono text-xs">
-                          <div className="mb-1 text-gray-400 font-bold uppercase text-[8px] tracking-widest">Input</div>
-                          <div className="mb-3 text-gray-700 dark:text-gray-300">{tc.input}</div>
-                          <div className="mb-1 text-gray-400 font-bold uppercase text-[8px] tracking-widest">Expected Output</div>
-                          <div className="text-emerald-600 dark:text-emerald-400">{tc.expectedOutput}</div>
+                       <div key={idx} className="p-4 rounded-2xl bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 font-mono text-base">
+                          <div className="mb-1 text-gray-400 font-bold uppercase text-[10px] tracking-widest">Input</div>
+                          <div className="mb-3 text-gray-800 dark:text-gray-200 font-black">{tc.input}</div>
+                          <div className="mb-1 text-gray-400 font-bold uppercase text-[10px] tracking-widest">Expected Output</div>
+                          <div className="text-emerald-600 dark:text-emerald-400 font-black">{tc.expectedOutput}</div>
                        </div>
                     ))}
                  </div>
@@ -171,8 +164,8 @@ sys.stdout = io.StringIO()
                          <Trophy size={24} />
                       </div>
                       <div>
-                         <h4 className="font-black uppercase tracking-tighter text-lg leading-tight">CHALLENGE COMPLETE!</h4>
-                         <p className="text-emerald-50 text-[10px] font-bold uppercase tracking-widest">Anda Berhasil Menyelesaikan Tantangan Ini.</p>
+                         <h4 className="font-black uppercase tracking-tighter text-lg leading-tight">{t("practice.complete.title")}</h4>
+                         <p className="text-emerald-50 text-[10px] font-bold uppercase tracking-widest">{t("practice.complete.desc")}</p>
                       </div>
                    </div>
                 </div>
@@ -219,7 +212,7 @@ sys.stdout = io.StringIO()
                       className="flex items-center gap-3 px-10 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20 transition-all active:scale-95 disabled:opacity-50"
                     >
                        {running ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} fill="currentColor" />}
-                       {running ? "Running..." : "Run Test Cases"}
+                       {running ? t("practice.running") : t("practice.run")}
                     </button>
                  </div>
               </div>
@@ -231,7 +224,7 @@ sys.stdout = io.StringIO()
                  <div className="px-8 py-6">
                     <div className="flex items-center justify-between mb-6">
                        <h3 className="text-xs font-black text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                          <Check size={14} className="text-emerald-500" /> Results for Test Cases
+                          <Check size={14} className="text-emerald-500" /> {t("practice.cases.results")}
                        </h3>
                        <button onClick={() => setResults(null)} className="text-zinc-500 hover:text-white"><X size={16}/></button>
                     </div>
@@ -240,7 +233,7 @@ sys.stdout = io.StringIO()
                        {results.map((res, i) => (
                           <div key={i} className={`p-4 rounded-2xl border transition-all ${res.passed ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-rose-500/10 border-rose-500/20'}`}>
                              <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Case {i+1}</span>
+                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">{t("practice.cases.case")} {i+1}</span>
                                 {res.passed ? <Check size={14} className="text-emerald-500" /> : <X size={14} className="text-rose-500" />}
                              </div>
                              <div className="space-y-1 font-mono text-[11px]">

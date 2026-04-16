@@ -1,51 +1,132 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import type { Progress as ProgressModel } from "@/generated/prisma/client";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export const dynamic = "force-dynamic";
+
+type ProgressDTO = {
+  completedStepIds: Record<string, boolean | string[]>;
+  xp: number;
+  streak: {
+    current: number;
+    longest: number;
+    lastActiveISO?: string;
+  };
+};
+
+function safeParseCompleted(json: string | null | undefined): Record<string, boolean | string[]> {
+  try {
+    const obj = JSON.parse(json || "{}");
+    return typeof obj === "object" && obj ? (obj as Record<string, boolean | string[]>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function normalize(progressRow: ProgressModel): ProgressDTO {
+  const completedStepIds = safeParseCompleted(progressRow.completedJson);
+
+  return {
+    completedStepIds,
+    xp: progressRow.xp ?? 0,
+    streak: {
+      current: progressRow.streakCurrent ?? 0,
+      longest: progressRow.streakLongest ?? 0,
+      lastActiveISO: progressRow.lastActiveISO ?? undefined,
+    },
+  };
+}
+
+function updateStreak(row: {
+  streakCurrent: number;
+  streakLongest: number;
+  lastActiveISO: string | null;
+}) {
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const last = row.lastActiveISO;
+
+  let current = row.streakCurrent ?? 0;
+  let longest = row.streakLongest ?? 0;
+
+  if (!last) {
+    current = 1;
+  } else if (last === todayISO) {
+    // already active today
+  } else {
+    const lastDate = new Date(last + "T00:00:00Z");
+    const diffDays = Math.floor((Date.now() - lastDate.getTime()) / (24 * 3600 * 1000));
+    current = diffDays === 1 ? current + 1 : 1;
+  }
+
+  longest = Math.max(longest, current);
+
+  return { todayISO, current, longest };
+}
+
+export async function POST(req: Request): Promise<NextResponse> {
   const session = await auth();
-  if (!session?.user?.id) {
+  const email = session?.user?.email;
+
+  if (!email) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
   try {
-    const { challengeId, xp } = await req.json();
+    const body = await req.json();
+    const { challengeId, xp } = body;
+    const xpEarned = Number(xp ?? 0);
 
-    // Get current progress
-    let progress = await prisma.progress.findUnique({
-      where: { userId: session.user.id }
+    if (!challengeId) {
+       return NextResponse.json({ error: "challengeId is required" }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
     });
 
-    if (!progress) {
-      progress = await prisma.progress.create({
-        data: {
-          userId: session.user.id,
-          xp: 0,
-          completedJson: "{}"
-        }
-      });
+    if (!user) {
+      return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
     }
 
-    const completed = JSON.parse(progress.completedJson || "{}");
-    const practiceSet = new Set(completed.practice || []);
+    const userId = user.id;
+
+    // Get current progress
+    const row =
+      (await prisma.progress.findUnique({ where: { userId } })) ??
+      (await prisma.progress.create({ data: { userId } }));
+
+    const completed = safeParseCompleted(row.completedJson);
+    const practiceArray = completed.practice;
+    const practiceSet = new Set(Array.isArray(practiceArray) ? practiceArray : []);
     
-    // If not already completed, add it and give XP
-    if (!practiceSet.has(challengeId)) {
+    const alreadyDone = practiceSet.has(challengeId);
+
+    // streak update
+    const { todayISO, current, longest } = updateStreak({
+      streakCurrent: row.streakCurrent,
+      streakLongest: row.streakLongest,
+      lastActiveISO: row.lastActiveISO,
+    });
+
+    if (!alreadyDone) {
       practiceSet.add(challengeId);
       completed.practice = Array.from(practiceSet);
-
-      await prisma.progress.update({
-        where: { userId: session.user.id },
-        data: {
-          xp: { increment: xp },
-          completedJson: JSON.stringify(completed)
-        }
-      });
-      
-      return NextResponse.json({ success: true, newlyCompleted: true });
     }
 
-    return NextResponse.json({ success: true, newlyCompleted: false });
+    const updated = await prisma.progress.update({
+      where: { userId },
+      data: {
+        xp: alreadyDone ? row.xp : row.xp + Math.max(0, xpEarned),
+        completedJson: JSON.stringify(completed),
+        streakCurrent: current,
+        streakLongest: longest,
+        lastActiveISO: todayISO,
+      },
+    });
+    
+    return NextResponse.json(normalize(updated));
   } catch (error) {
     console.error("Complete Practice Error:", error);
     return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });

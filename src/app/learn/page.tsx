@@ -1,10 +1,14 @@
+"use client";
+
 import { Topbar } from "@/components/Topbar";
 import { PathMap } from "@/components/PathMap";
 import { CourseProgressHeader } from "@/components/CourseProgressHeader";
 import Link from "next/link";
 import { Code2 } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export default function LearnPage() {
+  const { t } = useTranslation();
   return (
     <div className="relative min-h-screen bg-[#F8FAFC] dark:bg-[#09090b]">
       {/* Background Pattern */}
@@ -26,7 +30,7 @@ export default function LearnPage() {
               className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-900"
             >
               <Code2 size={16} className="text-indigo-500" />
-              Free Playground
+              {t("practice.sandbox")}
             </Link>
           </div>
 

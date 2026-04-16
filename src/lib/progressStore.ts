@@ -1,7 +1,7 @@
 "use client";
 
 export type ProgressDTO = {
-  completedStepIds: Record<string, boolean>;
+  completedStepIds: Record<string, boolean | string[]>;
   xp: number;
   streak: {
     current: number;
@@ -65,6 +65,23 @@ export async function completeStep(stepId: string, xpEarned: number) {
   });
 
   if (!res.ok) throw new Error(`POST /api/progress/complete-step failed: ${res.status}`);
+
+  const data = (await res.json()) as ProgressDTO;
+  snap = { status: "ready", progress: data };
+  emit();
+
+  return data;
+}
+
+export async function completePractice(challengeId: string, xpEarned: number) {
+  const res = await fetch("/api/progress/complete-practice", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ challengeId, xp: xpEarned }),
+  });
+
+  if (!res.ok) throw new Error(`POST /api/progress/complete-practice failed: ${res.status}`);
 
   const data = (await res.json()) as ProgressDTO;
   snap = { status: "ready", progress: data };

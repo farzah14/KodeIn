@@ -3,13 +3,15 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
-import { ArrowLeft, User, Palette, Sun, Moon, Monitor, LogOut, Camera, Upload, Trash2 } from "lucide-react";
+import { ArrowLeft, User, LogOut, Camera, Upload, Trash2, Layout, CheckCircle, Zap } from "lucide-react";
+import { practiceChallenges } from "@/lib/practiceChallenges";
 
 import { resetProgressStore } from "@/lib/progressStore";
 import { useProgress } from "@/lib/useProgress";
 import { UserAvatar } from "@/components/UserAvatar";
 import { XPBar } from "@/components/XPBar";
 import { Avatar3D } from "@/components/Avatar3D";
+import { useTranslation } from "@/lib/i18n";
 
 type ProfileData = {
   id: string;
@@ -27,17 +29,10 @@ type ToastState =
 
 const THEME_KEY = "kodeln_theme";
 
-function persistTheme(next: ProfileData["theme"]) {
-  try {
-    localStorage.setItem(THEME_KEY, next);
-    window.dispatchEvent(new Event("kodeln-theme"));
-  } catch {
-    // ignore
-  }
-}
 
 export default function ProfileClient() {
   const router = useRouter();
+  const { t } = useTranslation();
   const { update } = useSession();
   const p = useProgress();
 
@@ -45,8 +40,6 @@ export default function ProfileClient() {
 
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
-  const [theme, setTheme] = useState<ProfileData["theme"]>("system");
-
   const [selectedSeed, setSelectedSeed] = useState("");
 
   const [savingProfile, setSavingProfile] = useState(false);
@@ -77,10 +70,7 @@ export default function ProfileClient() {
       setData(j);
       setName(j.name || "");
       setAddress(j.address || "");
-      setTheme(j.theme || "system");
       setSelectedSeed(j.image || j.email || "user");
-
-      persistTheme(j.theme || "system");
     }
 
     load();
@@ -156,29 +146,13 @@ export default function ProfileClient() {
     }
   }
 
-  async function saveTheme(nextTheme: ProfileData["theme"]) {
-    try {
-      const res = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ theme: nextTheme }),
-      });
-      if (!res.ok) throw new Error("Failed to save theme");
 
-      await update();
-
-      setData((d) => (d ? { ...d, theme: nextTheme } : d));
-      router.refresh();
-      showSuccess("Theme preferences updated");
-    } catch {
-      showError("Failed to save theme setting.");
-    }
-  }
-
-  async function handleSignOut() {
+  const handleSignOut = async () => {
     resetProgressStore();
     await signOut({ callbackUrl: "/" });
-  }
+  };
+
+  const solvedPractice = (p.completedStepIds.practice as string[]) || [];
 
   if (!data) {
     return (
@@ -197,7 +171,7 @@ export default function ProfileClient() {
           className="group inline-flex items-center gap-2 rounded-lg bg-edu-surface1 text-edu-textSecondary hover:text-edu-textPrimary font-semibold px-4 py-2 border border-edu-border transition-colors focus:ring-2 focus:ring-edu-primary focus:outline-none"
         >
           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-          Back to Map
+          {t("topbar.map")}
         </button>
       </div>
 
@@ -246,7 +220,7 @@ export default function ProfileClient() {
                         onClick={() => fileInputRef.current?.click()}
                         className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-edu-surface2 border border-edu-border text-edu-textPrimary font-semibold hover:bg-edu-border transition-colors text-sm"
                      >
-                        <Upload size={16} /> Update Photo
+                        <Upload size={16} /> {t("profile.details.updatePhoto")}
                      </button>
                      
                      <div className="flex flex-wrap justify-center gap-2 pt-2">
@@ -261,13 +235,13 @@ export default function ProfileClient() {
 
                <div className="mt-10 pt-8 border-t border-edu-border">
                   <div className="flex items-center justify-between mb-6 px-1">
-                    <div className="text-xs font-bold text-edu-textSecondary uppercase tracking-widest">Avatar Styles</div>
+                    <div className="text-xs font-bold text-edu-textSecondary uppercase tracking-widest">{t("profile.avatar.styles")}</div>
                     {selectedSeed.startsWith("data:") && (
                       <button 
                         onClick={() => setSelectedSeed(data.email)}
                         className="text-[10px] font-bold text-edu-error uppercase tracking-widest flex items-center gap-1 hover:underline"
                       >
-                        <Trash2 size={12} /> Remove custom
+                        <Trash2 size={12} /> {t("profile.avatar.remove")}
                       </button>
                     )}
                   </div>
@@ -289,20 +263,125 @@ export default function ProfileClient() {
                   </div>
                </div>
             </div>
+
+            {/* Logout Panel */}
+            <div className="bg-edu-surface1 border border-edu-error/20 rounded-xl p-8 shadow-sm">
+               <div className="flex flex-col items-center sm:items-start gap-4">
+                  <div>
+                     <h3 className="text-sm font-black text-edu-error uppercase tracking-widest flex items-center gap-2">
+                        {t("profile.session.title")}
+                     </h3>
+                     <p className="mt-1 text-[10px] font-bold text-edu-textSecondary uppercase tracking-wider">{t("profile.session.desc")}</p>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl border border-edu-error text-edu-error font-black text-[10px] uppercase tracking-widest hover:bg-edu-error hover:text-white transition-all active:scale-95"
+                  >
+                     <LogOut size={16} /> {t("profile.session.logout")}
+                  </button>
+               </div>
+            </div>
          </div>
 
-         {/* RIGHT COLUMN: Settings & Save */}
+         {/* RIGHT COLUMN: Stats & Settings */}
          <div className="lg:col-span-3 space-y-8">
+            
+            {/* PRACTICE STATS PANEL (LeetCode Style) */}
+            <div className="bg-edu-surface1 border border-edu-border rounded-2xl p-8 shadow-sm">
+               <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-3">
+                     <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                        <Layout size={20} />
+                     </div>
+                     <div>
+                        <h3 className="text-lg font-black text-edu-textPrimary leading-tight">{t("profile.practice.dashboard")}</h3>
+                        <p className="text-[10px] font-bold text-edu-textSecondary uppercase tracking-widest">{t("profile.stats.avg")}</p>
+                     </div>
+                  </div>
+                  <div className="flex flex-col items-end">
+                     <span className="text-[20px] font-black text-edu-textPrimary leading-none">{solvedPractice.length}</span>
+                     <span className="text-[9px] font-bold text-edu-textSecondary uppercase tracking-widest leading-none mt-1">{t("profile.stats.practice")}</span>
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Left Side: Circular Summary */}
+                  <div className="flex flex-col items-center justify-center p-6 bg-edu-bg/50 rounded-[2rem] border border-edu-border/50 relative overflow-hidden group">
+                     <div className="relative h-32 w-32 flex items-center justify-center">
+                        {/* Background Ring */}
+                        <svg className="h-full w-full -rotate-90">
+                           <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-edu-surface2" />
+                           <circle 
+                             cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" 
+                             className="text-indigo-500 transition-all duration-1000 ease-out"
+                             strokeDasharray={364}
+                             strokeDashoffset={364 - (364 * (solvedPractice.length / practiceChallenges.length))}
+                           />
+                        </svg>
+                        <div className="absolute flex flex-col items-center">
+                           <span className="text-2xl font-black text-edu-textPrimary leading-none">
+                              {Math.round((solvedPractice.length / practiceChallenges.length) * 100)}%
+                           </span>
+                           <span className="text-[8px] font-black text-edu-textSecondary uppercase tracking-widest mt-1">{t("profile.stats.mastery")}</span>
+                        </div>
+                     </div>
+                     <div className="mt-4 text-center">
+                        <p className="text-xs font-bold text-edu-textSecondary">
+                           {t("profile.stats.solvedDesc").replace("{solved}", solvedPractice.length.toString()).replace("{total}", practiceChallenges.length.toString())}
+                        </p>
+                     </div>
+                  </div>
+
+                  {/* Right Side: Difficulty Bars */}
+                  <div className="space-y-6 flex flex-col justify-center">
+                     {[
+                        { label: "Easy", color: "text-emerald-500", bg: "bg-emerald-500", total: practiceChallenges.filter(c => c.difficulty === "Easy").length, solved: practiceChallenges.filter(c => c.difficulty === "Easy" && solvedPractice.includes(c.id)).length },
+                        { label: "Medium", color: "text-amber-500", bg: "bg-amber-500", total: practiceChallenges.filter(c => c.difficulty === "Medium").length, solved: practiceChallenges.filter(c => c.difficulty === "Medium" && solvedPractice.includes(c.id)).length }
+                     ].map((stat) => (
+                        <div key={stat.label} className="space-y-2">
+                           <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest">
+                              <span className={stat.color}>{stat.label}</span>
+                              <span className="text-edu-textSecondary">
+                                 <span className="text-edu-textPrimary">{stat.solved}</span>/{stat.total}
+                              </span>
+                           </div>
+                           <div className="h-2 w-full bg-edu-surface2 rounded-full overflow-hidden">
+                              <div 
+                                 className={`h-full ${stat.bg} transition-all duration-1000`} 
+                                 style={{ width: `${(stat.solved / stat.total) * 100}%` }}
+                              />
+                           </div>
+                        </div>
+                     ))}
+                     
+                     <div className="pt-2 flex items-center gap-4 border-t border-edu-border mt-2">
+                        <div className="flex-1 p-3 rounded-xl bg-edu-surface2/50 border border-edu-border/50 text-center">
+                           <div className="text-[10px] font-black text-edu-textSecondary uppercase tracking-widest mb-1">{t("profile.stats.xp")}</div>
+                           <div className="flex items-center justify-center gap-1 text-edu-xp font-black">
+                              <Zap size={12} fill="currentColor" /> {p.xp}
+                           </div>
+                        </div>
+                        <div className="flex-1 p-3 rounded-xl bg-edu-surface2/50 border border-edu-border/50 text-center">
+                           <div className="text-[10px] font-black text-edu-textSecondary uppercase tracking-widest mb-1">{t("profile.stats.bestStreak")}</div>
+                           <div className="flex items-center justify-center gap-1 text-edu-streak font-black">
+                              <CheckCircle size={12} /> {p.streak.longest}
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
             {/* Profile Form Panel */}
             <div className="bg-edu-surface1 border border-edu-border rounded-xl p-8">
                <div className="flex items-center gap-3 mb-8 border-b border-edu-border pb-4">
                   <User size={22} className="text-edu-primary" />
-                  <h3 className="text-xl font-bold text-edu-textPrimary">Profile Settings</h3>
+                  <h3 className="text-xl font-bold text-edu-textPrimary">{t("profile.details.title")}</h3>
                </div>
 
                <div className="space-y-6">
                   <div>
-                     <label className="block text-xs font-bold text-edu-textSecondary uppercase tracking-widest mb-2">Display Name</label>
+                     <label className="block text-xs font-bold text-edu-textSecondary uppercase tracking-widest mb-2">{t("profile.details.name")}</label>
                      <input
                         value={name}
                         onChange={(e) => setName(e.target.value)}
@@ -311,7 +390,7 @@ export default function ProfileClient() {
                      />
                   </div>
                   <div>
-                     <label className="block text-xs font-bold text-edu-textSecondary uppercase tracking-widest mb-2">Location</label>
+                     <label className="block text-xs font-bold text-edu-textSecondary uppercase tracking-widest mb-2">{t("profile.details.location")}</label>
                      <input
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
@@ -327,27 +406,7 @@ export default function ProfileClient() {
                     disabled={savingProfile}
                     className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-edu-primary text-white font-semibold hover:bg-edu-primaryHover focus:ring-2 focus:ring-offset-2 focus:ring-offset-edu-surface1 focus:ring-edu-primary transition-all disabled:opacity-50"
                   >
-                    {savingProfile ? "Saving Details..." : "Save Changes"}
-                  </button>
-               </div>
-            </div>
-
-
-
-            {/* Logout Panel */}
-            <div className="bg-edu-surface1 border border-edu-error/30 rounded-xl p-8">
-               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-                  <div>
-                     <h3 className="text-lg font-bold text-edu-error flex items-center gap-2">
-                        Account Session
-                     </h3>
-                     <p className="mt-1 text-sm font-medium text-edu-textSecondary">Are you sure you want to log out? Your progress will wait for you.</p>
-                  </div>
-                  <button
-                    onClick={handleSignOut}
-                    className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-edu-error text-edu-error font-semibold hover:bg-edu-error hover:text-white transition-all"
-                  >
-                     <LogOut size={18} /> Log Out
+                    {savingProfile ? t("profile.details.saving") : t("profile.details.save")}
                   </button>
                </div>
             </div>

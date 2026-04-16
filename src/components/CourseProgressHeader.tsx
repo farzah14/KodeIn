@@ -2,12 +2,13 @@
 
 import { content } from "@/lib/content";
 import { useProgress } from "@/lib/useProgress";
-import { getLevelInfo } from "@/components/XPBar";
-import { BookOpen, Flame, Zap, Trophy } from "lucide-react";
+import { BookOpen, Flame, Zap } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useSession } from "next-auth/react";
+import { useTranslation } from "@/lib/i18n";
 
 export function CourseProgressHeader() {
+  const { t } = useTranslation();
   const p = useProgress();
   const { data: session } = useSession();
 
@@ -22,7 +23,6 @@ export function CourseProgressHeader() {
 
   const pct = totalSteps === 0 ? 0 : Math.round((completedSteps / totalSteps) * 100);
   const done = totalSteps > 0 && completedSteps === totalSteps;
-  const lvl = getLevelInfo(p.xp);
 
   const userSeed = (session?.user?.image?.trim() || session?.user?.email?.trim() || session?.user?.name?.trim() || "anonymous") as string;
 
@@ -36,7 +36,7 @@ export function CourseProgressHeader() {
            </div>
            <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-edu-primary mb-2">
-                <BookOpen size={14} /> Current Quest
+                <BookOpen size={14} /> {t("learn.quest")}
               </div>
 
               <h1 className="text-xl sm:text-3xl font-bold text-edu-textPrimary leading-tight">
@@ -44,10 +44,10 @@ export function CourseProgressHeader() {
               </h1>
 
               <div className="mt-2 text-sm text-edu-textSecondary flex items-center gap-2">
-                {completedSteps}/{totalSteps} steps completed
+                {completedSteps}/{totalSteps} {t("learn.stepsCompleted")}
                 {done && (
                   <span className="inline-flex items-center gap-1 text-edu-success font-semibold px-2 py-0.5 rounded-md bg-edu-success/10 text-xs uppercase">
-                    Cleared!
+                    {t("leaderboard.refresh") === "Refresh" ? "Cleared!" : "Selesai!"}
                   </span>
                 )}
               </div>
@@ -81,7 +81,7 @@ export function CourseProgressHeader() {
       {/* Progress Bar */}
       <div className="mt-8">
         <div className="flex items-center justify-between text-[10px] sm:text-xs font-semibold text-edu-textSecondary tracking-widest uppercase mb-2 sm:mb-3">
-          <span>Total Progress</span>
+          <span>{t("learn.totalProgress")}</span>
           <span>{pct}%</span>
         </div>
         <div className="h-2 sm:h-3 w-full bg-edu-surface2 rounded-full overflow-hidden border border-edu-border">

@@ -89,7 +89,7 @@ export function Topbar() {
                   {t("topbar.leaderboard")}
                </Link>
                <Link href="/battle" className="text-sm font-bold text-gray-400 hover:text-indigo-600 dark:text-zinc-500 dark:hover:text-indigo-400 transition-colors uppercase tracking-widest flex items-center gap-2">
-                  <Sword size={14} className="text-edu-error" /> 1v1 Battle
+                  <Sword size={14} className="text-edu-error" /> {t("topbar.battle")}
                </Link>
             </div>
           )}
@@ -207,7 +207,7 @@ export function Topbar() {
             {isAuthed && (
                <>
                  <Link href="/learn" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-2xl transition-colors uppercase tracking-widest">
-                    <Map size={20} /> Course Map
+                    <Map size={20} /> {t("topbar.map")}
                  </Link>
                  <Link href="/practice" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-2xl transition-colors uppercase tracking-widest">
                     <Code2 size={20} /> {t("topbar.practice")}
@@ -216,14 +216,14 @@ export function Topbar() {
                     <Trophy size={20} /> {t("topbar.leaderboard")}
                  </Link>
                  <Link href="/battle" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-4 p-4 text-sm font-black text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-2xl transition-colors uppercase tracking-widest">
-                    <Sword size={20} /> 1v1 Battle
+                    <Sword size={20} /> {t("topbar.battle")}
                  </Link>
                  <div className="h-px bg-gray-100 dark:bg-zinc-800 my-2" />
                  <button
                    onClick={handleSignOut}
                    className="flex items-center gap-4 p-4 text-sm font-black text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 w-full text-left rounded-2xl transition-colors uppercase tracking-widest"
                  >
-                   <LogOut size={20} /> Sign Out
+                   <LogOut size={20} /> {t("topbar.logout")}
                  </button>
                </>
             )}

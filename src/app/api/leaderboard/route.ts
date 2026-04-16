@@ -20,6 +20,7 @@ export async function GET() {
           select: {
             xp: true,
             streakCurrent: true,
+            completedJson: true,
           },
         },
       },
@@ -28,17 +29,27 @@ export async function GET() {
           xp: "desc",
         },
       },
-      take: 50,
+      take: 100, // Increase slightly for more comprehensive rankings
     });
 
-    const formattedLeaderboard = leaderboard.map((user, index) => ({
-      rank: index + 1,
-      id: user.id,
-      name: user.name || "Anonymous",
-      image: user.image || user.email || "user",
-      xp: user.progress?.xp || 0,
-      streak: user.progress?.streakCurrent || 0,
-    }));
+    const formattedLeaderboard = leaderboard.map((user) => {
+      let solvedPracticeCount = 0;
+      try {
+        const completed = JSON.parse(user.progress?.completedJson || "{}");
+        solvedPracticeCount = (completed.practice || []).length;
+      } catch {
+        // ignore
+      }
+
+      return {
+        id: user.id,
+        name: user.name || "Anonymous",
+        image: user.image || user.email || "user",
+        xp: user.progress?.xp || 0,
+        streak: user.progress?.streakCurrent || 0,
+        solvedPractice: solvedPracticeCount,
+      };
+    });
 
     return NextResponse.json(formattedLeaderboard);
   } catch (error: unknown) {

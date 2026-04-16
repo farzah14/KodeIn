@@ -147,7 +147,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   if (!step) {
     return (
       <div className="rounded-xl border border-edu-border bg-edu-surface1 p-6 w-full max-w-5xl mx-auto mt-6">
-        <div className="text-sm font-semibold text-edu-textPrimary">Lesson does not have any steps.</div>
+        <div className="text-sm font-semibold text-edu-textPrimary">{t("lesson.noSteps")}</div>
       </div>
     );
   }
@@ -241,7 +241,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
               {isLessonCompleted ? (
                 <div className="flex items-center gap-4">
                   <div className="px-6 py-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-black text-xs uppercase tracking-widest hidden sm:block">
-                    Lesson Cleared
+                    {t("lesson.cleared")}
                   </div>
                   <button
                     onClick={handleNextLesson}
@@ -256,7 +256,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
                   disabled={isSaving || isFinishing}
                   className="px-12 py-4 rounded-2xl bg-indigo-600 text-white font-black text-sm tracking-wide shadow-xl shadow-indigo-600/20 hover:bg-indigo-700 hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50"
                 >
-                  {isSaving ? "SAVING..." : isLastStep ? t("lesson.finish") : t("lesson.continue")}
+                  {isSaving ? "..." : isLastStep ? t("lesson.finish") : t("lesson.continue")}
                 </button>
               )}
             </div>

@@ -1,32 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Topbar } from "@/components/Topbar";
 import { practiceChallenges } from "@/lib/practiceChallenges";
-import { Trophy, Zap, Code2, ArrowRight, Star, Search, Filter, Check } from "lucide-react";
+import { Trophy, Zap, Code2, ArrowRight, Search, Filter, Check } from "lucide-react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
+import { useProgress } from "@/lib/useProgress";
 
 export default function PracticeListPage() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<string>("All");
   const [searchTerm, setSearchTerm] = useState("");
-  const [completedIds, setCompletedIds] = useState<string[]>([]);
-
-  useEffect(() => {
-    const fetchProgress = async () => {
-      try {
-        const res = await fetch("/api/progress");
-        if (res.ok) {
-          const data = await res.json();
-          // The API returns normalized data in completedStepIds
-          const practice = data.completedStepIds?.practice || [];
-          setCompletedIds(practice);
-        }
-      } catch (e) {
-        console.error("Failed to fetch progress");
-      }
-    };
-    fetchProgress();
-  }, []);
+  const p = useProgress();
+  const completedIds = (p.completedStepIds?.practice as string[]) || [];
 
   const filteredChallenges = practiceChallenges.filter(c => {
     const matchesFilter = filter === "All" || c.difficulty === filter || c.category === filter;
@@ -44,23 +31,28 @@ export default function PracticeListPage() {
            <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-1000" />
            <div className="relative z-10 max-w-2xl">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 text-white/80 text-[10px] font-black uppercase tracking-[0.2em] mb-6 backdrop-blur-md">
-                 <Trophy size={14} className="text-orange-400" /> Level Up Your Logic
+                 <Trophy size={14} className="text-orange-400" /> {t("practice.hero.badge")}
               </div>
               <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-6 leading-tight">
-                 Asah Kemampuan <br/> <span className="text-indigo-200">Competitive Programming</span> Kamu.
+                 {t("practice.hero.title")}
               </h1>
               <p className="text-indigo-100/70 font-medium leading-relaxed mb-8">
-                 Selesaikan tantangan algoritma harian untuk mendapatkan XP tambahan dan naiki peringkat di leaderboard global.
+                 {t("practice.hero.desc")}
               </p>
               <div className="flex flex-wrap gap-8">
                  <div className="flex flex-col">
                     <span className="text-3xl font-black text-white">{practiceChallenges.length}</span>
-                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Soal Tersedia</span>
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">{t("practice.stats.total")}</span>
                  </div>
                  <div className="w-px h-10 bg-white/20" />
                  <div className="flex flex-col">
                     <span className="text-3xl font-black text-white">{practiceChallenges.filter(c => c.difficulty === 'Easy').length}</span>
-                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Easy Level</span>
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">Easy</span>
+                 </div>
+                 <div className="w-px h-10 bg-white/20" />
+                 <div className="flex flex-col">
+                    <span className="text-3xl font-black text-white">{completedIds.length}</span>
+                    <span className="text-[10px] font-bold text-indigo-200 uppercase tracking-widest">{t("practice.stats.completed")}</span>
                  </div>
               </div>
            </div>
@@ -72,7 +64,7 @@ export default function PracticeListPage() {
               <div className="pl-4 text-gray-400"><Search size={18} /></div>
               <input 
                 type="text" 
-                placeholder="Cari tantangan..."
+                placeholder={t("practice.search")}
                 className="bg-transparent border-none outline-none px-2 py-2 text-sm font-bold w-full md:w-64"
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
@@ -80,7 +72,7 @@ export default function PracticeListPage() {
            </div>
 
            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
-              {["All", "Easy", "Medium", "Logic", "Array", "String"].map(f => (
+              {["All", "Easy", "Medium", "Array", "String", "Math", "HashMap", "Stack", "Two Pointers", "Sorting"].map(f => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
@@ -111,7 +103,7 @@ export default function PracticeListPage() {
                       </div>
                       {completedIds.includes(challenge.id) && (
                         <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-[0.1em] shadow-lg shadow-emerald-500/20 animate-in zoom-in duration-300">
-                           <Check size={10} strokeWidth={4} /> Done
+                           <Check size={10} strokeWidth={4} /> {t("practice.done")}
                         </div>
                       )}
                    </div>
@@ -121,8 +113,8 @@ export default function PracticeListPage() {
                    </div>
                 </div>
 
-                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">
-                   {challenge.title}
+                <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 group-hover:text-indigo-600 transition-colors tracking-tight">
+                   <span className="text-gray-300 dark:text-zinc-600 text-sm font-bold mr-1">#{challenge.number}.</span> {challenge.title}
                 </h3>
                 <p className="text-gray-500 dark:text-zinc-400 text-xs font-medium leading-relaxed mb-8 line-clamp-2">
                    {challenge.description}
@@ -131,7 +123,7 @@ export default function PracticeListPage() {
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-gray-50 dark:border-zinc-800/50">
                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{challenge.category}</span>
                    <div className="flex items-center gap-2 text-indigo-600 font-black text-[10px] uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0">
-                      Mulai <ArrowRight size={14} />
+                      {t("topbar.map") === "Peta" ? "Mulai" : "Start"} <ArrowRight size={14} />
                    </div>
                 </div>
              </Link>
@@ -142,8 +134,8 @@ export default function PracticeListPage() {
           <div className="flex flex-col items-center justify-center p-20 text-center space-y-4 opacity-50 grayscale">
              <Filter size={64} className="text-gray-300" />
              <div>
-                <p className="text-lg font-black text-gray-900 dark:text-white">Tidak ada tantangan ditemukan</p>
-                <p className="text-sm font-medium text-gray-500">Coba ubah filter atau pencarianmu.</p>
+                <p className="text-lg font-black text-gray-900 dark:text-white">{t("practice.empty")}</p>
+                <p className="text-sm font-medium text-gray-500">{t("practice.emptyDesc")}</p>
              </div>
           </div>
         )}
