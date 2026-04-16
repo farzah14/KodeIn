@@ -4,9 +4,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
-  // kalau project Anda pakai driver adapter (seperti sekarang), biasanya perlu ini:
-  previewFeatures = ["driverAdapters"]
 }
 
 model User {
