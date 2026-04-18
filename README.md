@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# KodeIn 🚀
 
-## Getting Started
+KodeIn is a premium, interactive Python learning platform designed with gamification at its core. It provides a structured curriculum for mastering Python through hands-on practice, real-time code execution, 1v1 competitive coding battles, and a comprehensive progression system.
 
-First, run the development server:
+## ✨ Features
 
+- **Interactive Curriculum (Course Map)**: A beautifully designed learning path that guides users through Python concepts unit by unit.
+- **In-Browser Code Execution**: Write and run Python code directly in the browser. Powered by **Pyodide** for instant local evaluation and the **Piston API** for secure server-side validation.
+- **Gamification System**: Earn XP, maintain daily streaks, and level up as you complete challenges.
+- **1v1 Battle Arena**: Challenge other users in real-time coding battles using Server-Sent Events (SSE). First to solve the algorithm wins!
+- **Global Leaderboard**: Compete with students worldwide for the top spot based on your XP.
+- **Modern UI/UX**: Built with a "Clean Premium" aesthetic, featuring glassmorphism, dynamic theme syncing (Light/Dark mode), and micro-animations.
+- **Mobile Responsive**: Seamless dashboard navigation on mobile (Note: writing code in the practice/battle modules requires a desktop environment for optimal UX).
+
+## 🛠 Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org/) (App Router, React 19)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL)
+- **ORM**: [Prisma](https://www.prisma.io/) (`@prisma/adapter-pg`)
+- **Authentication**: [NextAuth.js v5](https://authjs.dev/) (Auth.js Beta) with JWT Session Strategy
+- **Code Execution**: [Pyodide](https://pyodide.org/) (Client) & [Piston](https://github.com/engineer-man/piston) (Server)
+- **Editor**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
+
+## 🚀 Getting Started
+
+Follow these instructions to get a local copy of the project up and running.
+
+### 1. Clone the repository
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/farzah14/KodeIn.git
+cd KodeIn
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Set up Environment Variables
+Create a `.env` file in the root directory and configure the following variables:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+# Database Configuration (Supabase PostgreSQL)
+DATABASE_URL="postgres://[user]:[password]@[host]:[port]/[db]?schema=public"
 
-## Learn More
+# NextAuth Configuration
+NEXTAUTH_URL="http://localhost:3000"
+AUTH_SECRET="your-super-secret-auth-key-generate-one"
 
-To learn more about Next.js, take a look at the following resources:
+# OAuth Providers (Optional: If using Google/GitHub)
+AUTH_GITHUB_ID="your-github-id"
+AUTH_GITHUB_SECRET="your-github-secret"
+AUTH_GOOGLE_ID="your-google-id"
+AUTH_GOOGLE_SECRET="your-google-secret"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Setup Prisma Database
+Generate the Prisma client and push the schema to your Supabase instance:
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 5. Run the Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser to see the result.
 
-## Deploy on Vercel
+## 📂 Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `/src/app` - Next.js App Router (Pages & API Routes)
+- `/src/components` - Reusable React components (UI, Topbar, Course Map)
+- `/src/lib` - Core logic, configuration, and state stores (Prisma, ProgressStore, i18n, Battle challenges)
+- `/prisma` - Database schema definition (`schema.prisma`)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🌐 Localization
+KodeIn currently supports English (`en`) and Indonesian (`id`) out of the box. Locales are managed safely via context to prevent hydration mismatches.
+
+## 🛡 License
+This project is proprietary and built specifically for the KodeIn educational platform.
