@@ -27,7 +27,7 @@ export async function GET() {
       take: 100, // Increase slightly for more comprehensive rankings
     });
 
-    const formattedLeaderboard = leaderboard.map((user: any) => {
+    const formattedLeaderboard = leaderboard.map((user) => {
       let solvedPracticeCount = 0;
       try {
         const completed = JSON.parse(user.progress?.completedJson || "{}");

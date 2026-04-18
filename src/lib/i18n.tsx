@@ -386,11 +386,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("kodeln_locale") as Locale;
-    if (saved && (saved === "en" || saved === "id")) {
-      setLocaleState(saved);
-    }
-    setMounted(true);
+    // We defer the state update to avoid React's "cascading render in effect" compiler error 
+    // while still safely setting the user's preferred locale after hydration.
+    setTimeout(() => {
+      const saved = localStorage.getItem("kodeln_locale") as Locale;
+      if (saved && (saved === "en" || saved === "id")) {
+        setLocaleState(saved);
+      }
+      setMounted(true);
+    }, 0);
   }, []);
 
   const setLocale = (l: Locale) => {

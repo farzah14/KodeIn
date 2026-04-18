@@ -10,7 +10,7 @@ import { useTranslation } from "@/lib/i18n";
 export default function LearnPage() {
   const { t } = useTranslation();
   return (
-    <div className="relative min-h-screen bg-[#F8FAFC] dark:bg-[#09090b]">
+    <div className="relative min-h-screen overflow-x-hidden bg-[#F8FAFC] dark:bg-[#09090b]">
       {/* Background Pattern */}
       <div className="pointer-events-none fixed inset-0 z-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:32px_32px]"></div>
       <div className="pointer-events-none fixed top-0 right-0 z-0 h-[600px] w-[600px] rounded-full bg-gradient-to-bl from-indigo-500/8 via-cyan-500/5 to-transparent blur-[120px] dark:from-indigo-500/4 dark:via-cyan-500/3"></div>

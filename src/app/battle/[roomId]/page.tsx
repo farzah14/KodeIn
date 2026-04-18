@@ -44,6 +44,7 @@ export default function BattleArena({ params: paramsPromise }: { params: Promise
   const [room, setRoom] = useState<RoomState | null>(null);
   const [code, setCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [surrendering, setSurrendering] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
 
@@ -134,6 +135,25 @@ sys.stdout = io.StringIO()
     }
   };
 
+  const handleSurrender = async () => {
+    if (submitting || surrendering || done) return;
+    if (!confirm(t("leaderboard.ranking") === "Peta" ? "Yakin ingin menyerah?" : "Are you sure you want to surrender?")) return;
+    
+    setSurrendering(true);
+    setError("");
+    try {
+      const res = await fetch(`/api/battle/${roomId}/surrender`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json();
+        setError(err.error || t("common.error"));
+      }
+    } catch (err) {
+      setError((err as Error).message || "Gagal menyerah.");
+    } finally {
+      setSurrendering(false);
+    }
+  };
+
   if (!room) {
     return (
       <div className="min-h-screen bg-edu-bg">
@@ -180,13 +200,24 @@ sys.stdout = io.StringIO()
                   <div className="text-[9px] font-black text-edu-textSecondary uppercase tracking-widest animate-pulse">{t("battle.status.waiting")}</div>
                </div>
             ) : room.status === "active" ? (
-               <div className="flex flex-col items-center gap-1">
+               <div className="flex flex-col items-center gap-2">
                   <div className="flex items-center gap-4 text-edu-error">
                      <Sword size={24} className="animate-pulse" />
                      <span className="text-2xl font-black italic tracking-tighter">{t("battle.versus")}</span>
                      <Sword size={24} className="scale-x-[-1] animate-pulse" />
                   </div>
-                  <div className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20">{t("battle.status.started")}</div>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                     <div className="px-3 py-1 bg-red-50 dark:bg-red-900/20 text-red-500 rounded-full text-[9px] font-black uppercase tracking-widest border border-red-500/20">{t("battle.status.started")}</div>
+                     {(isPlayer1 || isPlayer2) && !done && (
+                        <button 
+                           onClick={handleSurrender} 
+                           disabled={submitting || surrendering}
+                           className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-gray-500 rounded-full text-[9px] font-black uppercase tracking-widest transition-colors"
+                        >
+                           {t("leaderboard.ranking") === "Peta" ? "Menyerah" : "Surrender"}
+                        </button>
+                     )}
+                  </div>
                </div>
             ) : (
                <div className="flex flex-col items-center gap-1">
@@ -259,8 +290,8 @@ sys.stdout = io.StringIO()
             )}
          </div>
 
-         {/* Right Side: Code Editor */}
-         <div className="flex-1 flex flex-col min-w-0 bg-edu-codeBg relative group">
+         {/* Right Side: Code Editor (Hidden on Mobile) */}
+         <div className="hidden md:flex flex-1 flex-col min-w-0 bg-edu-codeBg relative group">
             {room.status === "active" ? (
                <>
                   <Editor
@@ -321,6 +352,14 @@ sys.stdout = io.StringIO()
                    <Sword size={200} className="text-white animate-pulse" />
                </div>
             )}
+         </div>
+         
+         {/* Mobile Missing Editor Warning */}
+         <div className="flex md:hidden flex-1 bg-edu-codeBg items-center justify-center p-8 text-center border-t border-gray-100 dark:border-zinc-800">
+            <div className="text-white/50 text-xs font-black uppercase tracking-[0.2em] space-y-4">
+               <Sword size={32} className="mx-auto text-white/20 mb-2" />
+               <div>{t("leaderboard.ranking") === "Peta" ? "Gunakan Desktop untuk Menulis Kode" : "Please use desktop to write code"}</div>
+            </div>
          </div>
       </div>
 
