@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 export type Locale = "en" | "id";
 
@@ -336,6 +336,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "profile.stats.practice": "Total Selesai",
     "profile.stats.avg": "Penguasaan Harian",
     "profile.stats.mastery": "Penguasaan",
+    "profile.stats.solvedDesc": "Kamu telah menyelesaikan {solved} dari {total} tantangan",
     "profile.details.title": "Pengaturan Profil",
     "profile.details.updatePhoto": "Perbarui Foto",
     "profile.details.name": "Nama Tampilan",
@@ -381,15 +382,16 @@ interface LanguageContextType {
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("kodeln_locale") as Locale;
-      if (saved && (saved === "en" || saved === "id")) {
-        return saved;
-      }
+  const [locale, setLocaleState] = useState<Locale>("en");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("kodeln_locale") as Locale;
+    if (saved && (saved === "en" || saved === "id")) {
+      setLocaleState(saved);
     }
-    return "en";
-  });
+    setMounted(true);
+  }, []);
 
   const setLocale = (l: Locale) => {
     setLocaleState(l);
@@ -402,7 +404,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>
-      {children}
+      <div style={{ visibility: mounted ? "visible" : "hidden", display: "contents" }}>
+        {children}
+      </div>
     </LanguageContext.Provider>
   );
 }
@@ -414,3 +418,4 @@ export function useTranslation() {
   }
   return context;
 }
+
