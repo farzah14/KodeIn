@@ -173,8 +173,8 @@ sys.stdout = io.StringIO()
            </div>
         </div>
 
-        {/* Right Panel: Editor & Results */}
-        <div className="flex-1 flex flex-col bg-edu-codeBg relative overflow-hidden">
+        {/* Right Panel: Editor & Results (Desktop Only) */}
+        <div className="hidden md:flex flex-1 flex-col bg-edu-codeBg relative overflow-hidden">
            
            <div className="flex-1 min-h-0 relative">
               <div className="absolute top-0 left-0 right-0 h-10 bg-black/20 backdrop-blur-md border-b border-white/5 z-20 flex items-center justify-between px-6">
@@ -252,6 +252,17 @@ sys.stdout = io.StringIO()
                  {error}
               </div>
            )}
+        </div>
+        
+        {/* Mobile View Fallback */}
+        <div className="md:hidden flex-1 flex flex-col items-center justify-center p-8 text-center bg-gray-50 dark:bg-zinc-950/50">
+           <div className="w-20 h-20 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mb-6 shadow-xl shadow-indigo-500/10">
+              <Code2 size={32} />
+           </div>
+           <h3 className="text-xl font-black text-gray-900 dark:text-white mb-3">Code Editor Not Available</h3>
+           <p className="text-sm font-medium text-gray-500 dark:text-zinc-400 max-w-[280px] leading-relaxed">
+              For the best coding experience, please use a desktop browser to solve this practice challenge.
+           </p>
         </div>
       </div>
 
