@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { content } from "@/lib/content";
 import type { Progress as ProgressModel } from "@prisma/client";
 import { NextResponse } from "next/server";
 
@@ -72,13 +73,31 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  const body = (await req.json()) as { stepId?: string; xpEarned?: number };
-  const stepId = body.stepId;
-  const xpEarned = Number(body.xpEarned ?? 0);
+  let body: { stepId?: string; xpEarned?: number };
+  try {
+    body = (await req.json()) as { stepId?: string; xpEarned?: number };
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
 
+  const { stepId } = body;
   if (!stepId) {
     return NextResponse.json({ error: "stepId is required" }, { status: 400 });
   }
+
+  let foundStep: { type: "explain" | "code" } | null = null;
+  for (const lesson of Object.values(content.lessons)) {
+    const step = lesson.steps.find((s) => s.id === stepId);
+    if (step) {
+      foundStep = step;
+      break;
+    }
+  }
+
+  if (!foundStep) {
+    return NextResponse.json({ error: "Step not found" }, { status: 404 });
+  }
+  const xpEarned = foundStep.type === "code" ? 10 : 2;
 
   const user = await prisma.user.findUnique({
     where: { email },
@@ -89,33 +108,35 @@ export async function POST(req: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
   }
 
-  const row =
-    (await prisma.progress.findUnique({ where: { userId: user.id } })) ??
-    (await prisma.progress.create({ data: { userId: user.id } }));
+  const updated = await prisma.$transaction(async (tx) => {
+    const row =
+      (await tx.progress.findUnique({ where: { userId: user.id } })) ??
+      (await tx.progress.create({ data: { userId: user.id } }));
 
-  const completed = safeParseCompleted(row.completedJson);
-  const alreadyDone = !!completed[stepId];
+    const completed = safeParseCompleted(row.completedJson);
+    const alreadyDone = !!completed[stepId];
 
-  // streak update: dihitung setiap "berhasil", walau step sudah pernah selesai
-  const { todayISO, current, longest } = updateStreak({
-    streakCurrent: row.streakCurrent,
-    streakLongest: row.streakLongest,
-    lastActiveISO: row.lastActiveISO,
-  });
+    // streak update: dihitung setiap "berhasil", walau step sudah pernah selesai
+    const { todayISO, current, longest } = updateStreak({
+      streakCurrent: row.streakCurrent,
+      streakLongest: row.streakLongest,
+      lastActiveISO: row.lastActiveISO,
+    });
 
-  if (!alreadyDone) {
-    completed[stepId] = true;
-  }
+    if (!alreadyDone) {
+      completed[stepId] = true;
+    }
 
-  const updated = await prisma.progress.update({
-    where: { userId: user.id },
-    data: {
-      xp: alreadyDone ? row.xp : row.xp + Math.max(0, xpEarned),
-      completedJson: JSON.stringify(completed),
-      streakCurrent: current,
-      streakLongest: longest,
-      lastActiveISO: todayISO,
-    },
+    return await tx.progress.update({
+      where: { userId: user.id },
+      data: {
+        xp: alreadyDone ? row.xp : row.xp + xpEarned,
+        completedJson: JSON.stringify(completed),
+        streakCurrent: current,
+        streakLongest: longest,
+        lastActiveISO: todayISO,
+      },
+    });
   });
 
   return NextResponse.json(normalize(updated));

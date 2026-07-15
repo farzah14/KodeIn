@@ -48,20 +48,46 @@ export function CodeStep({
     setMessage("");
     setStdoutStr("");
 
-    const res = await runWithPiston({
-      language: "python",
-      code,
-      functionName: step.functionName,
-      publicCases: step.publicCases,
-      timeoutMs: 3000,
-    });
+    // Network call: run code against the Piston-compatible API. Any thrown
+    // exception (offline, CORS, server 5xx with non-JSON body, etc.) must not
+    // crash the whole step — fall back to a friendly offline message.
+    let res;
+    try {
+      res = await runWithPiston({
+        language: "python",
+        code,
+        functionName: step.functionName,
+        publicCases: step.publicCases,
+        timeoutMs: 3000,
+      });
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("[CodeStep] runWithPiston failed:", e);
+      setStatus("fail");
+      setMessage(
+        "Tidak bisa menghubungi server kode. Periksa koneksi internetmu lalu coba lagi."
+      );
+      setShakeKey((k: number) => k + 1);
+      return;
+    }
 
     const parsedStdout = res.stdout ? res.stdout.replace("ALL_PASS", "").trim() : "";
     setStdoutStr(parsedStdout || (res.stderr?.trim() ?? ""));
 
     if (res.status === "pass") {
       setStatus("pass");
-      await completeStep(step.id, 10);
+      // Database call: persist step completion. A failure here must not
+      // overturn a successful run — the user already passed, so we just warn
+      // and continue the lesson flow.
+      try {
+        await completeStep(step.id, 10);
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error("[CodeStep] completeStep failed:", e);
+        setMessage(
+          "Hasil test pass, tetapi progres gagal disimpan. Coba lagi dalam beberapa saat."
+        );
+      }
       setShowSuccess(true);
       return;
     }

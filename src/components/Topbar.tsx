@@ -16,17 +16,19 @@ export function Topbar() {
   const { t, locale, setLocale } = useTranslation();
   const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [theme, setThemeState] = useState<"light" | "dark" | "system">(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
-    }
-    return "system";
-  });
+  // Theme depends on `localStorage`, which is unavailable during SSR. Defer
+  // reading it until after mount to avoid a hydration mismatch — the server
+  // renders "system", then the client snaps to the persisted value.
+  const [theme, setThemeState] = useState<"light" | "dark" | "system">("system");
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
+    const next = (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
+    setThemeState(next);
+    setHydrated(true);
     const handle = () => {
-      const next = (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
-      setThemeState(next);
+      const updated = (localStorage.getItem("kodeln_theme") as "light" | "dark" | "system") || "system";
+      setThemeState(updated);
     };
     window.addEventListener("kodeln-theme", handle);
     return () => window.removeEventListener("kodeln-theme", handle);
@@ -149,8 +151,10 @@ export function Topbar() {
                 onClick={toggleTheme}
                 className="flex items-center justify-center h-6 w-10 rounded-lg bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-800 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all active:scale-95"
                 title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+                suppressHydrationWarning
               >
-                {theme === "dark" ? <Sun size={12} /> : <Moon size={12} />}
+                {hydrated && theme === "dark" && <Sun size={12} />}
+                {hydrated && theme !== "dark" && <Moon size={12} />}
               </button>
             </div>
           </div>
@@ -173,8 +177,10 @@ export function Topbar() {
           <button
             onClick={toggleTheme}
             className="p-3 rounded-2xl bg-gray-50 dark:bg-zinc-900 text-gray-500 transition-colors"
+            suppressHydrationWarning
           >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            {hydrated && theme === "dark" && <Sun size={20} />}
+            {hydrated && theme !== "dark" && <Moon size={20} />}
           </button>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}

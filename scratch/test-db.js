@@ -1,4 +1,5 @@
-const { PrismaClient } = require("./src/generated/prisma");
+/* eslint-disable */
+const { PrismaClient } = require("@prisma/client");
 const { Pool } = require("pg");
 const { PrismaPg } = require("@prisma/adapter-pg");
 require('dotenv').config();
@@ -14,7 +15,6 @@ async function test() {
 
   const pool = new Pool({
     connectionString: url,
-    ssl: { rejectUnauthorized: false },
   });
 
   try {

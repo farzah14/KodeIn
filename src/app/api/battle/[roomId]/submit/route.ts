@@ -11,7 +11,7 @@ export async function POST(
   if (!session?.user?.id) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
 
   const { roomId } = await params;
-  const { code, forceSuccess } = await req.json();
+  const { code } = await req.json();
 
   const room = await prisma.battleRoom.findUnique({ where: { id: roomId } });
   if (!room || room.status !== "active") return NextResponse.json({ error: "BATTLE_NOT_ACTIVE" }, { status: 400 });
@@ -24,34 +24,7 @@ export async function POST(
 
   if (!isPlayer1 && !isPlayer2) return NextResponse.json({ error: "NOT_IN_ROOM" }, { status: 403 });
 
-  // FALLBACK: If client already validated via Pyodide
-  if (forceSuccess !== undefined) {
-    const allPassed = forceSuccess;
-    const updateData: Record<string, any> = {};
-    if (isPlayer1) {
-      updateData.player1Code = code;
-      updateData.player1Done = true;
-      updateData.player1Result = allPassed ? "success" : "fail";
-    } else {
-      updateData.player2Code = code;
-      updateData.player2Done = true;
-      updateData.player2Result = allPassed ? "success" : "fail";
-    }
-
-    if (allPassed && !room.winnerId) {
-      updateData.winnerId = session.user.id;
-      updateData.status = "finished";
-    }
-
-    const updatedRoom = await prisma.battleRoom.update({
-      where: { id: roomId },
-      data: updateData
-    });
-
-    return NextResponse.json({ success: true, allPassed, room: updatedRoom });
-  }
-
-  // --- ORIGINAL LOGIC (Piston) ---
+  // --- SERVER-SIDE VALIDATION (Piston) ---
   // Run all test cases in parallel using Piston
   const runTestCase = async (input: string, expected: string) => {
     try {
@@ -97,7 +70,7 @@ export async function POST(
     const results = await Promise.all(challenge.testCases.map(tc => runTestCase(tc.input, tc.expectedOutput)));
     const allPassed = results.every(r => r === true);
 
-    const updateData: Record<string, any> = {};
+    const updateData: Record<string, string | boolean> = {};
     if (isPlayer1) {
       updateData.player1Code = code;
       updateData.player1Done = true;

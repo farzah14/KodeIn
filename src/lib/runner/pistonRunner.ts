@@ -49,7 +49,25 @@ def __run_tests():
                 sys.exit(1)
                 
             func = globals()['${functionName}']
-            result = func(*inputs)
+            
+            # Special class test handling
+            if '${functionName}' == 'Calculator':
+                obj = func()
+                result = obj.add(inputs[0], inputs[1])
+            elif '${functionName}' == 'Account':
+                obj = func()
+                obj.deposit(inputs[0])
+                result = obj.balance
+            elif '${functionName}' == 'Database':
+                obj = func()
+                obj.add_item(inputs[0], inputs[1])
+                result = obj.get_item(inputs[0])
+            else:
+                result = func(*inputs)
+            
+            # Cast tuples to lists for matching JSON array comparisons
+            if isinstance(result, tuple):
+                result = list(result)
             
             if result != expected:
                 print(json.dumps({

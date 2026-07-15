@@ -3,10 +3,15 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 
 declare global {
-  var prisma: PrismaClient | undefined;
+  var prismaV7: PrismaClient | undefined;
 }
 
 const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  if (process.env.NEXT_PHASE !== "phase-production-build") {
+    throw new Error("DATABASE_URL environment variable is missing.");
+  }
+}
 
 function createPrismaClient() {
   const pool = new pg.Pool({ connectionString });

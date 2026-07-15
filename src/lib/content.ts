@@ -88,7 +88,7 @@ export const content: Content = {
           type: "code",
           title: "Indentasi & Komentar",
           prompt: "Buatlah fungsi `hello_world()` yang:\n1. Memiliki satu baris komentar bebas.\n2. Mengembalikan string `\"Hello World\"`.\n\nPastikan indentasi (spasi) di dalam fungsi sudah benar!",
-          starterCode: "def hello_world():\n# Tulis komentar di sini\n# Kembalikan \"Hello World\"\npass",
+          starterCode: "def hello_world():\n    # Tulis komentar di sini\n    # Kembalikan \"Hello World\"\n    pass",
           functionName: "hello_world",
           hints: ["Gunakan 4 spasi untuk indentasi di dalam fungsi.", "Komentar dimulai dengan `#`.", "Jangan lupa tanda petik untuk string."],
           publicCases: [
@@ -810,7 +810,7 @@ export const content: Content = {
           type: "code",
           title: "Hapus Duplikat",
           prompt: "Seringkali Set digunakan untuk membuang duplikat dari list. Buatlah fungsi `unique_list(items)` yang mengubah list menjadi set lalu kembali menjadi list untuk membuang duplikatnya.",
-          starterCode: "def unique_list(items):\n    # TODO: list(set(items))\n    pass",
+          starterCode: "def unique_list(items):\n    # TODO: sorted(list(set(items)))\n    pass",
           functionName: "unique_list",
           hints: ["Gunakan `set(items)` untuk membuang duplikat.", "Gunakan `list(...)` untuk mengembalikannya ke tipe list."],
           publicCases: [
@@ -1061,7 +1061,7 @@ export const content: Content = {
           functionName: "safe_div",
           hints: ["Gunakan blok `except:`."],
           publicCases: [
-            { input: [10, 2], output: 5 },
+            { input: [10, 2], output: 5.0 },
             { input: [10, 0], output: "Error" },
           ],
         },
@@ -1116,7 +1116,7 @@ export const content: Content = {
           functionName: "process_data",
           hints: ["Pindahkan logika return sukses ke dalam blok `else:`."],
           publicCases: [
-            { input: [2], output: 50 },
+            { input: [2], output: 50.0 },
             { input: [0], output: 0 },
           ],
         },
@@ -1140,7 +1140,7 @@ export const content: Content = {
           type: "code",
           title: "Gunakan Global",
           prompt: "Buatlah fungsi `set_global_x(val)` yang menggunakan kata kunci `global` untuk mengubah variabel global `x` menjadi `val`.",
-          starterCode: "x = 0\n\ndef set_global_x(val):\n    # TODO: global x\n    pass",
+          starterCode: "x = 0\n\ndef set_global_x(val):\n    # TODO: global x\n    # x = val\n    # return x\n    pass",
           functionName: "set_global_x",
           hints: ["Tulis `global x` di baris pertama fungsi."],
           publicCases: [

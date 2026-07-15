@@ -1,263 +1,462 @@
-# KodeIn — Implementation Plan: Level Up to Best Website
+# Bug Fixing & Stability Implementation Plan
 
-## 📌 Project Overview
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**KodeIn** adalah platform belajar coding interaktif (mirip Duolingo for code) berbasis Next.js 16, Tailwind CSS v4, Prisma + SQLite/PostgreSQL, NextAuth v5.
+**Goal:** Fix all 30+ security, logic, data, component, and translation bugs across the KodeIn codebase to ensure stability, safety, and correctness.
 
-**Stack saat ini:**
+**Architecture:** We will implement strict input validation, transaction-based database queries to eliminate race conditions, secure server-side XP verification, try/catch handlers for resilient async operations, and correct the Python content/test cases.
 
-- Next.js 16 (App Router) + React 19
-- Tailwind CSS v4
-- Prisma + SQLite (dev) / PostgreSQL (prod)
-- NextAuth v5 (Google + GitHub OAuth)
-- Monaco Editor (code editor)
-- Spline 3D (avatar)
-- Lucide React (icons)
+**Tech Stack:** Next.js 16, React 19, Prisma, Tailwind CSS v4, NextAuth v5, Piston API
 
 ---
 
-## 🔍 Analisis Kondisi Saat Ini (Current State)
+### Task 1: Auth & Database Connection Security
 
-### ✅ Yang Sudah Ada (Strengths)
+**Files:**
+- Modify: `src/auth.ts`
+- Modify: `src/lib/prisma.ts`
 
-| Area                                 | Status               |
-| ------------------------------------ | -------------------- |
-| Auth (Google + GitHub OAuth)         | ✅ Berjalan          |
-| Progress tracking (XP + Streak)      | ✅ Berjalan          |
-| Monaco Code Editor                   | ✅ Terintegrasi      |
-| 3D Avatar (Spline) di Topbar         | ✅ Ada               |
-| PathMap (Course Map zigzag)          | ✅ Berjalan          |
-| Lesson Player (Explain + Code steps) | ✅ Berjalan          |
-| Dark mode                            | ✅ Ada (class-based) |
-| Mobile hamburger menu                | ✅ Ada               |
+- [ ] **Step 1: Harden next-auth configuration**
+  Open [src/auth.ts](file:///D:/KodeIn/src/auth.ts). Change `debug: true` to use conditional development mode, validate OAuth env vars on startup in production, and remove the invalid `prompt` parameter from GitHub OAuth provider config.
+  ```typescript
+  // Update authConfig in src/auth.ts:
+  if (process.env.NODE_ENV === "production") {
+    if (!process.env.AUTH_SECRET) throw new Error("Missing AUTH_SECRET env var");
+    if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) throw new Error("Missing Google OAuth credentials");
+    if (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET) throw new Error("Missing GitHub OAuth credentials");
+  }
 
-### ❌ Gap & Masalah Besar (Critical Gaps)
+  const authConfig: NextAuthConfig = {
+    adapter: PrismaAdapter(prisma),
+    secret: process.env.AUTH_SECRET,
+    trustHost: true,
+    session: { strategy: "jwt" },
+    providers: [
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET,
+        authorization: { params: { prompt: "select_account" } },
+      }),
+      GitHub({
+        clientId: process.env.AUTH_GITHUB_ID,
+        clientSecret: process.env.AUTH_GITHUB_SECRET,
+        // Removed prompt: select_account as GitHub does not support it
+      }),
+    ],
+    // ...
+    debug: process.env.NODE_ENV === "development",
+  };
+  ```
 
-#### 1. **Landing Page Tidak Menarik** 🔴
+- [ ] **Step 2: Harden Prisma client & connection validation**
+  Open [src/lib/prisma.ts](file:///D:/KodeIn/src/lib/prisma.ts). Fix global variable naming declaration mismatch and validate `DATABASE_URL` is set before starting pool creation.
+  ```typescript
+  import { PrismaClient } from "@prisma/client";
+  import { PrismaPg } from "@prisma/adapter-pg";
+  import pg from "pg";
 
-- Halaman utama (`/`) hanya ada card kecil dengan teks "KodeIn" dan "Belajar Coding Gampang Kok😂"
-- Tidak ada hero section yang impresif, tidak ada social proof, tidak ada feature showcase
-- Sangat jauh dari standar website modern yang bisa *wow* pengguna
+  declare global {
+    var prismaV7: PrismaClient | undefined;
+  }
 
-#### 2. **Code Runner Masih Mock** 🔴
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL environment variable is missing.");
+  }
 
-- `mockPythonRunner.ts` hanya cek regex sederhana (`def` + `return`), tidak benar-benar menjalankan kode
-- User bisa pass dengan kode yang salah secara logika
-- Tanpa real execution engine, pengalaman belajar tidak valid
+  function createPrismaClient() {
+    const pool = new pg.Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    });
+  }
 
-#### 3. **Konten Kursus Sangat Sedikit** 🔴
+  export const prisma = (globalThis as unknown as { prismaV7: PrismaClient | undefined }).prismaV7 || createPrismaClient();
 
-- Hanya 1 Unit aktif (Unit 1 — Basics) dengan 3 lesson
-- Unit 2 dan Unit 3 masih "Coming Soon"
-- Tidak cukup untuk menahan pengguna
-
-#### 4. **Login Page Terlalu Sederhana** 🟡
-
-- Tidak ada branding, tidak ada dark mode
-- UI polos, tidak meyakinkan
-
-#### 5. **Profile Page Minimal** 🟡
-
-- Belum terlihat isinya, hanya redirect ke ProfileClient
-
-#### 6. **Tidak Ada Sistem Gamifikasi yang Terlihat** 🟡
-
-- XP dan Streak ada, tapi tidak ada Leaderboard, Badge, atau Level System yang nyata
-- Progress bar terlalu sederhana
-
-#### 7. **SEO & Meta Tags** 🟡
-
-- Tidak ada metadata yang proper di halaman
-- `layout.tsx` tidak memiliki `<title>` atau `<meta description>` yang kuat
-
-#### 8. **Tidak Ada Practice / Playground Mode** 🟡
-
-- Route `/practice` ada di folder tapi kosong
-
----
-
-## 🎯 Tujuan Eksekusi Berikutnya
-
-**Prioritas:** Buat KodeIn terasa seperti produk nyata yang premium, bukan MVP kasar.
-
----
-
-## 🚀 Proposed Changes (Fase Eksekusi)
-
-### FASE 1 — Landing Page Visual Overhaul [PALING PENTING]
-
-> Ini adalah hal pertama yang user lihat. Kalau ini jelek, user langsung tutup.
-
-#### [MODIFY] `src/app/page.tsx`
-
-Redesign total menjadi full landing page dengan:
-
-**Sections:**
-
-1. **Hero Section** — Headline besar, animated gradient text, subheadline, 2 CTA buttons (Mulai Belajar + Lihat Demo), animated code snippet floating di samping
-2. **Social Proof Bar** — "500+ Pelajar", "3 Bahasa", "100% Gratis" sebagai stat pills
-3. **Feature Cards** — 3 cards: Interactive Coding, Track Progress, Real Feedback
-4. **How It Works** — 3 langkah dengan ikon numbered
-5. **CTA Footer Section** — Big CTA block sebelum footer
-
-**Visual Style:**
-
-- Background: dark gradient (`from-slate-950 via-indigo-950 to-slate-950`) dengan animated mesh
-- Typography: Inter/Outfit dari Google Fonts
-- Accent color: Indigo/Violet gradient
-- Animated particles atau grid background
-- Glassmorphism cards di feature section
+  if (process.env.NODE_ENV !== "production") (globalThis as unknown as { prismaV7: PrismaClient | undefined }).prismaV7 = prisma;
+  ```
 
 ---
 
-### FASE 2 — Login Page Redesign
+### Task 2: API Route Security, XP Verification, & Race Conditions
 
-#### [MODIFY] `src/app/login/page.tsx`
+**Files:**
+- Modify: `src/app/api/progress/complete-step/route.ts`
+- Modify: `src/app/api/progress/complete-practice/route.ts`
+- Modify: `src/app/api/battle/[roomId]/submit/route.ts`
 
-- Full screen split layout (kiri: branding + quote, kanan: login form)
-- Dark mode support
-- Animated gradient background
-- Social login buttons yang proper dengan icon Google dan GitHub SVG
-- "Gratis selamanya" badge
+- [ ] **Step 1: Secure complete-step route**
+  Open [src/app/api/progress/complete-step/route.ts](file:///D:/KodeIn/src/app/api/progress/complete-step/route.ts). Secure XP tracking by calculating values server-side based on step type, handle JSON parsing failures, and run the database logic in a transaction.
+  ```typescript
+  import { auth } from "@/auth";
+  import { prisma } from "@/lib/prisma";
+  import { content } from "@/lib/content";
+  import type { Progress as ProgressModel } from "@prisma/client";
+  import { NextResponse } from "next/server";
+
+  export const dynamic = "force-dynamic";
+  // ... Keep types, normalize, safeParseCompleted, updateStreak helpers ...
+
+  export async function POST(req: Request): Promise<NextResponse> {
+    const session = await auth();
+    const email = session?.user?.email;
+    if (!email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const { stepId } = body;
+    if (!stepId) return NextResponse.json({ error: "stepId is required" }, { status: 400 });
+
+    // Look up step server-side to prevent XP spoofing
+    let foundStep = null;
+    for (const lesson of Object.values(content.lessons)) {
+      const step = lesson.steps.find(s => s.id === stepId);
+      if (step) {
+        foundStep = step;
+        break;
+      }
+    }
+
+    if (!foundStep) return NextResponse.json({ error: "Step not found" }, { status: 404 });
+    const xpEarned = foundStep.type === "code" ? 10 : 2;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: { id: true },
+    });
+    if (!user) return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const row =
+        (await tx.progress.findUnique({ where: { userId: user.id } })) ??
+        (await tx.progress.create({ data: { userId: user.id } }));
+
+      const completed = safeParseCompleted(row.completedJson);
+      const alreadyDone = !!completed[stepId];
+
+      const { todayISO, current, longest } = updateStreak({
+        streakCurrent: row.streakCurrent,
+        streakLongest: row.streakLongest,
+        lastActiveISO: row.lastActiveISO,
+      });
+
+      if (!alreadyDone) {
+        completed[stepId] = true;
+      }
+
+      return await tx.progress.update({
+        where: { userId: user.id },
+        data: {
+          xp: alreadyDone ? row.xp : row.xp + xpEarned,
+          completedJson: JSON.stringify(completed),
+          streakCurrent: current,
+          streakLongest: longest,
+          lastActiveISO: todayISO,
+        },
+      });
+    });
+
+    return NextResponse.json(normalize(updated));
+  }
+  ```
+
+- [ ] **Step 2: Secure complete-practice route**
+  Open [src/app/api/progress/complete-practice/route.ts](file:///D:/KodeIn/src/app/api/progress/complete-practice/route.ts). Check practice XP server-side and run update inside a Prisma `$transaction`.
+  ```typescript
+  import { prisma } from "@/lib/prisma";
+  import { auth } from "@/auth";
+  import { practiceChallenges } from "@/lib/practiceChallenges";
+  import type { Progress as ProgressModel } from "@prisma/client";
+  import { NextResponse } from "next/server";
+
+  export const dynamic = "force-dynamic";
+  // ... Keep types, normalize, safeParseCompleted, updateStreak helpers ...
+
+  export async function POST(req: Request): Promise<NextResponse> {
+    const session = await auth();
+    const email = session?.user?.email;
+    if (!email) return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+
+    try {
+      let body;
+      try {
+        body = await req.json();
+      } catch {
+        return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+      }
+      const { challengeId } = body;
+      if (!challengeId) return NextResponse.json({ error: "challengeId is required" }, { status: 400 });
+
+      // Look up challenge XP server-side
+      const challenge = practiceChallenges.find(c => c.id === challengeId);
+      if (!challenge) return NextResponse.json({ error: "Challenge not found" }, { status: 404 });
+      const xpEarned = challenge.xp;
+
+      const user = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (!user) return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
+      const userId = user.id;
+
+      const updated = await prisma.$transaction(async (tx) => {
+        const row =
+          (await tx.progress.findUnique({ where: { userId } })) ??
+          (await tx.progress.create({ data: { userId } }));
+
+        const completed = safeParseCompleted(row.completedJson);
+        const practiceArray = completed.practice;
+        const practiceSet = new Set(Array.isArray(practiceArray) ? practiceArray : []);
+        
+        const alreadyDone = practiceSet.has(challengeId);
+
+        const { todayISO, current, longest } = updateStreak({
+          streakCurrent: row.streakCurrent,
+          streakLongest: row.streakLongest,
+          lastActiveISO: row.lastActiveISO,
+        });
+
+        if (!alreadyDone) {
+          practiceSet.add(challengeId);
+          completed.practice = Array.from(practiceSet);
+        }
+
+        return await tx.progress.update({
+          where: { userId },
+          data: {
+            xp: alreadyDone ? row.xp : row.xp + xpEarned,
+            completedJson: JSON.stringify(completed),
+            streakCurrent: current,
+            streakLongest: longest,
+            lastActiveISO: todayISO,
+          },
+        });
+      });
+      
+      return NextResponse.json(normalize(updated));
+    } catch (error) {
+      console.error("Complete Practice Error:", error);
+      return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });
+    }
+  }
+  ```
+
+- [ ] **Step 3: Remove Battle submit backdoor bypass**
+  Open [src/app/api/battle/[roomId]/submit/route.ts](file:///D:/KodeIn/src/app/api/battle/%5BroomId%5D/submit/route.ts). Remove lines 27 to 52 containing `forceSuccess` check so that users cannot cheat in multiplayer arena battles.
+  ```typescript
+  // Remove forceSuccess from request destructured parameters:
+  const { code } = await req.json(); // Remove forceSuccess
+  
+  // Delete the block: if (forceSuccess !== undefined) { ... } completely!
+  ```
 
 ---
 
-### FASE 3 — Real Python Code Runner
+### Task 3: Client-side UI Hydration & Resilience
 
-#### [NEW] `src/lib/runner/pyodideRunner.ts`
+**Files:**
+- Modify: `src/components/Topbar.tsx`
+- Modify: `src/components/steps/CodeStep.tsx`
+- Modify: `src/components/CodeEditor.tsx`
+- Create: `src/components/ErrorBoundary.tsx`
+- Modify: `src/app/layout.tsx`
 
-Implementasi code runner menggunakan **Pyodide** (WebAssembly Python) atau **API-based execution**.
+- [ ] **Step 1: Fix Topbar theme SSR hydration mismatch**
+  Open [src/components/Topbar.tsx](file:///D:/KodeIn/src/components/Topbar.tsx). Initialize the state as `"system"` and only load the saved value in a `useEffect` hook.
+  ```typescript
+  const [theme, setThemeState] = useState<"light" | "dark" | "system">("system");
+  const [mounted, setMounted] = useState(false);
 
-**Opsi A (Recommended): Pyodide (Client-side WASM)**
+  useEffect(() => {
+    setMounted(true);
+    const saved = localStorage.getItem("kodeln_theme") as "light" | "dark" | "system" | null;
+    if (saved) {
+      setThemeState(saved);
+    }
+  }, []);
+  ```
 
-- Jalankan Python langsung di browser via WebAssembly
-- Tidak perlu server, tidak ada biaya API
-- Load Pyodide script di komponen CodeStep saja (lazy load)
+- [ ] **Step 2: Add CodeStep try/catch handlers for network & database robustness**
+  Open [src/components/steps/CodeStep.tsx](file:///D:/KodeIn/src/components/steps/CodeStep.tsx). Wrap `runWithPiston` call and `completeStep` call in try-catches.
+  ```typescript
+  // Replace onCheck inside src/components/steps/CodeStep.tsx:
+  const onCheck = async () => {
+    if (status === "checking") return;
+    setStatus("checking");
+    setResult(undefined);
 
-**Opsi B: Piston API (Free, server-side)**
+    try {
+      const res = await runWithPiston({
+        language: "python",
+        code,
+        functionName: step.functionName,
+        publicCases: step.publicCases,
+        timeoutMs: 3000,
+      });
 
-- HTTP POST ke `https://emkc.org/api/v2/piston/execute`
-- Gratis, mendukung Python, JS, dan banyak bahasa lain
-- Perlu internet connection
+      if (res.status === "pass") {
+        setStatus("pass");
+        try {
+          await completeStep(step.id, 10);
+        } catch (persistErr) {
+          console.error("Failed to save progress", persistErr);
+          alert("Progress passed but failed to sync online. Please check network connection.");
+        }
+      } else {
+        setStatus("fail");
+        setResult(res);
+      }
+    } catch (err) {
+      console.error("Execution Error:", err);
+      setStatus("fail");
+      setResult({
+        status: "error",
+        friendlyMessage: "Gagal menghubungkan ke engine kode. Silakan coba lagi.",
+      });
+    }
+  };
+  ```
 
-#### [MODIFY] `src/components/steps/CodeStep.tsx`
+- [ ] **Step 3: Handle CodeEditor Monaco loader init failure**
+  Open [src/components/CodeEditor.tsx](file:///D:/KodeIn/src/components/CodeEditor.tsx). Add a catch block to `loader.init()` at module scope:
+  ```typescript
+  if (typeof window !== "undefined") {
+    loader.init().then(() => {
+      // theme setups...
+    }).catch((err) => {
+      console.error("Monaco loader failed to initialize:", err);
+    });
+  }
+  ```
 
-- Integrasikan real runner menggantikan mockPythonRunner
-- Tambah output console yang real (stdout/stderr display)
-- Loading skeleton saat kode dieksekusi
-- Animasi test case pass/fail yang lebih menarik
+- [ ] **Step 4: Create generic Error Boundary**
+  Create [src/components/ErrorBoundary.tsx](file:///D:/KodeIn/src/components/ErrorBoundary.tsx) to prevent full-app crashes if a layout fails:
+  ```typescript
+  import React, { Component, ErrorInfo, ReactNode } from "react";
 
----
+  interface Props { children?: ReactNode; }
+  interface State { hasError: boolean; }
 
-### FASE 4 — Konten Kursus Diperluas
+  export class ErrorBoundary extends Component<Props, State> {
+    public state: State = { hasError: false };
 
-#### [MODIFY] `src/lib/content.ts`
+    public static getDerivedStateFromError(_: Error): State {
+      return { hasError: true };
+    }
 
-Tambah minimal **5 lesson baru** untuk Unit 2 (Conditionals):
+    public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+      console.error("Uncaught error:", error, errorInfo);
+    }
 
-```
-Unit 2 — Conditionals:
-- L4: if/else basics
-- L5: Comparison operators
-- L6: Nested conditions
-- L7: elif chain
-- L8: Boolean logic (and/or/not)
-```
+    public render() {
+      if (this.state.hasError) {
+        return (
+          <div className="p-4 border border-red-500 rounded bg-red-50 dark:bg-red-950/20 text-red-900 dark:text-red-200">
+            <h2>Something went wrong in this module.</h2>
+            <button
+              className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+              onClick={() => this.setState({ hasError: false })}
+            >
+              Try again
+            </button>
+          </div>
+        );
+      }
+      return this.props.children;
+    }
+  }
+  ```
 
----
-
-### FASE 5 — Gamifikasi Visual
-
-#### [NEW] `src/components/XPBar.tsx`
-
-- Level system berdasarkan XP total (Level 1: 0-100 XP, Level 2: 100-250 XP, dst.)
-- Visual XP bar dengan animasi fill saat naik level
-- Level badge di profil
-
-#### [MODIFY] `src/app/profile/profile-client.tsx`
-
-- Tambah stat cards: Total XP, Level, Streak, Lessons Completed
-- Tambah badge section (misal: "Python Starter", "7-Day Streak")
-- Achievement unlocks
-
-#### [MODIFY] `src/components/Topbar.tsx`
-
-- Tampilkan Level badge di samping XP pill
-
----
-
-### FASE 6 — Practice / Playground Page
-
-#### [MODIFY] `src/app/practice/page.tsx`
-
-- Free coding playground dengan Monaco Editor
-- Pilih bahasa (Python, JavaScript)
-- Run code dan lihat output
-- Tidak perlu login
-
----
-
-### FASE 7 — SEO & Meta + Layout Polish
-
-#### [MODIFY] `src/app/layout.tsx`
-
-```tsx
-export const metadata = {
-  title: 'KodeIn — Belajar Coding Interaktif',
-  description: 'Platform belajar coding gratis dengan metode interaktif. Mulai dari Python, JavaScript, dan SQL.',
-  openGraph: { ... }
-}
-```
-
-#### [MODIFY] `src/app/globals.css`
-
-- Tambah Google Fonts (Inter atau Outfit)
-- Tambah CSS custom properties untuk color system
-- Tambah animasi gradient background
-- Mesh/noise texture utility
-
----
-
-## 📋 Prioritas Eksekusi (Urutan Recommended)
-
-| # | Task                             | Impact      | Effort | Priority |
-| - | -------------------------------- | ----------- | ------ | -------- |
-| 1 | Landing Page Overhaul            | 🔴 Critical | Medium | P0       |
-| 2 | Login Page Redesign              | 🔴 High     | Low    | P0       |
-| 3 | Real Python Runner (Piston API)  | 🔴 High     | Medium | P1       |
-| 4 | Tambah Konten Kursus (Unit 2)    | 🟡 Medium   | Medium | P1       |
-| 5 | Gamifikasi Visual (Level System) | 🟡 Medium   | Medium | P2       |
-| 6 | Practice Playground              | 🟢 Nice     | Low    | P2       |
-| 7 | SEO + Meta Tags                  | 🟡 Medium   | Low    | P2       |
-| 8 | Profile Page Polish              | 🟢 Nice     | Medium | P3       |
-
----
-
-## ❓ Open Questions
-
-> [!IMPORTANT]
-> **Pilih Code Runner:** Mau pakai **Pyodide** (offline WASM, lebih berat ~10MB load) atau **Piston API** (online HTTP, ringan tapi butuh internet)? Rekomendasi saya: **Piston API** untuk MVP, bisa upgrade ke Pyodide nanti.
-
-> [!IMPORTANT]
-> **Bahasa Kursus:** Saat ini hanya Python. Apakah mau tambah **JavaScript** atau **SQL** di roadmap berikutnya?
-
-> [!WARNING]
-> **Database:** Schema Prisma menunjukkan `provider = "postgresql"` tapi file `dev.db` ada (SQLite). Pastikan `prisma.config.ts` sudah dikonfigurasi dengan benar untuk dev vs prod.
+- [ ] **Step 5: Wrap app pages with Error Boundary**
+  Open [src/app/layout.tsx](file:///D:/KodeIn/src/app/layout.tsx). Wrap providers or main children with `ErrorBoundary`.
 
 ---
 
-## ✅ Verification Plan
+### Task 4: Python Lesson Content & Runner Evaluation Fixes
 
-### Automated
+**Files:**
+- Modify: `src/lib/content.ts`
+- Modify: `src/lib/runner/pistonRunner.ts`
+- Modify: `src/lib/practiceChallenges.ts`
 
-- Build check: `npm run build` tanpa error
-- TypeScript: `tsc --noEmit`
+- [ ] **Step 1: Correct hello_world starter code indentation**
+  Open [src/lib/content.ts](file:///D:/KodeIn/src/lib/content.ts). Fix step `py-l1-s2` indentation:
+  ```typescript
+  starterCode: "def hello_world():\n    # Tulis komentar di sini\n    # Kembalikan \"Hello World\"\n    pass",
+  ```
 
-### Manual
+- [ ] **Step 2: Correct unique_list non-determinism**
+  Open [src/lib/content.ts](file:///D:/KodeIn/src/lib/content.ts). Ensure `unique_list` tests expect a sorted output.
+  ```typescript
+  starterCode: "def unique_list(items):\n    # TODO: sorted(list(set(items)))\n    pass",
+  ```
 
-- Buka landing page → harus *wow* dalam 3 detik
-- Klik "Mulai Belajar" → ke `/learn`
-- Kerjakan 1 lesson sampai selesai → XP bertambah
-- Coba code yang salah → runner harus reject
-- Test dark mode toggle
-- Test mobile responsive
+- [ ] **Step 3: Fix division floats vs ints**
+  Open [src/lib/content.ts](file:///D:/KodeIn/src/lib/content.ts). Change expected outputs of `safe_div(10, 2)` and `process_data(2)` to match Python 3 floats.
+  ```typescript
+  // For safe_div:
+  { input: [10, 2], output: 5.0 },
+  
+  // For process_data:
+  { input: [2], output: 50.0 },
+  ```
+
+- [ ] **Step 4: Centralize tuple-to-list comparison in piston runner**
+  Open [src/lib/runner/pistonRunner.ts](file:///D:/KodeIn/src/lib/runner/pistonRunner.ts). Cast tuple results to arrays in generated script to allow proper comparison with JSON arrays.
+  ```typescript
+  // Inside testScript template string inside runWithPiston:
+  func = globals()['${functionName}']
+  result = func(*inputs)
+
+  # Cast tuples to lists for matching JSON array comparisons
+  if isinstance(result, tuple):
+      result = list(result)
+  ```
+
+- [ ] **Step 5: Support class-based test case runners**
+  Open [src/lib/runner/pistonRunner.ts](file:///D:/KodeIn/src/lib/runner/pistonRunner.ts). Implement OOP instantiator checks in generated Python testScript.
+  ```typescript
+  // Inside testScript template string inside runWithPiston:
+  # Special class test handling
+  if '${functionName}' == 'Calculator':
+      obj = func()
+      result = obj.add(inputs[0], inputs[1])
+  elif '${functionName}' == 'Account':
+      obj = func(inputs[0], inputs[1])
+      result = obj.balance
+  elif '${functionName}' == 'Database':
+      obj = func()
+      obj.add_item(inputs[0], inputs[1])
+      result = obj.get_item(inputs[0])
+  else:
+      result = func(*inputs)
+  ```
+
+- [ ] **Step 6: Fix frequency_map dictionary iteration**
+  Open [src/lib/practiceChallenges.ts](file:///D:/KodeIn/src/lib/practiceChallenges.ts). Iterate key/value correctly in starter code:
+  ```python
+  for k, v in result.items():
+      print(f"{k}:{v}")
+  ```
+
+---
+
+### Task 5: i18n Translations & Typo Polish
+
+**Files:**
+- Modify: `src/lib/i18n.tsx`
+
+- [ ] **Step 1: Correct i18n translations & typos**
+  Open [src/lib/i18n.tsx](file:///D:/KodeIn/src/lib/i18n.tsx). Fix English terms and years:
+  ```typescript
+  "leaderboard.totalUsers": "Programmers", // Changed from "Designers"
+  "hero.badge": "Coding Masterclass 2026", // Changed from 2024
+  ```

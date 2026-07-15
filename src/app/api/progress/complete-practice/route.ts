@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { practiceChallenges } from "@/lib/practiceChallenges";
 import type { Progress as ProgressModel } from "@prisma/client";
 import { NextResponse } from "next/server";
 
@@ -73,13 +74,22 @@ export async function POST(req: Request): Promise<NextResponse> {
   }
 
   try {
-    const body = await req.json();
-    const { challengeId, xp } = body;
-    const xpEarned = Number(xp ?? 0);
-
-    if (!challengeId) {
-       return NextResponse.json({ error: "challengeId is required" }, { status: 400 });
+    let body: { challengeId?: string; xp?: number };
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
+    const { challengeId } = body;
+    if (!challengeId) {
+      return NextResponse.json({ error: "challengeId is required" }, { status: 400 });
+    }
+
+    const challenge = practiceChallenges.find((c) => c.id === challengeId);
+    if (!challenge) {
+      return NextResponse.json({ error: "Challenge not found" }, { status: 404 });
+    }
+    const xpEarned = challenge.xp;
 
     const user = await prisma.user.findUnique({
       where: { email },
@@ -92,40 +102,41 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const userId = user.id;
 
-    // Get current progress
-    const row =
-      (await prisma.progress.findUnique({ where: { userId } })) ??
-      (await prisma.progress.create({ data: { userId } }));
+    const updated = await prisma.$transaction(async (tx) => {
+      const row =
+        (await tx.progress.findUnique({ where: { userId } })) ??
+        (await tx.progress.create({ data: { userId } }));
 
-    const completed = safeParseCompleted(row.completedJson);
-    const practiceArray = completed.practice;
-    const practiceSet = new Set(Array.isArray(practiceArray) ? practiceArray : []);
-    
-    const alreadyDone = practiceSet.has(challengeId);
+      const completed = safeParseCompleted(row.completedJson);
+      const practiceArray = completed.practice;
+      const practiceSet = new Set(Array.isArray(practiceArray) ? practiceArray : []);
 
-    // streak update
-    const { todayISO, current, longest } = updateStreak({
-      streakCurrent: row.streakCurrent,
-      streakLongest: row.streakLongest,
-      lastActiveISO: row.lastActiveISO,
+      const alreadyDone = practiceSet.has(challengeId);
+
+      // streak update
+      const { todayISO, current, longest } = updateStreak({
+        streakCurrent: row.streakCurrent,
+        streakLongest: row.streakLongest,
+        lastActiveISO: row.lastActiveISO,
+      });
+
+      if (!alreadyDone) {
+        practiceSet.add(challengeId);
+        completed.practice = Array.from(practiceSet);
+      }
+
+      return await tx.progress.update({
+        where: { userId },
+        data: {
+          xp: alreadyDone ? row.xp : row.xp + xpEarned,
+          completedJson: JSON.stringify(completed),
+          streakCurrent: current,
+          streakLongest: longest,
+          lastActiveISO: todayISO,
+        },
+      });
     });
 
-    if (!alreadyDone) {
-      practiceSet.add(challengeId);
-      completed.practice = Array.from(practiceSet);
-    }
-
-    const updated = await prisma.progress.update({
-      where: { userId },
-      data: {
-        xp: alreadyDone ? row.xp : row.xp + Math.max(0, xpEarned),
-        completedJson: JSON.stringify(completed),
-        streakCurrent: current,
-        streakLongest: longest,
-        lastActiveISO: todayISO,
-      },
-    });
-    
     return NextResponse.json(normalize(updated));
   } catch (error) {
     console.error("Complete Practice Error:", error);

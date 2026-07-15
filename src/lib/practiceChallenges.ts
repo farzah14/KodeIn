@@ -550,7 +550,7 @@ import sys
 arr = json.loads(sys.stdin.read().strip())
 result = frequency_map(arr)
 # Print as sorted items: element:count
-for k, v in result:
+for k, v in result.items():
     print(f"{k}:{v}")`,
     testCases: [
       { input: "[1,2,2,3,3,3]", expectedOutput: "3:3\n2:2\n1:1" },
