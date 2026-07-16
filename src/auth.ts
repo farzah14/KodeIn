@@ -9,56 +9,69 @@ import type { NextAuthConfig } from "next-auth";
 if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
   if (!process.env.AUTH_SECRET) throw new Error("Missing AUTH_SECRET env var");
   if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) throw new Error("Missing Google OAuth credentials");
-  if (!process.env.AUTH_GITHUB_ID || !process.env.AUTH_GITHUB_SECRET) throw new Error("Missing GitHub OAuth credentials");
 }
+
+const providers: NextAuthConfig["providers"] = [];
+
+if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+  providers.push(
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      authorization: { params: { prompt: "select_account" } },
+    })
+  );
+}
+
+if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+  providers.push(
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+    })
+  );
+}
+
+providers.push(
+  Credentials({
+    name: "Bypass",
+    credentials: {
+      email: { label: "Email", type: "email" },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email) return null;
+      const email = credentials.email as string;
+      
+      let user = await prisma.user.findUnique({
+        where: { email },
+      });
+      
+      if (!user) {
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: email.split("@")[0],
+            image: `https://api.dicebear.com/7.x/adventurer/svg?seed=${email}`,
+          },
+        });
+      }
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+      };
+    },
+  })
+);
 
 const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   secret: process.env.AUTH_SECRET,
   trustHost: true,
   session: { strategy: "jwt" },
-  providers: [
-    Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
-      authorization: { params: { prompt: "select_account" } },
-    }),
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-    }),
-    Credentials({
-      name: "Bypass",
-      credentials: {
-        email: { label: "Email", type: "email" },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email) return null;
-        const email = credentials.email as string;
-        
-        let user = await prisma.user.findUnique({
-          where: { email },
-        });
-        
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              email,
-              name: email.split("@")[0],
-              image: `https://api.dicebear.com/7.x/adventurer/svg?seed=${email}`,
-            },
-          });
-        }
-        
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
-      },
-    }),
-  ],
+  providers,
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
