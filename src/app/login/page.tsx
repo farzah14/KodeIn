@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { ArrowLeft, Github, TerminalSquare, ShieldCheck } from "lucide-react";
+import { ArrowLeft, TerminalSquare, ShieldCheck } from "lucide-react";
 
 export default function LoginPage() {
   return (
@@ -85,14 +85,7 @@ export default function LoginPage() {
                 Masuk dengan Google
               </button>
 
-              {/* GitHub Button */}
-              <button
-                onClick={() => signIn("github", { callbackUrl: "/learn", prompt: "select_account" })}
-                className="group relative flex w-full items-center justify-center gap-3 rounded-2xl bg-gray-900 px-5 py-4 text-sm font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-gray-800 hover:shadow-lg dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-              >
-                <Github size={20} className="text-white dark:text-black" />
-                Masuk dengan GitHub
-              </button>
+
 
             </div>
 
