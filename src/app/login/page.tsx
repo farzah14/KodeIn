@@ -89,58 +89,6 @@ export default function LoginPage() {
 
             </div>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                <div className="w-full border-t border-gray-200 dark:border-zinc-800"></div>
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500 dark:bg-[#09090b] dark:text-zinc-500">
-                  Atau Mode Pengembang (Bypass)
-                </span>
-              </div>
-            </div>
-
-            {/* Credentials / Bypass Login Form */}
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                const email = formData.get("email") as string;
-                if (!email) return;
-                
-                try {
-                  await signIn("credentials", {
-                    email,
-                    callbackUrl: "/learn",
-                  });
-                } catch (err) {
-                  console.error(err);
-                }
-              }}
-              className="flex flex-col gap-3"
-            >
-              <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-gray-600 dark:text-zinc-400 uppercase tracking-wider mb-1.5">
-                  Email Demo / Pengembang
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  defaultValue="developer@kodein.dev"
-                  className="block w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-900 focus:border-indigo-500 focus:bg-white focus:outline-none dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-white dark:placeholder-zinc-500 dark:focus:border-indigo-400 dark:focus:bg-zinc-950 transition-all"
-                />
-              </div>
-              <button
-                type="submit"
-                className="flex w-full items-center justify-center rounded-2xl bg-indigo-600 px-5 py-4 text-sm font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-indigo-500 hover:shadow-lg dark:bg-indigo-500 dark:hover:bg-indigo-400"
-              >
-                Masuk Mode Pengembang
-              </button>
-            </form>
 
              {/* Footer Form */}
              <div className="mt-8 text-center text-xs text-gray-500 dark:text-zinc-500">
