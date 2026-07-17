@@ -13,6 +13,7 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  passwordHash  String?
   address       String?
   theme         String    @default("system") // "light" | "dark" | "system"
   accounts      Account[]
