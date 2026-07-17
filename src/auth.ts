@@ -38,6 +38,23 @@ const authConfig: NextAuthConfig = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        if (token.id) {
+          try {
+            const dbUser = await prisma.user.findUnique({
+              where: { id: token.id as string },
+              select: { name: true, image: true, email: true },
+            });
+            if (dbUser) {
+              session.user.name = dbUser.name;
+              session.user.image = dbUser.image;
+              if (dbUser.email) {
+                session.user.email = dbUser.email;
+              }
+            }
+          } catch (error) {
+            console.error("Failed to fetch latest user session details:", error);
+          }
+        }
       }
       return session;
     },
