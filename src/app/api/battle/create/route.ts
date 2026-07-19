@@ -26,7 +26,7 @@ export async function POST() {
     return NextResponse.json({ roomId: room.id });
   } catch (error: unknown) {
     console.error("Create Battle Room: Error", error);
-    return NextResponse.json({ error: "INTERNAL_ERROR", details: (error as Error).message }, { status: 500 });
+    return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });
   }
 }
 

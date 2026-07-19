@@ -10,7 +10,6 @@ export async function GET() {
         id: true,
         name: true,
         image: true,
-        email: true,
         progress: {
           select: {
             xp: true,
@@ -39,7 +38,7 @@ export async function GET() {
       return {
         id: user.id,
         name: user.name || "Anonymous",
-        image: user.image || user.email || "user",
+        image: user.image && (user.image.startsWith("data:") || user.image.startsWith("http")) ? user.image : user.id,
         xp: user.progress?.xp || 0,
         streak: user.progress?.streakCurrent || 0,
         solvedPractice: solvedPracticeCount,
@@ -50,7 +49,7 @@ export async function GET() {
   } catch (error: unknown) {
     console.error("Leaderboard API Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: (error as Error).message },
+      { error: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }
