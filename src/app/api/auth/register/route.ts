@@ -60,67 +60,13 @@ export async function POST(req: NextRequest) {
     });
 
     if (existingUser) {
-      if (existingUser.passwordHash) {
-        if (existingUser.emailVerified) {
-          return NextResponse.json(
-            { error: "Email sudah terdaftar. Silakan masuk menggunakan email dan kata sandi Anda." },
-            { status: 400 }
-          );
-        }
-
-        // Akun ada tetapi belum diverifikasi -> kirim ulang email verifikasi!
-        await prisma.$transaction(async (tx) => {
-          // Update password/nama jika diinput baru
-          await tx.user.update({
-            where: { id: existingUser.id },
-            data: {
-              name: name.trim(),
-              passwordHash,
-            },
-          });
-
-          // Hapus token verifikasi lama jika ada
-          await tx.verificationToken.deleteMany({
-            where: { identifier: normalizedEmail },
-          });
-
-          // Simpan token verifikasi baru
-          await tx.verificationToken.create({
-            data: {
-              identifier: normalizedEmail,
-              token,
-              expires,
-            },
-          });
-        });
-
-        const emailSent = await sendVerificationEmail(normalizedEmail, token);
-        if (!emailSent) {
-          console.error("Gagal mengirim ulang email verifikasi ke:", normalizedEmail);
-        }
-
-        return NextResponse.json(
-          { 
-            message: "Akun ini belum diverifikasi. Email verifikasi baru telah dikirimkan ke email Anda.",
-            email: normalizedEmail 
-          },
-          { status: 200 }
-        );
-      }
-
-      // Jika terdaftar melalui provider OAuth (Google, dll)
-      const providers = existingUser.accounts.map((acc) => acc.provider).join(", ");
-      const providerMsg = providers 
-        ? ` (${providers})` 
-        : "";
       return NextResponse.json(
-        { 
-          error: `Email ini sudah terdaftar melalui login sosial${providerMsg}. Silakan masuk menggunakan metode tersebut.` 
-        },
-        { status: 400 }
+        { message: "Jika alamat dapat menerima email, instruksi berikutnya akan dikirim." },
+        { status: 202 }
       );
     }
 
+    let userId = "";
     // 5. Buat User baru & Token & Progress default dalam Transaksi
     await prisma.$transaction(async (tx) => {
       // Buat user baru (emailVerified bernilai null secara default)
@@ -131,6 +77,7 @@ export async function POST(req: NextRequest) {
           passwordHash,
         },
       });
+      userId = user.id;
 
       // Simpan token verifikasi
       await tx.verificationToken.create({
@@ -154,10 +101,14 @@ export async function POST(req: NextRequest) {
     });
 
     // 6. Kirim email verifikasi
-    const emailSent = await sendVerificationEmail(normalizedEmail, token);
-    if (!emailSent) {
-      console.error("Gagal mengirim email verifikasi ke:", normalizedEmail);
-      // Tetap kembalikan sukses, user bisa minta kirim ulang nanti atau dev melihat log
+    try {
+      await sendVerificationEmail(normalizedEmail, token);
+    } catch (error) {
+      console.error("Verification email delivery failed", { userId });
+      return NextResponse.json(
+        { error: "VERIFICATION_DELIVERY_FAILED" },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json(

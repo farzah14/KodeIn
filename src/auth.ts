@@ -16,7 +16,18 @@ class CustomAuthError extends CredentialsSignin {
 
 if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
   if (!process.env.AUTH_SECRET) throw new Error("Missing AUTH_SECRET env var");
-  if (!process.env.AUTH_GOOGLE_ID || !process.env.AUTH_GOOGLE_SECRET) throw new Error("Missing Google OAuth credentials");
+  
+  const hasGoogleId = !!process.env.AUTH_GOOGLE_ID;
+  const hasGoogleSecret = !!process.env.AUTH_GOOGLE_SECRET;
+  if (hasGoogleId !== hasGoogleSecret) {
+    throw new Error("Incomplete Google OAuth configuration pair: Set both AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET, or neither.");
+  }
+
+  const hasGithubId = !!process.env.AUTH_GITHUB_ID;
+  const hasGithubSecret = !!process.env.AUTH_GITHUB_SECRET;
+  if (hasGithubId !== hasGithubSecret) {
+    throw new Error("Incomplete GitHub OAuth configuration pair: Set both AUTH_GITHUB_ID and AUTH_GITHUB_SECRET, or neither.");
+  }
 }
 
 const providers: NextAuthConfig["providers"] = [];
@@ -62,22 +73,18 @@ providers.push(
         where: { email },
       });
 
-      if (!user) {
-        throw new CustomAuthError("Email tidak terdaftar.");
-      }
-
-      if (!user.passwordHash) {
-        throw new CustomAuthError("Email terdaftar melalui Google/GitHub. Silakan masuk menggunakan login sosial.");
-      }
-
-      // Pastikan email telah diverifikasi
-      if (!user.emailVerified) {
-        throw new CustomAuthError("Email belum diverifikasi. Silakan periksa kotak masuk email Anda.");
+      if (!user || !user.passwordHash) {
+        throw new CustomAuthError("Email atau kata sandi tidak valid.");
       }
 
       const isValidPassword = await bcrypt.compare(password, user.passwordHash);
       if (!isValidPassword) {
-        throw new CustomAuthError("Kata sandi yang Anda masukkan salah.");
+        throw new CustomAuthError("Email atau kata sandi tidak valid.");
+      }
+
+      // Pastikan email telah diverifikasi (hanya dicek setelah password valid)
+      if (!user.emailVerified) {
+        throw new CustomAuthError("Email belum diverifikasi. Silakan periksa kotak masuk email Anda.");
       }
 
       return {

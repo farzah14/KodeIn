@@ -38,21 +38,29 @@ npm install
 ```
 
 ### 3. Set up Environment Variables
-Create a `.env` file in the root directory and configure the following variables:
+Create a `.env` file in the root directory and configure the variables (see [.env.example](file:///d:/KodeIn/.env.example) for details):
 
 ```env
-# Database Configuration (Supabase PostgreSQL)
-DATABASE_URL="postgres://[user]:[password]@[host]:[port]/[db]?schema=public"
+# Database Configuration (PostgreSQL)
+DATABASE_URL="postgresql://username:password@localhost:5432/kodein?schema=public"
 
 # NextAuth Configuration
-NEXTAUTH_URL="http://localhost:3000"
-AUTH_SECRET="your-super-secret-auth-key-generate-one"
+AUTH_URL="http://localhost:3000"
+AUTH_SECRET="your-32-byte-hex-auth-secret"
 
-# OAuth Providers (Optional: If using Google/GitHub)
+# OAuth Providers (Optional pairs - set both, or neither)
 AUTH_GITHUB_ID="your-github-id"
 AUTH_GITHUB_SECRET="your-github-secret"
 AUTH_GOOGLE_ID="your-google-id"
 AUTH_GOOGLE_SECRET="your-google-secret"
+
+# Resend Email (Required)
+RESEND_API_KEY="re_yourApiKey"
+EMAIL_FROM="noreply@yourdomain.com"
+
+# Code Execution Backend (Required)
+PISTON_BASE_URL="http://localhost:2000"
+PISTON_AUTH_TOKEN="your-piston-token"
 ```
 
 ### 4. Setup Prisma Database
