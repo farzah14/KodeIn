@@ -16,9 +16,11 @@ model User {
   passwordHash  String?
   address       String?
   theme         String    @default("system") // "light" | "dark" | "system"
-  accounts      Account[]
-  sessions      Session[]
-  progress      Progress?
+  accounts       Account[]
+  sessions       Session[]
+  progress       Progress?
+  completions    Completion[]
+  executionQuota ExecutionQuota[]
 }
 
 model Account {
@@ -91,5 +93,32 @@ model BattleRoom {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
   expiresAt      DateTime
+}
+
+enum CompletionKind {
+  LESSON_STEP
+  PRACTICE
+}
+
+model Completion {
+  userId      String
+  kind        CompletionKind
+  activityId  String
+  xpAwarded   Int
+  completedAt DateTime       @default(now())
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, kind, activityId])
+  @@index([userId, completedAt])
+}
+
+model ExecutionQuota {
+  userId      String
+  windowStart DateTime
+  count       Int      @default(0)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, windowStart])
+  @@index([windowStart])
 }
 
