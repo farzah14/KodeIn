@@ -94,7 +94,7 @@ sys.stdout = io.StringIO()
         setIsSuccess(true);
         // Persist to database & update local store
         try {
-          await completePractice(challengeId, challenge.xp);
+          await completePractice(challengeId, code);
         } catch (e) {
           console.error("Failed to sync progress:", e);
         }

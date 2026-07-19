@@ -137,7 +137,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
     try {
       setIsSaving(true);
-      await completeStep(step.id, 2);
+      await completeStep(step.id);
       nextOrFinish();
     } finally {
       setIsSaving(false);

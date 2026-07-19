@@ -56,12 +56,12 @@ export async function initProgress() {
   }
 }
 
-export async function completeStep(stepId: string, xpEarned: number) {
+export async function completeStep(stepId: string, code?: string) {
   const res = await fetch("/api/progress/complete-step", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
-    body: JSON.stringify({ stepId, xpEarned }),
+    body: JSON.stringify({ stepId, code }),
   });
 
   if (!res.ok) throw new Error(`POST /api/progress/complete-step failed: ${res.status}`);
@@ -73,12 +73,12 @@ export async function completeStep(stepId: string, xpEarned: number) {
   return data;
 }
 
-export async function completePractice(challengeId: string, xpEarned: number) {
+export async function completePractice(challengeId: string, code: string) {
   const res = await fetch("/api/progress/complete-practice", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     cache: "no-store",
-    body: JSON.stringify({ challengeId, xp: xpEarned }),
+    body: JSON.stringify({ challengeId, code }),
   });
 
   if (!res.ok) throw new Error(`POST /api/progress/complete-practice failed: ${res.status}`);

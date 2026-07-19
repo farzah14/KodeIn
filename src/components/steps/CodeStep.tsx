@@ -80,7 +80,7 @@ export function CodeStep({
       // overturn a successful run — the user already passed, so we just warn
       // and continue the lesson flow.
       try {
-        await completeStep(step.id, 10);
+        await completeStep(step.id, code);
       } catch (e) {
         // eslint-disable-next-line no-console
         console.error("[CodeStep] completeStep failed:", e);
