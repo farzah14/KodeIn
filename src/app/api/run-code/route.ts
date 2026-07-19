@@ -1,58 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
+import { executeCode } from "@/server/execution/piston";
+import { SupportedLanguage } from "@/server/execution/types";
+import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    // 1. Authenticate caller
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) {
+      return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+    }
 
-    // Mapping bahasa ke versi spesifik Piston (opsional, Piston bisa menggunakan '*' untuk latest)
-    const languageMap: Record<string, string> = {
-      python: "3.10.0",
-      javascript: "18.15.0",
-      sql: "sqlite3",
-      sqlite: "sqlite3",
-      go: "1.16.2",
-      typescript: "5.0.3"
-    };
+    // 2. Parse request body
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
 
-    const targetLanguage = body.language === "sql" ? "sqlite3" : body.language;
+    // 3. Validate inputs
+    const { language, files, stdin } = body;
+    if (!language || typeof language !== "string") {
+      return NextResponse.json({ error: "Language is required" }, { status: 400 });
+    }
 
-    const payload = {
-      language: targetLanguage,
-      version: languageMap[body.language] || "*",
-      files: body.files,
-      stdin: body.stdin || "",
-      args: body.args || [],
-      compile_timeout: body.compile_timeout || 10000,
-      run_timeout: body.run_timeout || 3000,
-      compile_memory_limit: -1,
-      run_memory_limit: -1,
-    };
+    const allowedLanguages = ["python", "javascript", "typescript", "go"];
+    if (!allowedLanguages.includes(language)) {
+      return NextResponse.json({ error: "UNSUPPORTED_LANGUAGE" }, { status: 400 });
+    }
 
-    // Panggil Official Piston API (EMKC)
-    // Ini menghilangkan ketergantungan pada Python/Node lokal di server (Vercel)
-    const pistonRes = await fetch("https://emkc.org/api/v2/piston/execute", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+    if (!files || !Array.isArray(files) || files.length === 0 || typeof files[0]?.content !== "string") {
+      return NextResponse.json({ error: "Source code is required in files[0].content" }, { status: 400 });
+    }
 
-    if (!pistonRes.ok) {
-      const errorText = await pistonRes.text();
+    const sourceCode = files[0].content;
+    const inputStdin = typeof stdin === "string" ? stdin : "";
+
+    // 4. Rate limiting check
+    const quotaResult = await checkAndIncrementQuota(userId);
+    if (!quotaResult.allowed) {
       return NextResponse.json(
-        { error: "Piston API Error", details: errorText },
-        { status: pistonRes.status }
+        { error: "Too many execution requests. Please try again after 1 minute." },
+        { status: 429, headers: { "Retry-After": "60" } }
       );
     }
 
-    const result = await pistonRes.json();
-    return NextResponse.json(result);
+    // 5. Execute code
+    const result = await executeCode(language as SupportedLanguage, sourceCode, inputStdin);
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: result.error === "TIMEOUT" ? 408 : 502 });
+    }
 
-  } catch (error) {
+    return NextResponse.json(result);
+  } catch (error: unknown) {
     console.error("Run Code API Error:", error);
+    // Sanitize error details in production to protect internals
     return NextResponse.json(
-      { error: "Internal Server Error", details: (error as Error).message },
+      { error: "INTERNAL_ERROR" },
       { status: 500 }
     );
   }

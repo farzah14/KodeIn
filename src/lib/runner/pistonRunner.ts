@@ -110,9 +110,14 @@ if __name__ == '__main__':
     });
 
     if (!res.ok) {
+      let friendlyMessage = "Gagal memanggil execution engine. Sedang gangguan jaringan atau API limit.";
+      try {
+        const data = await res.json();
+        if (data.error) friendlyMessage = data.error;
+      } catch {}
       return {
         status: "error",
-        friendlyMessage: "Gagal memanggil execution engine. Sedang gangguan jaringan atau API limit.",
+        friendlyMessage,
       };
     }
 
@@ -181,10 +186,10 @@ export async function runGenericPiston(code: string, language: string) {
         run_timeout: 3000,
       }),
     });
-    if (!res.ok) {
-      return { stdout: "", stderr: "Network or API limit" };
-    }
     const data = await res.json();
+    if (!res.ok) {
+      return { stdout: "", stderr: data.error || "Network or API limit" };
+    }
     return { stdout: data.run.stdout, stderr: data.run.stderr };
   } catch (error) {
     return { stdout: "", stderr: "Timeout / Error Connection" };
