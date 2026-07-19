@@ -64,10 +64,15 @@ PISTON_AUTH_TOKEN="your-piston-token"
 ```
 
 ### 4. Setup Prisma Database
-Generate the Prisma client and push the schema to your Supabase instance:
+Generate the Prisma client and deploy database migrations:
 ```bash
 npx prisma generate
-npx prisma db push
+
+# For development, apply schema changes and create migrations:
+npx prisma migrate dev
+
+# For production, deploy all pending migrations safely:
+npx prisma migrate deploy
 ```
 
 ### 5. Run the Development Server
