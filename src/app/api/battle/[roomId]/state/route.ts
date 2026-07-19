@@ -1,4 +1,5 @@
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { getBattle } from "@/server/battle/actions";
 import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +8,13 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ roomId: string }> }
 ) {
-  const { roomId } = await params;
+  const session = await auth();
+  const userId = session?.user?.id;
+  if (!userId) {
+    return new Response("UNAUTHORIZED", { status: 401 });
+  }
 
+  const { roomId } = await params;
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -25,26 +31,15 @@ export async function GET(
       const sendState = async () => {
         if (isClosed) return;
         try {
-          const room = await prisma.battleRoom.findUnique({
-            where: { id: roomId }
-          });
+          const state = await getBattle(roomId, userId);
 
-          if (!room) {
+          if (!state) {
             if (!isClosed) {
               controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: "ROOM_NOT_FOUND" })}\n\n`));
               safeClose();
             }
             return;
           }
-
-          const p1 = await prisma.user.findUnique({ where: { id: room.player1Id }, select: { name: true, image: true } });
-          const p2 = room.player2Id ? await prisma.user.findUnique({ where: { id: room.player2Id }, select: { name: true, image: true } }) : null;
-
-          const state = {
-            ...room,
-            player1: p1,
-            player2: p2,
-          };
 
           if (!isClosed) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(state)}\n\n`));
