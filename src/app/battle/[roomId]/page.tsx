@@ -58,14 +58,16 @@ export default function BattleArena({ params: paramsPromise }: { params: Promise
     sse.onmessage = (e) => {
       const data = JSON.parse(e.data);
       setRoom(data);
-      if (data.status === "active" && !code) {
+      if (data.status === "active") {
         const ch = battleChallenges.find(c => c.id === data.challengeId);
-        if (ch) setCode(ch.starterCode);
+        if (ch) {
+          setCode((curr) => curr ? curr : ch.starterCode);
+        }
       }
     };
     sse.onerror = () => sse.close();
     return () => sse.close();
-  }, [roomId, code]);
+  }, [roomId]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(roomId);
@@ -120,7 +122,7 @@ sys.stdout = io.StringIO()
       const res = await fetch(`/api/battle/${roomId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, forceSuccess: allPassed })
+        body: JSON.stringify({ code })
       });
 
       if (!res.ok) {
