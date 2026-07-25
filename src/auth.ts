@@ -14,30 +14,36 @@ class CustomAuthError extends CredentialsSignin {
   }
 }
 
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const googleId = process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
+const googleSecret = process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+const githubId = process.env.AUTH_GITHUB_ID || process.env.GITHUB_CLIENT_ID;
+const githubSecret = process.env.AUTH_GITHUB_SECRET || process.env.GITHUB_CLIENT_SECRET;
+
 if (process.env.NODE_ENV === "production" && process.env.NEXT_PHASE !== "phase-production-build") {
-  if (!process.env.AUTH_SECRET) throw new Error("Missing AUTH_SECRET env var");
+  if (!authSecret) throw new Error("Missing AUTH_SECRET or NEXTAUTH_SECRET env var");
   
-  const hasGoogleId = !!process.env.AUTH_GOOGLE_ID;
-  const hasGoogleSecret = !!process.env.AUTH_GOOGLE_SECRET;
+  const hasGoogleId = !!googleId;
+  const hasGoogleSecret = !!googleSecret;
   if (hasGoogleId !== hasGoogleSecret) {
-    throw new Error("Incomplete Google OAuth configuration pair: Set both AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET, or neither.");
+    throw new Error("Incomplete Google OAuth configuration pair: Set both Google Client ID and Secret, or neither.");
   }
 
-  const hasGithubId = !!process.env.AUTH_GITHUB_ID;
-  const hasGithubSecret = !!process.env.AUTH_GITHUB_SECRET;
+  const hasGithubId = !!githubId;
+  const hasGithubSecret = !!githubSecret;
   if (hasGithubId !== hasGithubSecret) {
-    throw new Error("Incomplete GitHub OAuth configuration pair: Set both AUTH_GITHUB_ID and AUTH_GITHUB_SECRET, or neither.");
+    throw new Error("Incomplete GitHub OAuth configuration pair: Set both GitHub Client ID and Secret, or neither.");
   }
 }
 
 const providers: NextAuthConfig["providers"] = [];
 
 // 1. Google OAuth Provider
-if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+if (googleId && googleSecret) {
   providers.push(
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
       authorization: { params: { prompt: "select_account" } },
       allowDangerousEmailAccountLinking: true,
     })
@@ -45,11 +51,11 @@ if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
 }
 
 // 2. GitHub OAuth Provider
-if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+if (githubId && githubSecret) {
   providers.push(
     GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
+      clientId: githubId,
+      clientSecret: githubSecret,
       allowDangerousEmailAccountLinking: true,
     })
   );
@@ -101,7 +107,7 @@ providers.push(
 
 const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
-  secret: process.env.AUTH_SECRET,
+  secret: authSecret,
   trustHost: true,
   session: { strategy: "jwt" },
   providers,
