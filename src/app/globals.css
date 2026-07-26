@@ -41,6 +41,10 @@
   --edu-textSecondary: #4B5563;
   --edu-textMuted: #9CA3AF;
   --edu-codeBg: #F9FAFB;
+  --color-cyan: #00f0ff;
+  --color-magenta: #ff00aa;
+  --color-purple: #7c3aed;
+  --color-bg: #0a0a0f;
 }
 
 .dark {
@@ -94,4 +98,12 @@ h3 {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-edu-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
