@@ -4,14 +4,15 @@ import { useRef } from "react";
 import { motion } from "framer-motion";
 import CanvasWrapper from "../common/CanvasWrapper";
 import HeroScene from "./HeroScene";
-import { bio } from "../../../data/portfolio";
+import { bio } from "@/data/portfolio";
 
 export default function HeroSection() {
   const sectionRef = useRef<HTMLDivElement>(null);
   return (
     <section id="hero" ref={sectionRef} className="relative h-screen flex items-center justify-center overflow-hidden">
-      <CanvasWrapper className="absolute inset-0 z-0" />
-      <HeroScene />
+      <CanvasWrapper className="absolute inset-0 z-0">
+        <HeroScene />
+      </CanvasWrapper>
       <div className="relative z-10 text-center px-4">
         <motion.h1 initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }} className="text-5xl md:text-7xl font-mono font-bold text-cyan-400 tracking-tight">{bio.name}</motion.h1>
         <motion.p initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.2 }} viewport={{ once: true }} className="mt-4 text-lg md:text-xl text-gray-400 font-mono">{bio.title}</motion.p>

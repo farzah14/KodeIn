@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { bio } from "../../../data/portfolio";
+import { bio } from "@/data/portfolio";
 
 export default function ContactSection() {
   const [submitted, setSubmitted] = useState(false);
@@ -28,7 +28,7 @@ export default function ContactSection() {
         {submitted ? (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center p-8 border border-green-400/30 bg-green-400/5 rounded-lg">
             <div className="text-green-400 font-mono text-lg">Message Sent</div>
-            <p className="text-gray-400 text-sm mt-2">I'll get back to you soon.</p>
+            <p className="text-gray-400 text-sm mt-2">I&apos;ll get back to you soon.</p>
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">

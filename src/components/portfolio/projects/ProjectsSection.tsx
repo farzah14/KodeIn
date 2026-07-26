@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { projects } from "../../../data/portfolio";
+import { projects } from "@/data/portfolio";
 
 export default function ProjectsSection() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);

@@ -13,11 +13,11 @@ export default function Nav() {
   useEffect(() => {
     const onScroll = () => {
       setScrolled(window.scrollY > 50);
-      const secs = sections.map((id) => document.getElementById(id));
+      const secs = sections.map((secId) => document.getElementById(secId));
       let current = "hero";
       secs.forEach((el) => {
         if (el && window.scrollY >= el.offsetTop - 200) {
-          current = id;
+          current = sections[secs.indexOf(el)];
         }
       });
       setActiveSection(current);

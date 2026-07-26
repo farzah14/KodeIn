@@ -21,112 +21,111 @@ export interface Experience {
   company: string;
   period: string;
   description: string;
-  type: "professional" | "coop" | "internship";
+  type: "engineer" | "analyst" | "ml";
 }
 
 export const bio = {
   name: "KodeIn Developer",
-  title: "Full-Stack Developer & 3D Engineer",
+  title: "Data Engineer / Data Analyst / ML Engineer",
   summary:
-    "Passionate developer specializing in modern web technologies, 3D visualization, and interactive experiences. I build performant, accessible applications with a focus on craft and user experience.",
-  stats: [
-    { label: "Years of Experience", value: "5+" },
-    { label: "Projects Completed", value: "12" },
-    { label: "Technologies", value: "10+" },
-    { label: "Open Source Contrib", value: "8" },
-  ],
+    "I design and build data systems that turn raw information into actionable intelligence. From streaming pipelines to ML models, I work across the full data stack.",
+  stats: {
+    yearsExperience: 5,
+    projectsShipped: 12,
+    technologies: 15,
+  },
   email: "hello@kodein.dev",
   github: "https://github.com/kodein",
   linkedin: "https://linkedin.com/in/kodein",
 };
 
 export const skills: Skill[] = [
-  { name: "TypeScript", category: "language", level: 90, icon: "📘" },
-  { name: "JavaScript", category: "language", level: 85, icon: "📗" },
-  { name: "Python", category: "language", level: 75, icon: "🐍" },
-  { name: "React", category: "framework", level: 88, icon: "⚛" },
-  { name: "Next.js", category: "framework", level: 85, icon: "▲" },
-  { name: "Three.js", category: "framework", level: 70, icon: "🎲" },
-  { name: "React Three Fiber", category: "framework", level: 65, icon: "🌿" },
-  { name: "Node.js", category: "framework", level: 80, icon: "🟢" },
-  { name: "Git", category: "tool", level: 85, icon: "🔀" },
-  { name: "Docker", category: "tool", level: 60, icon: "🐳" },
-  { name: "VS Code", category: "tool", level: 90, icon: "💻" },
-  { name: "Framer Motion", category: "tool", level: 65, icon: "🎬" },
-  { name: "TensorFlow", category: "ml", level: 55, icon: "🧠" },
-  { name: "PyTorch", category: "ml", level: 50, icon: "🔥" },
-  { name: "AWS", category: "cloud", level: 60, icon: "☁" },
+  { name: "Python", category: "language", level: 5, icon: "python" },
+  { name: "SQL", category: "language", level: 5, icon: "sql" },
+  { name: "TypeScript", category: "language", level: 3, icon: "typescript" },
+  { name: "Spark", category: "framework", level: 4, icon: "spark" },
+  { name: "Airflow", category: "tool", level: 4, icon: "airflow" },
+  { name: "dbt", category: "tool", level: 4, icon: "dbt" },
+  { name: "TensorFlow", category: "ml", level: 3, icon: "tensorflow" },
+  { name: "PyTorch", category: "ml", level: 3, icon: "pytorch" },
+  { name: "scikit-learn", category: "ml", level: 3, icon: "sklearn" },
+  { name: "AWS", category: "cloud", level: 3, icon: "aws" },
+  { name: "Docker", category: "tool", level: 3, icon: "docker" },
+  { name: "Kafka", category: "tool", level: 2, icon: "kafka" },
+  { name: "PostgreSQL", category: "tool", level: 4, icon: "postgres" },
+  { name: "Redis", category: "tool", level: 2, icon: "redis" },
+  { name: "GCP", category: "cloud", level: 2, icon: "gcp" },
 ];
 
 export const projects: Project[] = [
   {
     id: "proj-1",
-    title: "3D Portfolio",
+    title: "Real-Time Data Pipeline",
     description:
-      "A modern 3D portfolio website built with Next.js, Three.js, and React Three Fiber featuring interactive scene transitions and immersive storytelling.",
-    tech: ["Next.js", "Three.js", "R3F", "Framer Motion", "TypeScript"],
-    github: "https://github.com/kodein/3d-portfolio",
-    demo: "https://kodein.dev",
-    category: "web",
+      "Built an end-to-end streaming data pipeline with Kafka, Spark Streaming, and Airflow for real-time analytics on user behavior data.",
+    tech: ["Kafka", "Spark", "Airflow", "Python"],
+    github: "https://github.com/kodein",
+    demo: "https://demo.example.com",
+    category: "data-engineering",
   },
   {
     id: "proj-2",
-    title: "Battle Arena",
+    title: "ML Fraud Detection Model",
     description:
-      "Real-time multiplayer coding battle platform where developers compete in timed coding challenges with live leaderboards.",
-    tech: ["Next.js", "Socket.io", "Prisma", "PostgreSQL", "TypeScript"],
-    github: "https://github.com/kodein/battle-arena",
-    demo: "https://battle.kodein.dev",
-    category: "web",
+      "Developed a gradient-boosted fraud detection model with 96% precision serving 10M+ transactions daily via a Flask API on GCP.",
+    tech: ["Python", "scikit-learn", "GCP", "PostgreSQL"],
+    github: "https://github.com/kodein",
+    demo: "https://demo.example.com",
+    category: "ml",
   },
   {
     id: "proj-3",
-    title: "AI Code Assistant",
+    title: "Data Warehouse & Dashboard",
     description:
-      "AI-powered coding assistant that provides real-time suggestions, code generation, and intelligent debugging assistance for multiple languages.",
-    tech: ["Python", "TensorFlow", "Next.js", "OpenAI API", "TypeScript"],
-    github: "https://github.com/kodein/ai-code-assistant",
-    demo: "https://ai.kodein.dev",
-    category: "ai",
+      "Designed and implemented a dimensional data warehouse with dbt transformations and interactive Tableau dashboards for executive reporting.",
+    tech: ["dbt", "PostgreSQL", "Tableau", "SQL"],
+    github: "https://github.com/kodein",
+    demo: "https://demo.example.com",
+    category: "analytics",
   },
   {
     id: "proj-4",
-    title: "Dev Dashboard",
+    title: "ML Recommendation Engine",
     description:
-      "Developer productivity dashboard with project analytics, git activity tracking, and custom workflow automation.",
-    tech: ["React", "D3.js", "Node.js", "MongoDB", "TypeScript"],
-    github: "https://github.com/kodein/dev-dashboard",
-    demo: "https://dash.kodein.dev",
-    category: "web",
+      "Built a collaborative filtering recommendation engine using PyTorch that improved user engagement by 34%. Deployed on AWS SageMaker.",
+    tech: ["PyTorch", "AWS", "Python", "Redis"],
+    github: "https://github.com/kodein",
+    demo: "https://demo.example.com",
+    category: "ml",
   },
 ];
 
 export const experience: Experience[] = [
   {
     id: "exp-1",
-    role: "Senior Full-Stack Developer",
-    company: "KodeIn Inc.",
-    period: "2023 - Present",
+    role: "Senior Data Engineer",
+    company: "TechCorp",
+    period: "2022 — Present",
     description:
-      "Leading development of the 3D portfolio platform and internal tooling. Mentoring junior developers and establishing best practices for React and Three.js adoption.",
-    type: "professional",
+      "Lead data pipeline architecture, migrated 50+ batch jobs to streaming, reduced pipeline latency by 60%.",
+    type: "engineer",
   },
   {
     id: "exp-2",
-    role: "Software Engineering Co-op",
-    company: "TechCorp",
-    period: "2021 - 2023",
+    role: "Data Analyst",
+    company: "DataCo",
+    period: "2020 — 2022",
     description:
-      "Contributed to backend services and frontend features using React, Node.js, and PostgreSQL. Built REST APIs and participated in code reviews and sprint planning.",
-    type: "coop",
+      "Built automated reporting dashboards, performed ad-hoc analysis for executive team, established data quality metrics.",
+    type: "analyst",
   },
   {
     id: "exp-3",
-    role: "Backend Engineering Intern",
-    company: "StartupLabs",
-    period: "2020 - 2021",
+    role: "ML Engineer",
+    company: "AIStart",
+    period: "2019 — 2020",
     description:
-      "Developed microservices in Python and Node.js, implemented CI/CD pipelines, and optimized database queries for improved application performance.",
-    type: "internship",
+      "Developed NLP pipeline for customer feedback, implemented ML models for churn prediction, deployed models to production.",
+    type: "ml",
   },
 ];

@@ -2,44 +2,45 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Line, LineBasicMaterial, IcosahedronGeometry, MeshBasicMaterial } from "three";
 import * as THREE from "three";
 
-interface SkillsSceneProps {
-  highlightedCategory?: string;
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
 }
 
-export default function SkillsScene({ highlightedCategory }: SkillsSceneProps) {
+export default function SkillsScene() {
   const groupRef = useRef<THREE.Group>(null);
-  const { nodes, connections } = useMemo(() => {
+  const { nodes, linePositions } = useMemo(() => {
+    const rng = seededRandom(789);
     const categories = ["language", "framework", "tool", "ml", "cloud"];
-    const catColors: Record<string, string> = {
-      language: "#00f0ff",
-      framework: "#7c3aed",
-      tool: "#ff00aa",
-      ml: "#22c55e",
-      cloud: "#f59e0b",
-    };
     const n: THREE.Vector3[] = [];
-    const c: [THREE.Vector3, THREE.Vector3][] = [];
+    const positions: number[] = [];
+    
     categories.forEach((cat, ci) => {
       const angle = (ci / categories.length) * Math.PI * 2;
       const count = 3;
       for (let i = 0; i < count; i++) {
         const r = 1.2 + i * 0.4;
         const a = angle + (i / count) * Math.PI * 0.5;
-        const y = (Math.random() - 0.5) * 0.5;
+        const y = (rng() - 0.5) * 0.5;
         n.push(new THREE.Vector3(Math.cos(a) * r, y, Math.sin(a) * r));
       }
     });
+    
     for (let i = 0; i < n.length; i++) {
       for (let j = i + 1; j < n.length; j++) {
         if (n[i].distanceTo(n[j]) < 1.8) {
-          c.push([n[i], n[j]]);
+          positions.push(n[i].x, n[i].y, n[i].z);
+          positions.push(n[j].x, n[j].y, n[j].z);
         }
       }
     }
-    return { nodes: n, connections: c };
+    
+    return { nodes: n, linePositions: new Float32Array(positions) };
   }, []);
 
   useFrame((state) => {
@@ -51,18 +52,20 @@ export default function SkillsScene({ highlightedCategory }: SkillsSceneProps) {
   return (
     <group ref={groupRef}>
       {nodes.map((pos, i) => (
-        <group key={i}>
-          <mesh position={pos}>
-            <octahedronGeometry args={[0.08, 0]} />
-            <meshBasicMaterial color="#00f0ff" wireframe />
-          </mesh>
-        </group>
+        <mesh key={i} position={pos}>
+          <octahedronGeometry args={[0.08, 0]} />
+          <meshBasicMaterial color="#00f0ff" wireframe />
+        </mesh>
       ))}
-      {connections.map(([a, b], i) => (
-        <Line key={i} points={[a, b]}>
-          <lineBasicMaterial color="#7c3aed" transparent opacity={0.15} />
-        </Line>
-      ))}
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[linePositions, 3]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color="#7c3aed" transparent opacity={0.15} />
+      </lineSegments>
     </group>
   );
 }

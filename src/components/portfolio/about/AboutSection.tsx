@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { bio } from "../../../data/portfolio";
+import { bio } from "@/data/portfolio";
 
 export default function AboutSection() {
   return (

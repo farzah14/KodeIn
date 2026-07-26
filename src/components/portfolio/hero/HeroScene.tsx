@@ -1,19 +1,27 @@
 "use client";
 
 import { useRef, useMemo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
-import { Points, PointMaterial, Line, LineBasicMaterial, IcosahedronGeometry, MeshBasicMaterial } from "three";
-import { OrbitControls } from "@react-three/drei";
+import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { OrbitControls } from "@react-three/drei";
+
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
 
 function ParticleField() {
   const count = 200;
   const positions = useMemo(() => {
+    const rng = seededRandom(42);
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 20;
-      arr[i * 3 + 1] = (Math.random() - 0.5) * 20;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 20;
+      arr[i * 3] = (rng() - 0.5) * 20;
+      arr[i * 3 + 1] = (rng() - 0.5) * 20;
+      arr[i * 3 + 2] = (rng() - 0.5) * 20;
     }
     return arr;
   }, []);
@@ -23,8 +31,13 @@ function ParticleField() {
     ref.current.rotation.y += 0.0005;
     ref.current.rotation.x += 0.0002;
   });
+  const geometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    return geo;
+  }, [positions]);
   return (
-    <points ref={ref} positions={positions} frustumCulled={false}>
+    <points ref={ref} geometry={geometry} frustumCulled={false}>
       <pointsMaterial size={0.05} color="#00f0ff" sizeAttenuation transparent opacity={0.8} />
     </points>
   );
@@ -33,23 +46,27 @@ function ParticleField() {
 function NeuralWeb() {
   const nodeCount = 12;
   const nodes = useMemo(() => {
+    const rng = seededRandom(123);
     return Array.from({ length: nodeCount }, (_, i) => {
       const theta = (i / nodeCount) * Math.PI * 2;
-      const r = 1.5 + Math.random() * 0.5;
-      return new THREE.Vector3(Math.cos(theta) * r, (Math.random() - 0.5) * 2, Math.sin(theta) * r);
+      const r = 1.5 + rng() * 0.5;
+      return new THREE.Vector3(Math.cos(theta) * r, (rng() - 0.5) * 2, Math.sin(theta) * r);
     });
   }, []);
-  const lines = useMemo(() => {
-    const result = [];
+
+  const linePositions = useMemo(() => {
+    const positions: number[] = [];
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         if (nodes[i].distanceTo(nodes[j]) < 2.5) {
-          result.push([nodes[i], nodes[j]]);
+          positions.push(nodes[i].x, nodes[i].y, nodes[i].z);
+          positions.push(nodes[j].x, nodes[j].y, nodes[j].z);
         }
       }
     }
-    return result;
+    return new Float32Array(positions);
   }, [nodes]);
+
   const centralRef = useRef<THREE.Mesh>(null);
   useFrame(() => {
     if (centralRef.current) {
@@ -57,23 +74,28 @@ function NeuralWeb() {
       centralRef.current.rotation.x += 0.002;
     }
   });
+
   return (
     <group>
-      <icosahedronGeometry args={[0.4, 1]} />
-      <meshBasicMaterial color="#00f0ff" wireframe transparent opacity={0.6} />
+      <mesh ref={centralRef}>
+        <icosahedronGeometry args={[0.4, 1]} />
+        <meshBasicMaterial color="#00f0ff" wireframe transparent opacity={0.6} />
+      </mesh>
       {nodes.map((pos, i) => (
-        <group key={i}>
-          <mesh position={pos}>
-            <icosahedronGeometry args={[0.05, 0]} />
-            <meshBasicMaterial color="#ff00aa" />
-          </mesh>
-        </group>
+        <mesh key={i} position={pos}>
+          <icosahedronGeometry args={[0.05, 0]} />
+          <meshBasicMaterial color="#ff00aa" />
+        </mesh>
       ))}
-      {lines.map(([a, b], i) => (
-        <Line key={i} points={[a, b]}>
-          <lineBasicMaterial color="#00f0ff" transparent opacity={0.2} />
-        </Line>
-      ))}
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[linePositions, 3]}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color="#00f0ff" transparent opacity={0.2} />
+      </lineSegments>
     </group>
   );
 }

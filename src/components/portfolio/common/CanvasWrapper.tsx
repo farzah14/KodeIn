@@ -1,8 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
-import { Suspense, ReactNode, useCallback } from "react";
+import { Suspense, ReactNode } from "react";
 
 interface CanvasWrapperProps {
   children: ReactNode;

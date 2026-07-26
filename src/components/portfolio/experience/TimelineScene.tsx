@@ -2,7 +2,6 @@
 
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Line, LineBasicMaterial, MeshBasicMaterial } from "three";
 import * as THREE from "three";
 
 interface TimelineSceneProps {
@@ -19,12 +18,21 @@ export default function TimelineScene({ activeIndex }: TimelineSceneProps) {
     ];
   }, []);
 
+  const linePositions = useMemo(() => {
+    const positions: number[] = [];
+    for (const pos of nodePositions) {
+      positions.push(pos.x, pos.y, pos.z);
+    }
+    return new Float32Array(positions);
+  }, [nodePositions]);
+
   useFrame(() => {
     if (groupRef.current) {
       groupRef.current.children.forEach((child, i) => {
-        if (child.material && "emissiveIntensity" in child.material) {
-          (child.material as THREE.MeshBasicMaterial).emissiveIntensity =
-            i === activeIndex ? 2 : 0.5;
+        if (child instanceof THREE.Mesh && child.material) {
+          if (child.material instanceof THREE.MeshPhongMaterial) {
+            child.material.emissiveIntensity = i === activeIndex ? 2 : 0.5;
+          }
         }
       });
     }
@@ -32,14 +40,25 @@ export default function TimelineScene({ activeIndex }: TimelineSceneProps) {
 
   return (
     <group ref={groupRef}>
-      <Line points={nodePositions}>
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[linePositions, 3]}
+          />
+        </bufferGeometry>
         <lineBasicMaterial color="#00f0ff" transparent opacity={0.4} />
-      </Line>
+      </lineSegments>
       {nodePositions.map((pos, i) => (
-        <group key={i} position={pos}>
+        <mesh key={i} position={pos}>
           <octahedronGeometry args={[0.1, 0]} />
-          <meshBasicMaterial color={i === activeIndex ? "#00f0ff" : "#ff00aa"} wireframe emissive={i === activeIndex ? "#00f0ff" : "#ff00aa"} emissiveIntensity={i === activeIndex ? 1 : 0.3} />
-        </group>
+          <meshPhongMaterial
+            color={i === activeIndex ? "#00f0ff" : "#ff00aa"}
+            emissive={i === activeIndex ? "#00f0ff" : "#ff00aa"}
+            emissiveIntensity={i === activeIndex ? 1 : 0.3}
+            wireframe
+          />
+        </mesh>
       ))}
     </group>
   );
