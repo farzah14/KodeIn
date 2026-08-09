@@ -14,7 +14,12 @@ if (!connectionString) {
 }
 
 function createPrismaClient() {
-  const pool = new pg.Pool({ connectionString });
+  const pool = new pg.Pool({
+    connectionString,
+    // pg defaults to 0 = wait forever; without this a dead/rotated
+    // database makes every request hang instead of failing fast.
+    connectionTimeoutMillis: 5000,
+  });
   const adapter = new PrismaPg(pool);
   
   return new PrismaClient({
