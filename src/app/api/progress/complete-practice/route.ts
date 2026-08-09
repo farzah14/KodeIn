@@ -3,6 +3,8 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { verifyActivity } from "@/server/execution/verifyActivity";
 import { awardCompletion } from "@/server/progress/awardCompletion";
+import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
+import { getActivityDateISO } from "@/server/progress/activityDate";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +41,14 @@ export async function POST(req: Request): Promise<NextResponse> {
       return NextResponse.json({ error: "USER_NOT_FOUND" }, { status: 404 });
     }
 
+    const quotaResult = await checkAndIncrementQuota(user.id);
+    if (!quotaResult.allowed) {
+      return NextResponse.json(
+        { error: "Too many execution requests. Please try again after 1 minute." },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
+
     // 1. Verify Activity on Server
     const verification = await verifyActivity({
       kind: "PRACTICE",
@@ -56,7 +66,7 @@ export async function POST(req: Request): Promise<NextResponse> {
       kind: "PRACTICE",
       activityId: challengeId,
       xp: verification.xp,
-      activityDateISO: new Date().toISOString().slice(0, 10),
+      activityDateISO: getActivityDateISO(),
     });
 
     return NextResponse.json(awardResult.progress);

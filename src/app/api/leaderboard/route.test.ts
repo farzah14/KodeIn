@@ -7,6 +7,9 @@ vi.mock("@/lib/prisma", () => ({
     user: {
       findMany: vi.fn(),
     },
+    completion: {
+      groupBy: vi.fn(),
+    },
   },
 }));
 
@@ -38,7 +41,6 @@ describe("Leaderboard API route", () => {
         progress: {
           xp: 100,
           streakCurrent: 2,
-          completedJson: "{}",
           userId: "user-2",
           streakLongest: 2,
           lastActiveISO: "2026-07-19",
@@ -46,6 +48,10 @@ describe("Leaderboard API route", () => {
         },
       } as any,
     ]);
+
+    vi.mocked(prisma.completion.groupBy).mockResolvedValue([
+      { userId: "user-1", _count: { _all: 2 } },
+    ] as any);
 
     const response = await GET();
     expect(response.status).toBe(200);
@@ -62,5 +68,9 @@ describe("Leaderboard API route", () => {
 
     // Assert Bob preserves his custom image URL
     expect(data[1].image).toBe("https://example.com/bob.jpg");
+
+    // Assert solved practice counts come from the Completion table
+    expect(data[0].solvedPractice).toBe(2);
+    expect(data[1].solvedPractice).toBe(0);
   });
 });
