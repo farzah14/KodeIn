@@ -45,7 +45,6 @@ if (googleId && googleSecret) {
       clientId: googleId,
       clientSecret: googleSecret,
       authorization: { params: { prompt: "select_account" } },
-      allowDangerousEmailAccountLinking: true,
     })
   );
 }
@@ -56,7 +55,6 @@ if (githubId && githubSecret) {
     GitHub({
       clientId: githubId,
       clientSecret: githubSecret,
-      allowDangerousEmailAccountLinking: true,
     })
   );
 }

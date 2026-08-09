@@ -1,0 +1,98 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { submitCode } from "./actions";
+import { prisma } from "@/lib/prisma";
+import { executeCode } from "../execution/piston";
+import { Prisma, BattleRoom } from "@prisma/client";
+
+vi.mock("server-only", () => ({}));
+
+vi.mock("@/lib/prisma", () => {
+  const mockPrisma = {
+    user: { findUnique: vi.fn() },
+    battleRoom: { findUnique: vi.fn(), update: vi.fn() },
+    $transaction: vi.fn(),
+  };
+  return { prisma: mockPrisma };
+});
+
+vi.mock("../execution/piston", () => ({
+  executeCode: vi.fn(),
+}));
+
+function conflictError(): unknown {
+  return new Prisma.PrismaClientKnownRequestError("write conflict", {
+    code: "P2034",
+    clientVersion: "7.2.0",
+  });
+}
+
+function makeRoom(overrides: Partial<BattleRoom> = {}): BattleRoom {
+  const base: BattleRoom = {
+    id: "room-1",
+    status: "active",
+    challengeId: "fizz-buzz",
+    player1Id: "user-1",
+    player2Id: null,
+    player1Code: "",
+    player2Code: "",
+    player1Done: false,
+    player2Done: false,
+    player1Result: "pending",
+    player2Result: "pending",
+    winnerId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    expiresAt: new Date(Date.now() + 60_000),
+  };
+  return { ...base, ...overrides };
+}
+
+describe("submitCode battle actions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // fizz-buzz challenge passes when student code produces the expected outputs.
+    const expectedByInput = new Map([
+      ["3", "Fizz"],
+      ["5", "Buzz"],
+      ["15", "FizzBuzz"],
+      ["7", "7"],
+    ]);
+    vi.mocked(executeCode).mockImplementation(async (_lang, _code, stdin) => {
+      const stdout = expectedByInput.get(stdin ?? "") ?? "WRONG-ANSWER";
+      return {
+        success: true,
+        run: { stdout, stderr: "", code: 0, signal: null, output: stdout },
+      };
+    });
+  });
+
+  it("retries on serialization conflict and records the winning submission", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom());
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: "Alice", image: null } as any);
+
+    // First write conflicts (opponent wrote concurrently), second succeeds.
+    vi.mocked(prisma.$transaction)
+      .mockRejectedValueOnce(conflictError())
+      .mockImplementationOnce(async () =>
+        makeRoom({ player1Done: true, player1Result: "success", winnerId: "user-1", status: "finished" })
+      );
+
+    const result = await submitCode("room-1", "user-1", "print(1)");
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    expect(result.success).toBe(true);
+    expect(result.allPassed).toBe(true);
+  });
+
+  it("returns a friendly error when conflicts exhaust retries", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom());
+    vi.mocked(prisma.$transaction).mockRejectedValue(conflictError());
+
+    const result = await submitCode("room-1", "user-1", "print(1)");
+
+    expect(prisma.$transaction).toHaveBeenCalledTimes(3);
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("CONCURRENT_UPDATE_CONFLICT");
+  });
+});
