@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { executeCode } from "@/server/execution/piston";
 import { SupportedLanguage } from "@/server/execution/types";
 import { checkAndIncrementQuota, refundExecutionQuota } from "@/server/rate-limit/executionQuota";
+import { executionQuotaExceeded } from "@/server/rate-limit/responses";
 
 export async function POST(req: NextRequest) {
   try {
@@ -42,10 +43,7 @@ export async function POST(req: NextRequest) {
     // 4. Rate limiting check
     const quotaResult = await checkAndIncrementQuota(userId);
     if (!quotaResult.allowed) {
-      return NextResponse.json(
-        { error: "Too many execution requests. Please try again after 1 minute." },
-        { status: 429, headers: { "Retry-After": "60" } }
-      );
+      return executionQuotaExceeded();
     }
 
     // 5. Execute code

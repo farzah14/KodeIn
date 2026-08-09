@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { verifyActivity } from "@/server/execution/verifyActivity";
 import { awardCompletion } from "@/server/progress/awardCompletion";
 import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
+import { executionQuotaExceeded } from "@/server/rate-limit/responses";
 import { getActivityDateISO } from "@/server/progress/activityDate";
 
 export const dynamic = "force-dynamic";
@@ -43,10 +44,7 @@ export async function POST(req: Request): Promise<NextResponse> {
 
     const quotaResult = await checkAndIncrementQuota(user.id);
     if (!quotaResult.allowed) {
-      return NextResponse.json(
-        { error: "Too many execution requests. Please try again after 1 minute." },
-        { status: 429, headers: { "Retry-After": "60" } }
-      );
+      return executionQuotaExceeded();
     }
 
     // 1. Verify Activity on Server

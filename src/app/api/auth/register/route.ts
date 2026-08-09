@@ -4,16 +4,14 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
 import { registerLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
+import { rateLimited } from "@/server/rate-limit/responses";
 
 export async function POST(req: NextRequest) {
   try {
     // 0. Rate limit per IP before any expensive work (bcrypt hashing).
     const check = registerLimiter.check(clientIp(req));
     if (!check.allowed) {
-      return NextResponse.json(
-        { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },
-        { status: 429, headers: { "Retry-After": String(check.retryAfterSeconds) } }
-      );
+      return rateLimited(check.retryAfterSeconds);
     }
 
     const { name, email, password } = await req.json();

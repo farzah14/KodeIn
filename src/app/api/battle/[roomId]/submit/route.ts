@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { submitCode } from "@/server/battle/actions";
 import { checkAndIncrementQuota, refundExecutionQuota } from "@/server/rate-limit/executionQuota";
+import { executionQuotaExceeded } from "@/server/rate-limit/responses";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -15,10 +16,7 @@ export async function POST(
 
   const quotaResult = await checkAndIncrementQuota(userId);
   if (!quotaResult.allowed) {
-    return NextResponse.json(
-      { error: "Too many execution requests. Please try again after 1 minute." },
-      { status: 429, headers: { "Retry-After": "60" } }
-    );
+    return executionQuotaExceeded();
   }
 
   try {
