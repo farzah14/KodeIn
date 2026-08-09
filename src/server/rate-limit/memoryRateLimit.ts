@@ -62,6 +62,22 @@ export const resendLimiter = new MemoryRateLimiter({
   max: RESEND_MAX_PER_KEY,
 });
 
+export const FORGOT_PASSWORD_WINDOW_MS = 60 * 1000; // 1 minute
+export const FORGOT_PASSWORD_MAX_PER_KEY = 1;
+
+export const forgotPasswordLimiter = new MemoryRateLimiter({
+  windowMs: FORGOT_PASSWORD_WINDOW_MS,
+  max: FORGOT_PASSWORD_MAX_PER_KEY,
+});
+
+export const RESET_PASSWORD_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+export const RESET_PASSWORD_MAX_PER_IP = 10;
+
+export const resetPasswordLimiter = new MemoryRateLimiter({
+  windowMs: RESET_PASSWORD_WINDOW_MS,
+  max: RESET_PASSWORD_MAX_PER_IP,
+});
+
 export function clientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) {

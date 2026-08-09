@@ -98,6 +98,12 @@ function LoginForm() {
             <label className="block text-sm font-semibold text-gray-700 dark:text-zinc-300">
               Kata Sandi
             </label>
+            <Link
+              href="/forgot-password"
+              className="text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+            >
+              Lupa kata sandi?
+            </Link>
           </div>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-gray-400 dark:text-zinc-500">
