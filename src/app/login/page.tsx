@@ -24,6 +24,8 @@ function LoginForm() {
     } else if (errorParam) {
       if (errorParam === "CredentialsSignin") {
         setError("Email atau kata sandi salah.");
+      } else if (errorParam === "OAuthAccountNotLinked") {
+        setError("Email ini sudah terdaftar dengan metode lain. Silakan masuk terlebih dahulu menggunakan metode tersebut, lalu hubungkan akun.");
       } else {
         setError(errorParam);
       }
