@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { submitCode } from "@/server/battle/actions";
-import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
+import { checkAndIncrementQuota, refundExecutionQuota } from "@/server/rate-limit/executionQuota";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(
@@ -27,6 +27,10 @@ export async function POST(
 
     const result = await submitCode(roomId, userId, code);
     if (!result.success) {
+      // Nothing actually executed (validation, race, expired room, ...);
+      // refund the claimed slot. Validation errors like the rate-limit
+      // rejection itself are caught above and never reach this point.
+      await refundExecutionQuota(userId, quotaResult.windowStart);
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
 

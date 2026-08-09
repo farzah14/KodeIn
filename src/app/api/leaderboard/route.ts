@@ -38,7 +38,11 @@ export async function GET() {
     const formattedLeaderboard = leaderboard.map((user) => ({
         id: user.id,
         name: user.name || "Anonymous",
-        image: user.image && (user.image.startsWith("data:") || user.image.startsWith("http")) ? user.image : user.id,
+        // Uploaded avatars are stored as raw base64 data URLs of up to 2MB;
+        // echoing them per row balloons every poll. Keep hotlinked OAuth
+        // URLs but collapse data URLs to the stable user id, which
+        // UserAvatar renders as the deterministic 3D avatar instead.
+        image: user.image && !user.image.startsWith("data:") ? user.image : user.id,
         xp: user.progress?.xp || 0,
         streak: user.progress?.streakCurrent || 0,
         solvedPractice: solvedById.get(user.id) ?? 0,

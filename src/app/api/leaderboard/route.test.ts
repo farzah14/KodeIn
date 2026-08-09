@@ -47,6 +47,19 @@ describe("Leaderboard API route", () => {
           updatedAt: new Date(),
         },
       } as any,
+    {
+        id: "user-3",
+        name: "Charlie",
+        image: "data:image/webp;base64," + "x".repeat(2_000_000),
+        progress: {
+          xp: 50,
+          streakCurrent: 1,
+          userId: "user-3",
+          streakLongest: 1,
+          lastActiveISO: "2026-07-19",
+          updatedAt: new Date(),
+        },
+      } as any,
     ]);
 
     vi.mocked(prisma.completion.groupBy).mockResolvedValue([
@@ -57,7 +70,7 @@ describe("Leaderboard API route", () => {
     expect(response.status).toBe(200);
 
     const data = await response.json();
-    expect(data.length).toBe(2);
+    expect(data.length).toBe(3);
 
     // Assert email field is not returned at all
     expect(data[0].email).toBeUndefined();
@@ -69,8 +82,13 @@ describe("Leaderboard API route", () => {
     // Assert Bob preserves his custom image URL
     expect(data[1].image).toBe("https://example.com/bob.jpg");
 
+    // Assert a 2MB base64 upload is collapsed to the id seed instead of
+    // being echoed per row on every poll
+    expect(data[2].image).toBe("user-3");
+
     // Assert solved practice counts come from the Completion table
     expect(data[0].solvedPractice).toBe(2);
     expect(data[1].solvedPractice).toBe(0);
+    expect(data[2].solvedPractice).toBe(0);
   });
 });
