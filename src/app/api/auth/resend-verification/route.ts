@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
-
-// Simple in-memory rate limiting map for resend-verification (keyed by email hash + IP)
-const rateLimitMap = new Map<string, number>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+import { resendLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -28,21 +25,18 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
     
-    // Rate limit check
-    const ip = req.headers.get("x-forwarded-for") || "unknown-ip";
+    // Rate limit check (email hash + IP)
+    const ip = clientIp(req);
     const emailHash = crypto.createHash("sha256").update(normalizedEmail).digest("hex");
     const rateLimitKey = `${emailHash}-${ip}`;
-    const now = Date.now();
-    const lastRequestTime = rateLimitMap.get(rateLimitKey);
+    const check = resendLimiter.check(rateLimitKey);
 
-    if (lastRequestTime && now - lastRequestTime < RATE_LIMIT_WINDOW_MS) {
-      const retryAfter = Math.ceil((RATE_LIMIT_WINDOW_MS - (now - lastRequestTime)) / 1000);
+    if (!check.allowed) {
       return NextResponse.json(
-        { error: `Terlalu banyak permintaan. Silakan coba lagi dalam ${retryAfter} detik.` },
-        { status: 429, headers: { "Retry-After": String(retryAfter) } }
+        { error: `Terlalu banyak permintaan. Silakan coba lagi dalam ${check.retryAfterSeconds} detik.` },
+        { status: 429, headers: { "Retry-After": String(check.retryAfterSeconds) } }
       );
     }
-    rateLimitMap.set(rateLimitKey, now);
 
     // Look up the user
     const user = await prisma.user.findUnique({

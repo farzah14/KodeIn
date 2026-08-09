@@ -44,6 +44,17 @@ export async function GET(
           if (!isClosed) {
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(state)}\n\n`));
           }
+
+          // Terminal state: stop polling once the battle is decided or the
+          // room has expired. Previously the stream polled the DB forever.
+          const expired = new Date(state.expiresAt).getTime() <= Date.now();
+          if (state.status === "finished" || expired) {
+            if (expired && state.status !== "finished") {
+              controller.enqueue(encoder.encode(`event: battle-expired\ndata: ${JSON.stringify({ roomId })}\n\n`));
+            }
+            if (interval) clearInterval(interval);
+            safeClose();
+          }
         } catch (e) {
           console.error("SSE Stream Error:", e);
           if (interval) clearInterval(interval);
