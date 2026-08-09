@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { executeCode } from "@/server/execution/piston";
 import { SupportedLanguage } from "@/server/execution/types";
-import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
+import { checkAndIncrementQuota, refundExecutionQuota } from "@/server/rate-limit/executionQuota";
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,6 +51,9 @@ export async function POST(req: NextRequest) {
     // 5. Execute code
     const result = await executeCode(language as SupportedLanguage, sourceCode, inputStdin);
     if (!result.success) {
+      // The slot was claimed before execution; give it back so a flaky
+      // runner or a bad program does not burn the user's quota.
+      await refundExecutionQuota(userId, quotaResult.windowStart);
       return NextResponse.json({ error: result.error }, { status: result.error === "TIMEOUT" ? 408 : 502 });
     }
 
