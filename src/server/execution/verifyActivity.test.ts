@@ -90,4 +90,96 @@ describe("verifyActivity verifier", () => {
       expect(result.xp).toBe(50);
     }
   });
+
+  it("rejects lesson code that prints ALL_PASS without passing the tests", async () => {
+    vi.mocked(executeCode).mockResolvedValue({
+      success: true,
+      run: {
+        // Student code smuggled out "ALL_PASS" before a test failed.
+        stdout: "ALL_PASS\n{error: \"Test case 1 gagal.\"}",
+        stderr: "",
+        code: 1,
+        signal: null,
+        output: "",
+      },
+    });
+
+    const result = await verifyActivity({
+      kind: "LESSON_STEP",
+      activityId: "py-l1-s2",
+      code: "def hello_world():\n    return \"nope\"\nprint(\"ALL_PASS\")",
+    });
+    expect(result.passed).toBe(false);
+    if (!result.passed) {
+      expect(result.reason).toBe("TEST_FAILED");
+    }
+  });
+
+  it("accepts a lesson only for an exact ALL_PASS marker on a zero exit code", async () => {
+    vi.mocked(executeCode).mockResolvedValue({
+      success: true,
+      run: { stdout: "ALL_PASS", stderr: "", code: 0, signal: null, output: "" },
+    });
+
+    const result = await verifyActivity({
+      kind: "LESSON_STEP",
+      activityId: "py-l1-s2",
+      code: "def hello_world():\n    return \"Hello World\"",
+    });
+    expect(result.passed).toBe(true);
+    if (result.passed) {
+      expect(result.xp).toBe(10);
+    }
+  });
+
+  it("drops unresolved placeholder hidden cases for parameterized lesson steps", async () => {
+    let builtScript = "";
+    vi.mocked(executeCode).mockImplementation(async (_lang, source) => {
+      builtScript = source;
+      return {
+        success: true,
+        run: { stdout: "ALL_PASS", stderr: "", code: 0, signal: null, output: "" },
+      };
+    });
+
+    const result = await verifyActivity({
+      kind: "LESSON_STEP",
+      activityId: "py-l3-s2", // calculate_power — public cases use inputs like [5, 2]
+      code: "def calculate_power(a, b):\n    return a ** b",
+    });
+
+    expect(builtScript).not.toContain('"placeholder"');
+    expect(result.passed).toBe(true);
+  });
+
+  it("skips fallback-sentinel hidden cases in practice challenges", async () => {
+    const stdins: string[] = [];
+    vi.mocked(executeCode).mockImplementation(async (lang, code, stdin) => {
+      stdins.push(stdin ?? "");
+      const outputs: Record<string, string> = {
+        "5": "120",
+        "0": "1",
+        "10": "3628800",
+      };
+      return {
+        success: true,
+        run: {
+          stdout: outputs[stdin ?? ""] ?? "sentinel-answer",
+          stderr: "",
+          code: 0,
+          signal: null,
+          output: "",
+        },
+      };
+    });
+
+    const result = await verifyActivity({
+      kind: "PRACTICE",
+      activityId: "factorial",
+      code: "def factorial(n):\n    return 1",
+    });
+
+    expect(stdins).not.toContain("fallback-input");
+    expect(result.passed).toBe(true);
+  });
 });
