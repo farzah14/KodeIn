@@ -2,7 +2,7 @@ import "server-only";
 import { content } from "@/lib/content";
 import { practiceChallenges } from "@/lib/practiceChallenges";
 import { executeCode } from "./piston";
-import { hiddenPracticeCases, hiddenStepCases } from "../challenges/hiddenCases";
+import { hiddenPracticeCases, hiddenStepCases, isFallbackHiddenTestCase } from "../challenges/hiddenCases";
 
 export type VerificationRequest =
   | { kind: "LESSON_STEP"; activityId: string; code?: string }
@@ -41,19 +41,24 @@ export async function verifyActivity(req: VerificationRequest): Promise<Verifica
       const publicCases = foundStep.publicCases || [];
       const hiddenCases = hiddenStepCases[req.activityId] || [];
 
-      // Map placeholders in hiddenCases to publicCase outputs
-      const resolvedHiddenCases = hiddenCases.map((hc) => {
-        let output = hc.output;
-        if (output === "placeholder") {
-          const matchingPublic = publicCases.find(
-            (pc: any) => JSON.stringify(pc.input) === JSON.stringify(hc.input)
-          );
-          if (matchingPublic) {
-            output = matchingPublic.output;
+      // Map placeholders in hiddenCases to publicCase outputs and drop the
+      // hidden case entirely when it cannot be resolved. An unresolved
+      // "placeholder" would be graded against the literal string and make the
+      // step impossible to pass.
+      const resolvedHiddenCases = hiddenCases
+        .map((hc) => {
+          let output = hc.output;
+          if (output === "placeholder") {
+            const matchingPublic = publicCases.find(
+              (pc: any) => JSON.stringify(pc.input) === JSON.stringify(hc.input)
+            );
+            if (matchingPublic) {
+              output = matchingPublic.output;
+            }
           }
-        }
-        return { input: hc.input, output };
-      });
+          return { input: hc.input, output };
+        })
+        .filter((hc) => hc.output !== "placeholder");
 
       const allCases = [...publicCases, ...resolvedHiddenCases];
 
@@ -123,8 +128,12 @@ if __name__ == '__main__':
         return { passed: false, reason: execution.error === "TIMEOUT" ? "TEST_FAILED" : "RUNNER_UNAVAILABLE" };
       }
 
+      // Anti-cheat: the grader only emits "ALL_PASS" when every test passed.
+      // Accept it only as the exact, whole output of a zero-exit-code process.
+      // Checking "includes" allowed student code running before the tests to
+      // print "ALL_PASS" and be rewarded for an empty solution.
       const stdout = execution.run.stdout.trim();
-      if (stdout.includes("ALL_PASS")) {
+      if (stdout === "ALL_PASS" && execution.run.code === 0) {
         return { passed: true, xp: 10 };
       }
 
@@ -138,7 +147,12 @@ if __name__ == '__main__':
     }
 
     const publicCases = challenge.testCases || [];
-    const hiddenCases = hiddenPracticeCases[req.activityId] || [];
+    // Unimplemented hidden cases use "fallback-input"/"fallback-output"
+    // sentinels. They are not real tests: skip them so the challenge can be
+    // completed on its public cases instead of failing forever.
+    const hiddenCases = (hiddenPracticeCases[req.activityId] || []).filter(
+      (c) => !isFallbackHiddenTestCase(c)
+    );
 
     // We run each case separately
     const allCases = [
