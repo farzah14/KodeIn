@@ -10,6 +10,7 @@ vi.mock("@/lib/prisma", () => {
       findUnique: vi.fn(),
       update: vi.fn(),
       create: vi.fn(),
+      delete: vi.fn(),
     },
     verificationToken: {
       deleteMany: vi.fn(),
@@ -17,6 +18,7 @@ vi.mock("@/lib/prisma", () => {
     },
     progress: {
       create: vi.fn(),
+      deleteMany: vi.fn(),
     },
     $transaction: vi.fn((cb) => cb(mockPrisma)),
   };
@@ -66,5 +68,32 @@ describe("POST /api/auth/register", () => {
     const data = await res.json();
     expect(data.message).toBe("Jika alamat dapat menerima email, instruksi berikutnya akan dikirim.");
     expect(data.error).toBeUndefined();
+  });
+
+  it("rolls back the account when the verification email cannot be delivered", async () => {
+    vi.mocked(prisma.user.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.user.create).mockResolvedValue({ id: "new-user-id" } as any);
+    vi.mocked(prisma.progress.create).mockResolvedValue({} as any);
+    vi.mocked(prisma.verificationToken.create).mockResolvedValue({} as any);
+    vi.mocked(sendVerificationEmail).mockRejectedValue(new Error("smtp unavailable"));
+
+    const req = new NextRequest("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({
+        name: "Orphan Preventer",
+        email: "fresh-address@example.com",
+        password: "correct-horse-9",
+      }),
+    });
+
+    const res = await POST(req);
+
+    expect(res.status).toBe(503);
+    expect(sendVerificationEmail).toHaveBeenCalledTimes(1);
+    expect(prisma.user.delete).toHaveBeenCalledWith({ where: { id: "new-user-id" } });
+    expect(prisma.verificationToken.deleteMany).toHaveBeenCalledWith({
+      where: { identifier: "fresh-address@example.com" },
+    });
+    expect(prisma.progress.deleteMany).toHaveBeenCalledWith({ where: { userId: "new-user-id" } });
   });
 });

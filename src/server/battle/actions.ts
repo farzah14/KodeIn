@@ -2,7 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { battleChallenges } from "@/lib/battleChallenges";
 import { executeCode } from "../execution/piston";
-import { SupportedLanguage } from "../execution/types";
+import { SupportedLanguage, EXECUTION_LIMITS } from "../execution/types";
 import { toPublicBattleState, BattleStateDTO } from "./dto";
 import { Prisma, BattleRoom } from "@prisma/client";
 
@@ -75,6 +75,7 @@ export async function joinBattle(
       if (!room) throw new Error("ROOM_NOT_FOUND");
       if (room.status !== "waiting") throw new Error("ROOM_NOT_WAITING");
       if (room.player1Id === userId) throw new Error("ALREADY_IN_ROOM");
+      if (room.expiresAt.getTime() <= Date.now()) throw new Error("BATTLE_EXPIRED");
 
       const updated = await tx.battleRoom.update({
         where: { id: roomId },
@@ -121,6 +122,13 @@ export async function submitCode(
 
     if (!isPlayer1 && !isPlayer2) {
       return { success: false, error: "NOT_IN_ROOM" };
+    }
+
+    // Reject oversized submissions before executing or persisting them.
+    // The runner enforces its own limit, but the room row would otherwise
+    // store an arbitrary-length string.
+    if (Buffer.byteLength(code, "utf-8") > EXECUTION_LIMITS.sourceBytes) {
+      return { success: false, error: "CODE_TOO_LARGE" };
     }
 
     // 2. Server-side code execution using secure piston adapter

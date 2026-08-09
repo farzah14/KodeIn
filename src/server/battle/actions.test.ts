@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { submitCode } from "./actions";
+import { submitCode, joinBattle } from "./actions";
 import { prisma } from "@/lib/prisma";
 import { executeCode } from "../execution/piston";
 import { Prisma, BattleRoom } from "@prisma/client";
@@ -94,5 +94,56 @@ describe("submitCode battle actions", () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(3);
     expect(result.success).toBe(false);
     expect(result.error).toBe("CONCURRENT_UPDATE_CONFLICT");
+  });
+
+  it("rejects oversized submissions before execution or persistence", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom());
+
+    const result = await submitCode("room-1", "user-1", "x".repeat(20_001));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("CODE_TOO_LARGE");
+    expect(executeCode).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("prevents joining an expired waiting room", async () => {
+    const expired = makeRoom({
+      player2Id: null,
+      status: "waiting",
+      expiresAt: new Date(Date.now() - 1_000),
+    });
+    const txPrisma = {
+      battleRoom: {
+        findUnique: vi.fn().mockResolvedValue(expired),
+        update: vi.fn(),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation((async (cb: any) => cb(txPrisma)) as any);
+
+    const result = await joinBattle("room-1", "user-2");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("BATTLE_EXPIRED");
+    expect(txPrisma.battleRoom.update).not.toHaveBeenCalled();
+  });
+
+  it("allows joining a fresh waiting room", async () => {
+    const fresh = makeRoom({ status: "waiting", player2Id: null });
+    const txPrisma = {
+      battleRoom: {
+        findUnique: vi.fn().mockResolvedValue(fresh),
+        update: vi.fn().mockResolvedValue(makeRoom({ status: "active", player2Id: "user-2" })),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation((async (cb: any) => cb(txPrisma)) as any);
+    vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: "Player 1", image: null } as any);
+
+    const result = await joinBattle("room-1", "user-2");
+
+    expect(result.success).toBe(true);
+    expect(txPrisma.battleRoom.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { player2Id: "user-2", status: "active" } })
+    );
   });
 });
