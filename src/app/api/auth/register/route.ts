@@ -3,9 +3,19 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
+import { registerLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
 
 export async function POST(req: NextRequest) {
   try {
+    // 0. Rate limit per IP before any expensive work (bcrypt hashing).
+    const check = registerLimiter.check(clientIp(req));
+    if (!check.allowed) {
+      return NextResponse.json(
+        { error: "Terlalu banyak permintaan. Silakan coba lagi nanti." },
+        { status: 429, headers: { "Retry-After": String(check.retryAfterSeconds) } }
+      );
+    }
+
     const { name, email, password } = await req.json();
 
     // 1. Validasi Input
@@ -105,6 +115,16 @@ export async function POST(req: NextRequest) {
       await sendVerificationEmail(normalizedEmail, token);
     } catch (error) {
       console.error("Verification email delivery failed", { userId });
+      // Roll back the just-created account so the email address is not burned:
+      // without a delivered token the user could never verify or sign in, and
+      // any retry of the same email would have been blocked by the 202 path.
+      await prisma.$transaction(async (tx) => {
+        await tx.verificationToken.deleteMany({ where: { identifier: normalizedEmail } });
+        await tx.progress.deleteMany({ where: { userId } });
+        await tx.user.delete({ where: { id: userId } });
+      }).catch((rollbackError) => {
+        console.error("Rollback of failed registration failed", { userId, rollbackError });
+      });
       return NextResponse.json(
         { error: "VERIFICATION_DELIVERY_FAILED" },
         { status: 503 }
