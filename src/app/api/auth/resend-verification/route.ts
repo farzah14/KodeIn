@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
 import { resendLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
+import { rateLimited } from "@/server/rate-limit/responses";
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,10 +33,7 @@ export async function POST(req: NextRequest) {
     const check = resendLimiter.check(rateLimitKey);
 
     if (!check.allowed) {
-      return NextResponse.json(
-        { error: `Terlalu banyak permintaan. Silakan coba lagi dalam ${check.retryAfterSeconds} detik.` },
-        { status: 429, headers: { "Retry-After": String(check.retryAfterSeconds) } }
-      );
+      return rateLimited(check.retryAfterSeconds);
     }
 
     // Look up the user
