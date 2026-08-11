@@ -114,29 +114,28 @@ const authConfig: NextAuthConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        // user is only present on sign-in / account link; embed the full
+        // profile once here so the session callback never needs a DB round
+        // trip, which previously ran findUnique() on every auth() call.
         token.id = user.id;
+        token.profile = {
+          name: user.name ?? null,
+          image: user.image ?? null,
+          email: user.email ?? null,
+        };
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        if (token.id) {
-          try {
-            const dbUser = await prisma.user.findUnique({
-              where: { id: token.id as string },
-              select: { name: true, image: true, email: true },
-            });
-            if (dbUser) {
-              session.user.name = dbUser.name;
-              session.user.image = dbUser.image;
-              if (dbUser.email) {
-                session.user.email = dbUser.email;
-              }
-            }
-          } catch (error) {
-            console.error("Failed to fetch latest user session details:", error);
-          }
+        const profile = token.profile as
+          | { name?: string | null; image?: string | null; email?: string | null }
+          | undefined;
+        if (profile) {
+          if (profile.name) session.user.name = profile.name;
+          if (profile.image) session.user.image = profile.image;
+          if (profile.email) session.user.email = profile.email;
         }
       }
       return session;

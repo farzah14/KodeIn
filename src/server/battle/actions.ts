@@ -2,9 +2,36 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { battleChallenges } from "@/lib/battleChallenges";
 import { executeCode } from "../execution/piston";
-import { SupportedLanguage } from "../execution/types";
+import { SupportedLanguage, EXECUTION_LIMITS } from "../execution/types";
 import { toPublicBattleState, BattleStateDTO } from "./dto";
 import { Prisma, BattleRoom } from "@prisma/client";
+
+const CONFLICT_MAX_RETRIES = 3;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** Serialized transactions can abort with P2034 when two players write the
+ * same room concurrently. Retry a bounded number of times before giving up. */
+async function withRetryOnConflict<T>(fn: () => Promise<T>): Promise<T> {
+  for (let attempt = 1; attempt <= CONFLICT_MAX_RETRIES; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const isConflict =
+        err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2034";
+      if (!isConflict) throw err;
+      if (attempt === CONFLICT_MAX_RETRIES) throw err;
+      await sleep(attempt * 50);
+    }
+  }
+  throw new Error("UNREACHABLE");
+}
+
+function isConflictError(err: unknown): boolean {
+  return err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2034";
+}
 
 async function fetchPlayers(room: BattleRoom) {
   const p1 = await prisma.user.findUnique({
@@ -48,6 +75,7 @@ export async function joinBattle(
       if (!room) throw new Error("ROOM_NOT_FOUND");
       if (room.status !== "waiting") throw new Error("ROOM_NOT_WAITING");
       if (room.player1Id === userId) throw new Error("ALREADY_IN_ROOM");
+      if (room.expiresAt.getTime() <= Date.now()) throw new Error("BATTLE_EXPIRED");
 
       const updated = await tx.battleRoom.update({
         where: { id: roomId },
@@ -96,6 +124,13 @@ export async function submitCode(
       return { success: false, error: "NOT_IN_ROOM" };
     }
 
+    // Reject oversized submissions before executing or persisting them.
+    // The runner enforces its own limit, but the room row would otherwise
+    // store an arbitrary-length string.
+    if (Buffer.byteLength(code, "utf-8") > EXECUTION_LIMITS.sourceBytes) {
+      return { success: false, error: "CODE_TOO_LARGE" };
+    }
+
     // 2. Server-side code execution using secure piston adapter
     let allPassed = true;
     for (const tc of challenge.testCases) {
@@ -106,8 +141,9 @@ export async function submitCode(
       }
     }
 
-    // 3. Atomically update battle state
-    const updatedRoom = await prisma.$transaction(async (tx) => {
+    // 3. Atomically update battle state (retry on concurrent write conflicts)
+    const updatedRoom = await withRetryOnConflict(() =>
+      prisma.$transaction(async (tx) => {
       // Re-fetch within serializable transaction to avoid race conditions
       const currentRoom = await tx.battleRoom.findUnique({
         where: { id: roomId },
@@ -148,9 +184,10 @@ export async function submitCode(
       });
 
       return updated;
-    }, {
-      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      })
+    );
 
     const roomWithPlayers = await fetchPlayers(updatedRoom);
 
@@ -160,7 +197,10 @@ export async function submitCode(
       room: toPublicBattleState(roomWithPlayers, userId),
     };
   } catch (err: any) {
-    return { success: false, error: err.message || "SUBMIT_FAILED" };
+    return {
+      success: false,
+      error: isConflictError(err) ? "CONCURRENT_UPDATE_CONFLICT" : err.message || "SUBMIT_FAILED",
+    };
   }
 }
 
@@ -169,7 +209,8 @@ export async function surrenderBattle(
   userId: string
 ): Promise<{ success: boolean; error?: string; room?: BattleStateDTO }> {
   try {
-    const updatedRoom = await prisma.$transaction(async (tx) => {
+    const updatedRoom = await withRetryOnConflict(() =>
+      prisma.$transaction(async (tx) => {
       const room = await tx.battleRoom.findUnique({
         where: { id: roomId },
       });
@@ -205,14 +246,18 @@ export async function surrenderBattle(
       });
 
       return updated;
-    }, {
-      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      })
+    );
 
     const roomWithPlayers = await fetchPlayers(updatedRoom);
 
     return { success: true, room: toPublicBattleState(roomWithPlayers, userId) };
   } catch (err: any) {
-    return { success: false, error: err.message || "SURRENDER_FAILED" };
+    return {
+      success: false,
+      error: isConflictError(err) ? "CONCURRENT_UPDATE_CONFLICT" : err.message || "SURRENDER_FAILED",
+    };
   }
 }

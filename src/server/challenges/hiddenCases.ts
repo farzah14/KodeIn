@@ -10,6 +10,17 @@ export type StepTestCase = {
   output: any;
 };
 
+// Placeholder sentinels used by entries that have not been filled in yet.
+// They must never run against student code: they are not real test cases and
+// would make the challenge impossible to pass (and would leak the expected
+// output to anyone reading the source). Consumers should skip them.
+export const FALLBACK_INPUT = "fallback-input";
+export const FALLBACK_OUTPUT = "fallback-output";
+
+export function isFallbackHiddenTestCase(c: TestCase): boolean {
+  return c.input === FALLBACK_INPUT && c.expectedOutput === FALLBACK_OUTPUT;
+}
+
 export const hiddenPracticeCases: Record<string, TestCase[]> = {
   "fizz-buzz": [
     { input: "30", expectedOutput: "FizzBuzz" },
