@@ -2,20 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
-import { resendLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
+import {
+  checkDbRateLimit,
+  clientIp,
+  RESEND_MAX_PER_KEY,
+  RESEND_WINDOW_MS,
+} from "@/server/rate-limit/dbRateLimit";
 import { rateLimited } from "@/server/rate-limit/responses";
+import { isRecord, nonEmptyString } from "@/server/http/validation";
 
 export async function POST(req: NextRequest) {
   try {
-    let body: { email?: string };
+    let rawBody: unknown;
     try {
-      body = await req.json();
+      rawBody = await req.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { email } = body;
-    if (!email || !email.trim()) {
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const email = nonEmptyString(rawBody.email);
+    if (!email) {
       return NextResponse.json({ error: "Alamat email wajib diisi." }, { status: 400 });
     }
 
@@ -24,13 +34,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Format email tidak valid." }, { status: 400 });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase();
     
     // Rate limit check (email hash + IP)
     const ip = clientIp(req);
     const emailHash = crypto.createHash("sha256").update(normalizedEmail).digest("hex");
-    const rateLimitKey = `${emailHash}-${ip}`;
-    const check = resendLimiter.check(rateLimitKey);
+    const rateLimitKey = `resend:${emailHash}:${ip}`;
+    const check = await checkDbRateLimit(rateLimitKey, {
+      windowMs: RESEND_WINDOW_MS,
+      max: RESEND_MAX_PER_KEY,
+    });
 
     if (!check.allowed) {
       return rateLimited(check.retryAfterSeconds);

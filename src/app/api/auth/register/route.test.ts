@@ -28,6 +28,12 @@ vi.mock("@/lib/prisma", () => {
 vi.mock("@/lib/email", () => ({
   sendVerificationEmail: vi.fn(),
 }));
+vi.mock("@/server/rate-limit/dbRateLimit", () => ({
+  checkDbRateLimit: vi.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 0 }),
+  clientIp: vi.fn().mockReturnValue("test-ip"),
+  REGISTER_MAX_PER_IP: 5,
+  REGISTER_WINDOW_MS: 600_000,
+}));
 
 describe("POST /api/auth/register", () => {
   beforeEach(() => {
@@ -68,6 +74,16 @@ describe("POST /api/auth/register", () => {
     const data = await res.json();
     expect(data.message).toBe("Jika alamat dapat menerima email, instruksi berikutnya akan dikirim.");
     expect(data.error).toBeUndefined();
+  });
+
+  it("rejects non-string registration fields", async () => {
+    const req = new NextRequest("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify({ name: {}, email: [], password: 123 }),
+    });
+
+    expect((await POST(req)).status).toBe(400);
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it("rolls back the account when the verification email cannot be delivered", async () => {

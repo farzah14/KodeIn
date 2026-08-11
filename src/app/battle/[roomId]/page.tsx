@@ -81,44 +81,7 @@ export default function BattleArena({ params: paramsPromise }: { params: Promise
     setError("");
 
     try {
-      // 1. Initialize Pyodide if not already there
-      if (!window.loadPyodide) {
-        throw new Error("Sistem eksekusi belum siap. Tunggu sebentar.");
-      }
-      
-      let py = window.pyodideInstance;
-      if (!py) {
-        py = await window.loadPyodide();
-        window.pyodideInstance = py;
-      }
-
-      // 2. Run all test cases locally
-      let allPassed = true;
-      for (const tc of challenge.testCases) {
-        try {
-          // Prepare Python environment
-          py.runPython(`
-import sys
-import io
-sys.stdin = io.StringIO(${JSON.stringify(tc.input)})
-sys.stdout = io.StringIO()
-          `);
-          
-          await py.runPythonAsync(code);
-          const result = py.runPython("sys.stdout.getvalue()").trim();
-          
-          if (result !== tc.expectedOutput.trim()) {
-            allPassed = false;
-            break;
-          }
-        } catch (err) {
-          console.error("Test Case Error:", err);
-          allPassed = false;
-          break;
-        }
-      }
-
-      // 3. Submit result to server to sync
+      // The server is the source of truth for battle verification.
       const res = await fetch(`/api/battle/${roomId}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

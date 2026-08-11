@@ -25,6 +25,7 @@ export interface Experience {
 }
 
 export const bio = {
+  isDemo: true,
   name: "KodeIn Developer",
   title: "Data Engineer / Data Analyst / ML Engineer",
   summary:

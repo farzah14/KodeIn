@@ -26,6 +26,17 @@ describe("executeCode Piston adapter", () => {
     }
   });
 
+  it("does not call fetch when PISTON_BASE_URL is absent", async () => {
+    delete process.env.PISTON_BASE_URL;
+    const mockFetch = vi.fn();
+    vi.stubGlobal("fetch", mockFetch);
+
+    const result = await executeCode("python", "print(1)");
+
+    expect(result).toEqual({ success: false, error: "RUNNER_NOT_CONFIGURED" });
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it("maps upstream failures to RUNNER_UNAVAILABLE without response-body leakage", async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,

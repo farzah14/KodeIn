@@ -9,6 +9,7 @@ export default function AboutSection() {
       <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
         <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }} viewport={{ once: true }}>
           <p className="text-gray-300 leading-relaxed text-lg">{bio.summary}</p>
+          {bio.isDemo && <p className="mt-4 text-xs font-mono text-amber-300">Demo data shown. Replace sample claims and links before publishing.</p>}
           <div className="mt-8 grid grid-cols-3 gap-4">
             <div className="text-center">
               <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-mono font-bold text-cyan-400">{bio.stats.yearsExperience}+</motion.div>

@@ -2,15 +2,29 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { projects } from "@/data/portfolio";
+import { bio, projects } from "@/data/portfolio";
+import dynamic from "next/dynamic";
+import CanvasWrapper from "../common/CanvasWrapper";
+import { useSectionVisibility } from "../common/useSectionVisibility";
+
+const ProjectsScene = dynamic(() => import("./ProjectsScene"), { ssr: false });
 
 export default function ProjectsSection() {
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  const { ref, visible } = useSectionVisibility<HTMLElement>();
   const project = selectedProject ? projects.find((p) => p.id === selectedProject) : null;
+  const activeIndex = selectedProject ? projects.findIndex((p) => p.id === selectedProject) : 0;
 
   return (
-    <section id="projects" className="relative py-20 md:py-32 px-4">
-      <div className="max-w-6xl mx-auto">
+    <section id="projects" ref={ref} className="relative py-20 md:py-32 px-4 overflow-hidden">
+      {visible && (
+        <CanvasWrapper active={visible} className="pointer-events-none absolute inset-0 z-0 opacity-30">
+          <ambientLight intensity={0.5} />
+          <pointLight position={[2, 3, 4]} intensity={20} />
+          <ProjectsScene activeIndex={activeIndex} />
+        </CanvasWrapper>
+      )}
+      <div className="relative z-10 max-w-6xl mx-auto">
         <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-mono font-bold text-white mb-8">Projects</motion.h2>
         <div className="grid md:grid-cols-2 gap-6">
           {projects.map((p, i) => (
@@ -24,10 +38,14 @@ export default function ProjectsSection() {
                   <span key={t} className="px-2 py-1 text-xs font-mono border border-gray-700 text-gray-400 rounded">{t}</span>
                 ))}
               </div>
-              <div className="mt-4 flex gap-4">
-                <a href={p.github} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-cyan-400 hover:underline">GitHub</a>
-                <a href={p.demo} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-magenta-400 hover:underline">Live Demo</a>
-              </div>
+              {bio.isDemo ? (
+                <div className="mt-4 text-xs font-mono text-amber-300">Project destinations pending owner values.</div>
+              ) : (
+                <div className="mt-4 flex gap-4">
+                  <a href={p.github} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-cyan-400 hover:underline">GitHub</a>
+                  <a href={p.demo} target="_blank" rel="noopener noreferrer" className="text-xs font-mono text-magenta-400 hover:underline">Live Demo</a>
+                </div>
+              )}
             </motion.div>
           ))}
         </div>
@@ -39,10 +57,14 @@ export default function ProjectsSection() {
             <h3 className="text-2xl font-mono font-bold text-white mb-4">{project.title}</h3>
             <p className="text-gray-300 mb-6">{project.description}</p>
             <div className="flex flex-wrap gap-2 mb-6">{project.tech.map((t) => <span key={t} className="px-3 py-1 text-xs font-mono border border-cyan-400/30 text-cyan-400 rounded">{t}</span>)}</div>
-            <div className="flex gap-4">
-              <a href={project.github} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-cyan-400 text-cyan-400 font-mono text-sm hover:bg-cyan-400/10 transition-colors">GitHub</a>
-              <a href={project.demo} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-magenta-400 text-magenta-400 font-mono text-sm hover:bg-magenta-400/10 transition-colors">Live Demo</a>
-            </div>
+            {bio.isDemo ? (
+              <p className="text-sm font-mono text-amber-300">Project destinations pending owner values.</p>
+            ) : (
+              <div className="flex gap-4">
+                <a href={project.github} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-cyan-400 text-cyan-400 font-mono text-sm hover:bg-cyan-400/10 transition-colors">GitHub</a>
+                <a href={project.demo} target="_blank" rel="noopener noreferrer" className="px-4 py-2 border border-magenta-400 text-magenta-400 font-mono text-sm hover:bg-magenta-400/10 transition-colors">Live Demo</a>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}

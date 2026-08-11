@@ -52,7 +52,12 @@ export async function POST(req: NextRequest) {
       // The slot was claimed before execution; give it back so a flaky
       // runner or a bad program does not burn the user's quota.
       await refundExecutionQuota(userId, quotaResult.windowStart);
-      return NextResponse.json({ error: result.error }, { status: result.error === "TIMEOUT" ? 408 : 502 });
+    const status = result.error === "TIMEOUT"
+      ? 408
+      : result.error === "RUNNER_NOT_CONFIGURED"
+        ? 503
+        : 502;
+    return NextResponse.json({ error: result.error }, { status });
     }
 
     return NextResponse.json(result);

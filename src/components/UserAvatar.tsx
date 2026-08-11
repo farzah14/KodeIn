@@ -22,7 +22,9 @@ export function UserAvatar({ src, size = 40, className = "", seed }: UserAvatarP
         className={`relative overflow-hidden rounded-full border border-edu-border bg-edu-surface1 ${className}`}
         style={{ width: size, height: size }}
       >
-        <img 
+        {/* User-provided URLs cannot use the app's fixed next/image host allowlist. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={src} 
           alt="User Avatar" 
           className="w-full h-full object-cover"

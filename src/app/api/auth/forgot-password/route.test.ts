@@ -21,10 +21,19 @@ vi.mock("@/lib/prisma", () => {
 vi.mock("@/lib/email", () => ({
   sendPasswordResetEmail: vi.fn(),
 }));
+vi.mock("@/server/rate-limit/dbRateLimit", () => ({
+  checkDbRateLimit: vi.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 0 }),
+  clientIp: vi.fn().mockReturnValue("test-ip"),
+  FORGOT_PASSWORD_MAX_PER_KEY: 1,
+  FORGOT_PASSWORD_WINDOW_MS: 60_000,
+}));
 
 describe("POST /api/auth/forgot-password", () => {
+  let emailedToken = "";
+
   beforeEach(() => {
     vi.clearAllMocks();
+    emailedToken = "";
   });
 
   it("returns a neutral 202 when the email does not exist (no enumeration)", async () => {
@@ -73,7 +82,10 @@ describe("POST /api/auth/forgot-password", () => {
       emailVerified: new Date("2026-01-01T00:00:00.000Z"),
     } as never);
     vi.mocked(prisma.passwordResetToken.create).mockResolvedValue({} as never);
-    vi.mocked(sendPasswordResetEmail).mockResolvedValue(true);
+    vi.mocked(sendPasswordResetEmail).mockImplementation(async (_email, _name, token) => {
+      emailedToken = token;
+      return true;
+    });
 
     const req = new NextRequest("http://localhost:3000/api/auth/forgot-password", {
       method: "POST",
@@ -90,7 +102,7 @@ describe("POST /api/auth/forgot-password", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           userId: "credential-user-id",
-          token: expect.any(String),
+          tokenHash: expect.any(String),
           expires: expect.any(Date),
         }),
       })
@@ -100,6 +112,9 @@ describe("POST /api/auth/forgot-password", () => {
       "Budi",
       expect.any(String)
     );
+    const createCall = vi.mocked(prisma.passwordResetToken.create).mock.calls[0][0];
+    expect(createCall.data.tokenHash).not.toBe(emailedToken);
+    expect(createCall.data.tokenHash).toHaveLength(64);
   });
 
   it("rolls back the token when the reset email cannot be delivered", async () => {
@@ -119,9 +134,18 @@ describe("POST /api/auth/forgot-password", () => {
 
     const res = await POST(req);
 
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(202);
     expect(prisma.passwordResetToken.deleteMany).toHaveBeenCalledWith({
       where: { userId: "credential-user-id" },
     });
+  });
+
+  it("rejects object-valued email fields without throwing", async () => {
+    const req = new NextRequest("http://localhost:3000/api/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email: {} }),
+    });
+
+    expect((await POST(req)).status).toBe(400);
   });
 });

@@ -100,13 +100,19 @@ function NeuralWeb() {
   );
 }
 
-export default function HeroScene() {
+export default function HeroScene({ reducedMotion = false }: { reducedMotion?: boolean }) {
   return (
     <>
       <ambientLight intensity={0.3} />
       <ParticleField />
       <NeuralWeb />
-      <OrbitControls enableZoom={false} enablePan={false} enableRotate={true} autoRotate autoRotateSpeed={0.5} />
+      <OrbitControls
+        enableZoom={false}
+        enablePan={false}
+        enableRotate={!reducedMotion}
+        autoRotate={!reducedMotion}
+        autoRotateSpeed={0.5}
+      />
     </>
   );
 }

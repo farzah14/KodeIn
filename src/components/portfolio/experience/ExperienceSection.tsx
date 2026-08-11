@@ -2,11 +2,24 @@
 
 import { motion } from "framer-motion";
 import { experience } from "@/data/portfolio";
+import dynamic from "next/dynamic";
+import CanvasWrapper from "../common/CanvasWrapper";
+import { useSectionVisibility } from "../common/useSectionVisibility";
+
+const TimelineScene = dynamic(() => import("./TimelineScene"), { ssr: false });
 
 export default function ExperienceSection() {
+  const { ref, visible } = useSectionVisibility<HTMLElement>();
   return (
-    <section id="experience" className="relative py-20 md:py-32 px-4">
-      <div className="max-w-4xl mx-auto">
+    <section id="experience" ref={ref} className="relative py-20 md:py-32 px-4 overflow-hidden">
+      {visible && (
+        <CanvasWrapper active={visible} className="pointer-events-none absolute inset-0 z-0 opacity-30">
+          <ambientLight intensity={0.5} />
+          <pointLight position={[-2, 2, 3]} intensity={15} />
+          <TimelineScene activeIndex={0} />
+        </CanvasWrapper>
+      )}
+      <div className="relative z-10 max-w-4xl mx-auto">
         <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-mono font-bold text-white mb-12">Experience</motion.h2>
         <div className="relative">
           <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-cyan-400/0 via-cyan-400/30 to-cyan-400/0" />

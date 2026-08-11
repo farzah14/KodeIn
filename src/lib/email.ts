@@ -129,3 +129,28 @@ export async function sendPasswordResetEmail(
 
   return true;
 }
+
+export async function sendContactEmail(input: {
+  toEmail: string;
+  fromName: string;
+  replyTo: string;
+  message: string;
+}): Promise<boolean> {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  const fromEmail = process.env.EMAIL_FROM?.trim();
+  if (!apiKey || !fromEmail) {
+    throw new Error("CONTACT_EMAIL_NOT_CONFIGURED");
+  }
+
+  const resend = new Resend(apiKey);
+  const { error } = await resend.emails.send({
+    from: `Portfolio contact <${fromEmail}>`,
+    to: input.toEmail,
+    replyTo: input.replyTo,
+    subject: `Portfolio contact from ${input.fromName}`,
+    text: `Name: ${input.fromName}\nEmail: ${input.replyTo}\n\n${input.message}`,
+  });
+
+  if (error) throw new Error(`Resend contact email failed: ${error.message}`);
+  return true;
+}

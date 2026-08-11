@@ -1,26 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { resetPasswordLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
+import {
+  checkDbRateLimit,
+  clientIp,
+  RESET_PASSWORD_MAX_PER_IP,
+  RESET_PASSWORD_WINDOW_MS,
+} from "@/server/rate-limit/dbRateLimit";
 import { rateLimited } from "@/server/rate-limit/responses";
+import { isRecord, nonEmptyString } from "@/server/http/validation";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
-    let body: { token?: string; password?: string };
+    let rawBody: unknown;
     try {
-      body = await req.json();
+      rawBody = await req.json();
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const check = resetPasswordLimiter.check(clientIp(req));
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const check = await checkDbRateLimit(`reset:${clientIp(req)}`, {
+      windowMs: RESET_PASSWORD_WINDOW_MS,
+      max: RESET_PASSWORD_MAX_PER_IP,
+    });
     if (!check.allowed) {
       return rateLimited(check.retryAfterSeconds);
     }
 
-    const { token, password } = body;
+    const token = nonEmptyString(rawBody.token);
+    const password = typeof rawBody.password === "string" ? rawBody.password : null;
 
-    if (!token || typeof token !== "string" || !token.trim()) {
+    if (!token) {
       return NextResponse.json(
         { error: "Token pengaturan ulang tidak valid." },
         { status: 400 }
@@ -46,8 +61,9 @@ export async function POST(req: NextRequest) {
     let changedUserId: string | null = null;
 
     await prisma.$transaction(async (tx) => {
+      const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
       const resetToken = await tx.passwordResetToken.findUnique({
-        where: { token },
+        where: { tokenHash },
         select: { userId: true, expires: true },
       });
 
@@ -57,7 +73,7 @@ export async function POST(req: NextRequest) {
 
       if (new Date() > resetToken.expires) {
         // Expired tokens are removed so the link cannot be retried.
-        await tx.passwordResetToken.delete({ where: { token } });
+        await tx.passwordResetToken.delete({ where: { tokenHash } });
         throw new ResetTokenError("EXPIRED_TOKEN");
       }
 

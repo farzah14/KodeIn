@@ -27,9 +27,6 @@ type ToastState =
   | { type: "success" | "error"; text: string; key: number }
   | null;
 
-const THEME_KEY = "kodeln_theme";
-
-
 export default function ProfileClient() {
   const router = useRouter();
   const { t } = useTranslation();

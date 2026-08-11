@@ -16,19 +16,25 @@ describe("verifyActivity verifier", () => {
     vi.restoreAllMocks();
   });
 
-  it("asserts every code activity has a hidden-case entry", () => {
-    // Check practice challenges
+  it("does not ship fallback or placeholder hidden-test data", () => {
+    const serialized = JSON.stringify({ hiddenPracticeCases, hiddenStepCases });
+    expect(serialized).not.toContain("fallback-input");
+    expect(serialized).not.toContain("fallback-output");
+    expect(serialized).not.toContain("placeholder");
+  });
+
+  it("keeps reviewed hidden cases aligned with known activities", () => {
     for (const challenge of practiceChallenges) {
-      expect(hiddenPracticeCases[challenge.id]).toBeDefined();
-      expect(hiddenPracticeCases[challenge.id].length).toBeGreaterThan(0);
+      for (const testCase of hiddenPracticeCases[challenge.id] || []) {
+        expect(testCase.input).toEqual(expect.any(String));
+        expect(testCase.expectedOutput).toEqual(expect.any(String));
+      }
     }
 
-    // Check lesson code steps
     for (const lesson of Object.values(content.lessons)) {
       for (const step of lesson.steps) {
-        if (step.type === "code") {
-          expect(hiddenStepCases[step.id]).toBeDefined();
-          expect(hiddenStepCases[step.id].length).toBeGreaterThan(0);
+        for (const testCase of hiddenStepCases[step.id] || []) {
+          expect(testCase.input).toEqual(expect.any(Array));
         }
       }
     }
@@ -115,10 +121,10 @@ describe("verifyActivity verifier", () => {
     }
   });
 
-  it("accepts a lesson only for an exact ALL_PASS marker on a zero exit code", async () => {
+  it("accepts a lesson when every isolated case returns the expected JSON", async () => {
     vi.mocked(executeCode).mockResolvedValue({
       success: true,
-      run: { stdout: "ALL_PASS", stderr: "", code: 0, signal: null, output: "" },
+      run: { stdout: JSON.stringify("Hello World"), stderr: "", code: 0, signal: null, output: "" },
     });
 
     const result = await verifyActivity({
@@ -132,13 +138,15 @@ describe("verifyActivity verifier", () => {
     }
   });
 
-  it("drops unresolved placeholder hidden cases for parameterized lesson steps", async () => {
+  it("does not add unreviewed hidden cases to a lesson script", async () => {
     let builtScript = "";
+    let call = 0;
     vi.mocked(executeCode).mockImplementation(async (_lang, source) => {
       builtScript = source;
+      const stdout = ["25", "8"][call++];
       return {
         success: true,
-        run: { stdout: "ALL_PASS", stderr: "", code: 0, signal: null, output: "" },
+        run: { stdout, stderr: "", code: 0, signal: null, output: stdout },
       };
     });
 
@@ -148,11 +156,31 @@ describe("verifyActivity verifier", () => {
       code: "def calculate_power(a, b):\n    return a ** b",
     });
 
-    expect(builtScript).not.toContain('"placeholder"');
+    expect(builtScript).not.toContain("placeholder");
     expect(result.passed).toBe(true);
   });
 
-  it("skips fallback-sentinel hidden cases in practice challenges", async () => {
+  it("keeps lesson expected outputs out of the learner process", async () => {
+    const scripts: string[] = [];
+    vi.mocked(executeCode).mockImplementation(async (_lang, source) => {
+      scripts.push(source);
+      return {
+        success: true,
+        run: { stdout: "25", stderr: "", code: 0, signal: null, output: "25" },
+      };
+    });
+
+    await verifyActivity({
+      kind: "LESSON_STEP",
+      activityId: "py-l3-s2",
+      code: "def calculate_power(a, b):\n    return a ** b",
+    });
+
+    expect(scripts).not.toHaveLength(0);
+    expect(scripts.every((script) => !script.includes('"output":25'))).toBe(true);
+  });
+
+  it("runs public cases when no reviewed hidden cases exist", async () => {
     const stdins: string[] = [];
     vi.mocked(executeCode).mockImplementation(async (lang, code, stdin) => {
       stdins.push(stdin ?? "");
