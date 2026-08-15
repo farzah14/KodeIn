@@ -33,7 +33,6 @@ export function CodeStep({
   const [message, setMessage] = useState("");
   const [stdoutStr, setStdoutStr] = useState("");
   const [shakeKey, setShakeKey] = useState(0);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const currentHint = useMemo(() => {
     if (!step.hints.length) return "";
@@ -61,7 +60,6 @@ export function CodeStep({
         timeoutMs: 3000,
       });
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error("[CodeStep] runWithPiston failed:", e);
       setStatus("fail");
       setMessage(
@@ -82,13 +80,11 @@ export function CodeStep({
       try {
         await completeStep(step.id, code);
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.error("[CodeStep] completeStep failed:", e);
         setMessage(
           "Hasil test pass, tetapi progres gagal disimpan. Coba lagi dalam beberapa saat."
         );
       }
-      setShowSuccess(true);
       return;
     }
 
@@ -105,12 +101,6 @@ export function CodeStep({
     setMessage("");
     setStdoutStr("");
     setHintIndex(0);
-    setShowSuccess(false);
-  }
-
-  function onContinueAfterSuccess() {
-    setShowSuccess(false);
-    onPassed();
   }
 
   return (

@@ -75,7 +75,6 @@ if (typeof window !== "undefined") {
       });
     })
     .catch((err) => {
-      // eslint-disable-next-line no-console
       console.error("[CodeEditor] Monaco loader failed:", err);
       monacoLoaderFailed = true;
       // Nudge the component so it re-renders with the fallback UI.
@@ -330,6 +329,7 @@ export function CodeEditor({
 
       {/* ── Editor Body ── */}
       <div style={{ flex: 1, minHeight: 0 }}>
+        {loaderError ? renderEditorFallback() : (
         <Editor
           height="100%"
           language={language}
@@ -377,6 +377,7 @@ export function CodeEditor({
             overviewRulerLanes: 3,
           }}
         />
+        )}
       </div>
 
       {/* ── VS Code Status Bar ── */}

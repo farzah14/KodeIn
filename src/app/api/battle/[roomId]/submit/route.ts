@@ -29,11 +29,18 @@ export async function POST(
       // refund the claimed slot. Validation errors like the rate-limit
       // rejection itself are caught above and never reach this point.
       await refundExecutionQuota(userId, quotaResult.windowStart);
-      return NextResponse.json({ error: result.error }, { status: 400 });
+      const status = result.error === "RUNNER_NOT_CONFIGURED"
+        ? 503
+        : result.error === "RUNNER_UNAVAILABLE"
+          ? 502
+          : result.error === "TIMEOUT"
+            ? 408
+            : 400;
+      return NextResponse.json({ error: result.error }, { status });
     }
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "INTERNAL_ERROR" }, { status: 500 });
   }
 }

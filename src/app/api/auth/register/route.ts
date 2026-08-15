@@ -3,28 +3,50 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { sendVerificationEmail } from "@/lib/email";
-import { registerLimiter, clientIp } from "@/server/rate-limit/memoryRateLimit";
+import {
+  checkDbRateLimit,
+  clientIp,
+  REGISTER_MAX_PER_IP,
+  REGISTER_WINDOW_MS,
+} from "@/server/rate-limit/dbRateLimit";
 import { rateLimited } from "@/server/rate-limit/responses";
+import { isRecord, nonEmptyString } from "@/server/http/validation";
 
 export async function POST(req: NextRequest) {
   try {
     // 0. Rate limit per IP before any expensive work (bcrypt hashing).
-    const check = registerLimiter.check(clientIp(req));
+    const check = await checkDbRateLimit(`register:${clientIp(req)}`, {
+      windowMs: REGISTER_WINDOW_MS,
+      max: REGISTER_MAX_PER_IP,
+    });
     if (!check.allowed) {
       return rateLimited(check.retryAfterSeconds);
     }
 
-    const { name, email, password } = await req.json();
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    if (!isRecord(rawBody)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+
+    const name = nonEmptyString(rawBody.name);
+    const email = nonEmptyString(rawBody.email);
+    const password = typeof rawBody.password === "string" ? rawBody.password : null;
 
     // 1. Validasi Input
-    if (!name || !name.trim()) {
+    if (!name) {
       return NextResponse.json(
         { error: "Nama lengkap wajib diisi." },
         { status: 400 }
       );
     }
 
-    if (!email || !email.trim()) {
+    if (!email) {
       return NextResponse.json(
         { error: "Alamat email wajib diisi." },
         { status: 400 }
@@ -46,7 +68,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase();
 
     // 2. Hash Password
     const saltRounds = 12;
@@ -80,7 +102,7 @@ export async function POST(req: NextRequest) {
       // Buat user baru (emailVerified bernilai null secara default)
       const user = await tx.user.create({
         data: {
-          name: name.trim(),
+          name,
           email: normalizedEmail,
           passwordHash,
         },
@@ -111,7 +133,7 @@ export async function POST(req: NextRequest) {
     // 6. Kirim email verifikasi
     try {
       await sendVerificationEmail(normalizedEmail, token);
-    } catch (error) {
+    } catch {
       console.error("Verification email delivery failed", { userId });
       // Roll back the just-created account so the email address is not burned:
       // without a delivered token the user could never verify or sign in, and

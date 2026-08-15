@@ -1,9 +1,9 @@
 name: CI
 
 on:
-  pull_request:
   push:
-    branches: [main]
+    branches: [ main ]
+  pull_request:
 
 jobs:
   check:
@@ -20,17 +20,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint
-        run: npm run lint
+      - name: Validate Prisma schema
+        run: npx prisma validate
 
-      - name: Typecheck
-        run: npm run typecheck
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
 
-      - name: Test
-        run: npm run test
-
-      - name: Build
-        run: npm run build
+      - name: Run CI Validation Check (lint, typecheck, tests, build)
+        run: npm run check
         env:
           # Build must succeed without a real DSN: e.g. first-time
           # contributors do not have access to the production database.

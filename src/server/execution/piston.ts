@@ -1,4 +1,5 @@
 import { EXECUTION_LIMITS, LANGUAGE_VERSIONS, SupportedLanguage, ExecutionResult } from "./types";
+import { runnerBaseUrl } from "./runnerConfig";
 
 export async function executeCode(
   language: SupportedLanguage,
@@ -21,8 +22,11 @@ export async function executeCode(
     return { success: false, error: "PAYLOAD_TOO_LARGE" };
   }
 
-  const baseUrl = process.env.PISTON_BASE_URL || "https://emkc.org";
-  const url = `${baseUrl.replace(/\/$/, "")}/api/v2/piston/execute`;
+  const baseUrl = runnerBaseUrl();
+  if (!baseUrl) {
+    return { success: false, error: "RUNNER_NOT_CONFIGURED" };
+  }
+  const url = `${baseUrl}/api/v2/piston/execute`;
 
   const payload = {
     language,
@@ -90,9 +94,11 @@ export async function executeCode(
         output,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Piston execution failed:", error);
-    if (error.name === "TimeoutError" || error.name === "AbortError" || error.message?.includes("timeout")) {
+    const message = error instanceof Error ? error.message : "";
+    const name = error instanceof Error ? error.name : "";
+    if (name === "TimeoutError" || name === "AbortError" || message.includes("timeout")) {
       return { success: false, error: "TIMEOUT" };
     }
     return { success: false, error: "RUNNER_UNAVAILABLE" };

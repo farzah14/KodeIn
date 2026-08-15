@@ -1,42 +1,9 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import type { Progress as ProgressModel } from "@prisma/client";
 import { NextResponse } from "next/server";
+import { buildProgressDTO } from "@/server/progress/progressDTO";
 
 export const dynamic = "force-dynamic";
-
-type ProgressDTO = {
-  completedStepIds: Record<string, boolean | string[]>;
-  xp: number;
-  streak: {
-    current: number;
-    longest: number;
-    lastActiveISO?: string;
-  };
-};
-
-function safeParseCompleted(json: string | null | undefined): Record<string, boolean | string[]> {
-  try {
-    const obj = JSON.parse(json || "{}");
-    return typeof obj === "object" && obj ? (obj as Record<string, boolean | string[]>) : {};
-  } catch {
-    return {};
-  }
-}
-
-function normalize(progressRow: ProgressModel): ProgressDTO {
-  const completedStepIds = safeParseCompleted(progressRow.completedJson);
-
-  return {
-    completedStepIds,
-    xp: progressRow.xp ?? 0,
-    streak: {
-      current: progressRow.streakCurrent ?? 0,
-      longest: progressRow.streakLongest ?? 0,
-      lastActiveISO: progressRow.lastActiveISO ?? undefined,
-    },
-  };
-}
 
 export async function GET(): Promise<NextResponse> {
   const session = await auth();
@@ -58,6 +25,10 @@ export async function GET(): Promise<NextResponse> {
   const row =
     (await prisma.progress.findUnique({ where: { userId: user.id } })) ??
     (await prisma.progress.create({ data: { userId: user.id } }));
+  const completions = await prisma.completion.findMany({
+    where: { userId: user.id },
+    select: { kind: true, activityId: true },
+  });
 
-  return NextResponse.json(normalize(row));
+  return NextResponse.json(buildProgressDTO(row, completions));
 }

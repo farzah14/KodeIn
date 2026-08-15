@@ -58,6 +58,10 @@ export async function getBattle(roomId: string, userId: string | null): Promise<
 
   if (!room) return null;
 
+  if (!userId || (room.player1Id !== userId && room.player2Id !== userId)) {
+    return null;
+  }
+
   const roomWithPlayers = await fetchPlayers(room);
   return toPublicBattleState(roomWithPlayers, userId);
 }
@@ -112,6 +116,10 @@ export async function submitCode(
       return { success: false, error: "BATTLE_NOT_ACTIVE" };
     }
 
+    if (room.expiresAt.getTime() <= Date.now()) {
+      return { success: false, error: "BATTLE_EXPIRED" };
+    }
+
     const challenge = battleChallenges.find((c) => c.id === room.challengeId);
     if (!challenge) {
       return { success: false, error: "CHALLENGE_NOT_FOUND" };
@@ -135,7 +143,10 @@ export async function submitCode(
     let allPassed = true;
     for (const tc of challenge.testCases) {
       const execution = await executeCode(challenge.language as SupportedLanguage, code, tc.input);
-      if (!execution.success || execution.run.stdout.trim() !== tc.expectedOutput.trim()) {
+      if (!execution.success) {
+        return { success: false, error: execution.error };
+      }
+      if (execution.run.stdout.trim() !== tc.expectedOutput.trim()) {
         allPassed = false;
         break;
       }
@@ -151,6 +162,10 @@ export async function submitCode(
 
       if (!currentRoom || currentRoom.status !== "active") {
         throw new Error("BATTLE_NOT_ACTIVE");
+      }
+
+      if (currentRoom.expiresAt.getTime() <= Date.now()) {
+        throw new Error("BATTLE_EXPIRED");
       }
 
       const updateData: Prisma.BattleRoomUpdateInput = {};
@@ -217,6 +232,10 @@ export async function surrenderBattle(
 
       if (!room || room.status !== "active") {
         throw new Error("BATTLE_NOT_ACTIVE");
+      }
+
+      if (room.expiresAt.getTime() <= Date.now()) {
+        throw new Error("BATTLE_EXPIRED");
       }
 
       const isPlayer1 = room.player1Id === userId;

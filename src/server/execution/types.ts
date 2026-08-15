@@ -30,5 +30,5 @@ export type ExecutionResult =
     }
   | { 
       success: false; 
-      error: "UNSUPPORTED_LANGUAGE" | "PAYLOAD_TOO_LARGE" | "RUNNER_UNAVAILABLE" | "TIMEOUT" | "UNKNOWN_ERROR";
+      error: "UNSUPPORTED_LANGUAGE" | "PAYLOAD_TOO_LARGE" | "RUNNER_NOT_CONFIGURED" | "RUNNER_UNAVAILABLE" | "TIMEOUT" | "UNKNOWN_ERROR";
     };

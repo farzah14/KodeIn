@@ -1,7 +1,7 @@
 import { RunnerRequest, RunnerResponse } from "../types";
 
 export async function runWithPiston(req: RunnerRequest): Promise<RunnerResponse> {
-  const { code, functionName, publicCases, language } = req;
+  const { code, functionName, publicCases } = req;
 
   // Pastikan function name ada di dalam code (Pengecekan simpel awal)
   const hasDef = new RegExp(`def\\s+${functionName}\\s*\\(`).test(code);
@@ -155,7 +155,7 @@ if __name__ == '__main__':
                 stdout: stdout
             }
         }
-    } catch(e) {
+    } catch {
         // Abaikan parse error, mungkin ada stdout dari print user
     }
 
@@ -165,7 +165,7 @@ if __name__ == '__main__':
         friendlyMessage: "Test case belum lulus nih, coba cek log output-nya.",
     }
 
-  } catch (error) {
+  } catch {
     return {
       status: "error",
       friendlyMessage: "Koneksi terputus saat mencoba menjalankan kode.",
@@ -191,7 +191,7 @@ export async function runGenericPiston(code: string, language: string) {
       return { stdout: "", stderr: data.error || "Network or API limit" };
     }
     return { stdout: data.run.stdout, stderr: data.run.stderr };
-  } catch (error) {
+  } catch {
     return { stdout: "", stderr: "Timeout / Error Connection" };
   }
 }

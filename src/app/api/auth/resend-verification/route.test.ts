@@ -21,6 +21,12 @@ vi.mock("@/lib/prisma", () => {
 vi.mock("@/lib/email", () => ({
   sendVerificationEmail: vi.fn(),
 }));
+vi.mock("@/server/rate-limit/dbRateLimit", () => ({
+  checkDbRateLimit: vi.fn().mockResolvedValue({ allowed: true, retryAfterSeconds: 0 }),
+  clientIp: vi.fn().mockReturnValue("test-ip"),
+  RESEND_MAX_PER_KEY: 1,
+  RESEND_WINDOW_MS: 60_000,
+}));
 
 describe("POST /api/auth/resend-verification", () => {
   beforeEach(() => {

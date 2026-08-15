@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { calculateStreak } from "./streak";
+import { buildProgressDTO, ProgressDTO } from "./progressDTO";
 
 export type AwardCompletionInput = {
   userId: string;
@@ -8,16 +9,6 @@ export type AwardCompletionInput = {
   activityId: string;
   xp: number;
   activityDateISO: string;
-};
-
-export type ProgressDTO = {
-  completedStepIds: Record<string, boolean | string[]>;
-  xp: number;
-  streak: {
-    current: number;
-    longest: number;
-    lastActiveISO?: string;
-  };
 };
 
 export async function awardCompletion(
@@ -81,29 +72,9 @@ export async function awardCompletion(
           where: { userId },
         });
 
-        const completedStepIds: Record<string, boolean | string[]> = {};
-        const practiceCompleted: string[] = [];
-
-        completions.forEach((c) => {
-          if (c.kind === "LESSON_STEP") {
-            completedStepIds[c.activityId] = true;
-          } else if (c.kind === "PRACTICE") {
-            practiceCompleted.push(c.activityId);
-          }
-        });
-        completedStepIds["practice"] = practiceCompleted;
-
         return {
           awarded: true,
-          progress: {
-            completedStepIds,
-            xp: updatedProgress.xp,
-            streak: {
-              current: updatedProgress.streakCurrent,
-              longest: updatedProgress.streakLongest,
-              lastActiveISO: updatedProgress.lastActiveISO ?? undefined,
-            },
-          },
+          progress: buildProgressDTO(updatedProgress, completions),
         };
       }, {
         isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
@@ -119,29 +90,17 @@ export async function awardCompletion(
           where: { userId },
         });
 
-        const completedStepIds: Record<string, boolean | string[]> = {};
-        const practiceCompleted: string[] = [];
-
-        completions.forEach((c) => {
-          if (c.kind === "LESSON_STEP") {
-            completedStepIds[c.activityId] = true;
-          } else if (c.kind === "PRACTICE") {
-            practiceCompleted.push(c.activityId);
-          }
-        });
-        completedStepIds["practice"] = practiceCompleted;
-
         return {
           awarded: false,
-          progress: {
-            completedStepIds,
-            xp: progressRecord?.xp ?? 0,
-            streak: {
-              current: progressRecord?.streakCurrent ?? 0,
-              longest: progressRecord?.streakLongest ?? 0,
-              lastActiveISO: progressRecord?.lastActiveISO ?? undefined,
+          progress: buildProgressDTO(
+            progressRecord ?? {
+              xp: 0,
+              streakCurrent: 0,
+              streakLongest: 0,
+              lastActiveISO: null,
             },
-          },
+            completions
+          ),
         };
       }
 

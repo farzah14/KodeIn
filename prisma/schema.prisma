@@ -3,24 +3,25 @@ datasource db {
 }
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  address       String?
-  theme         String    @default("system") // "light" | "dark" | "system"
-  accounts       Account[]
-  sessions       Session[]
-  progress       Progress?
-  completions    Completion[]
-  executionQuota ExecutionQuota[]
+  id                  String               @id @default(cuid())
+  name                String?
+  email               String?              @unique
+  emailVerified       DateTime?
+  image               String?
+  passwordHash        String?
+  address             String?
+  theme               String               @default("system") // "light" | "dark" | "system"
+  accounts            Account[]
+  sessions            Session[]
+  progress            Progress?
+  completions         Completion[]
+  executionQuota      ExecutionQuota[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Account {
@@ -59,6 +60,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
 model Progress {
   userId        String   @id
   xp            Int      @default(0)
@@ -72,27 +85,27 @@ model Progress {
 }
 
 model BattleRoom {
-  id             String   @id @default(cuid())
-  status         String   @default("waiting") // "waiting", "active", "finished"
-  challengeId    String
-  
-  player1Id      String
-  player2Id      String?
-  
-  player1Code    String   @default("")
-  player2Code    String   @default("")
-  
-  player1Done    Boolean  @default(false)
-  player2Done    Boolean  @default(false)
-  
-  player1Result  String   @default("") // "pending", "success", "fail"
-  player2Result  String   @default("") // "pending", "success", "fail"
-  
-  winnerId       String?
-  
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  expiresAt      DateTime
+  id          String @id @default(cuid())
+  status      String @default("waiting") // "waiting", "active", "finished"
+  challengeId String
+
+  player1Id String
+  player2Id String?
+
+  player1Code String @default("")
+  player2Code String @default("")
+
+  player1Done Boolean @default(false)
+  player2Done Boolean @default(false)
+
+  player1Result String @default("") // "pending", "success", "fail"
+  player2Result String @default("") // "pending", "success", "fail"
+
+  winnerId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime
 }
 
 enum CompletionKind {
@@ -122,3 +135,12 @@ model ExecutionQuota {
   @@index([windowStart])
 }
 
+model RateLimitBucket {
+  key         String
+  windowStart DateTime
+  count       Int      @default(0)
+  expiresAt   DateTime
+
+  @@id([key, windowStart])
+  @@index([expiresAt])
+}

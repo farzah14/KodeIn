@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { content } from "@/lib/content";
 import { useProgress } from "@/lib/useProgress";
-import { CheckCircle2, Lock, Play, GraduationCap, Trophy } from "lucide-react";
+import { Lock, Play, GraduationCap, Trophy } from "lucide-react";
 
 type NodeState = "completed" | "available" | "locked";
 

@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import { verifyActivity } from "@/server/execution/verifyActivity";
 import { awardCompletion } from "@/server/progress/awardCompletion";
-import { checkAndIncrementQuota } from "@/server/rate-limit/executionQuota";
+import { checkAndIncrementQuota, refundExecutionQuota } from "@/server/rate-limit/executionQuota";
 import { executionQuotaExceeded } from "@/server/rate-limit/responses";
 import { getActivityDateISO } from "@/server/progress/activityDate";
 
@@ -55,7 +55,18 @@ export async function POST(req: Request): Promise<NextResponse> {
     });
 
     if (!verification.passed) {
-      return NextResponse.json({ error: verification.reason }, { status: 400 });
+      if (verification.reason !== "TEST_FAILED") {
+        await refundExecutionQuota(user.id, quotaResult.windowStart);
+      }
+      return NextResponse.json(
+        { error: verification.reason },
+        {
+          status:
+            verification.reason === "RUNNER_UNAVAILABLE" || verification.reason === "RUNNER_NOT_CONFIGURED"
+              ? 503
+              : 400,
+        }
+      );
     }
 
     // 2. Award Completion Idempotently

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { submitCode, joinBattle } from "./actions";
+import { getBattle, submitCode, joinBattle, surrenderBattle } from "./actions";
 import { prisma } from "@/lib/prisma";
 import { executeCode } from "../execution/piston";
 import { Prisma, BattleRoom } from "@prisma/client";
@@ -67,6 +67,15 @@ describe("submitCode battle actions", () => {
     });
   });
 
+  it("rejects nonparticipants before loading player profiles", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom({ player2Id: "user-2" }));
+
+    const result = await getBattle("room-1", "spectator");
+
+    expect(result).toBeNull();
+    expect(prisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it("retries on serialization conflict and records the winning submission", async () => {
     vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom());
     vi.mocked(prisma.user.findUnique).mockResolvedValue({ name: "Alice", image: null } as any);
@@ -105,6 +114,49 @@ describe("submitCode battle actions", () => {
     expect(result.error).toBe("CODE_TOO_LARGE");
     expect(executeCode).not.toHaveBeenCalled();
     expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("does not persist a battle result when the runner is unavailable", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(makeRoom());
+    vi.mocked(executeCode).mockResolvedValue({
+      success: false,
+      error: "RUNNER_NOT_CONFIGURED",
+    });
+
+    const result = await submitCode("room-1", "user-1", "print(1)");
+
+    expect(result).toEqual({ success: false, error: "RUNNER_NOT_CONFIGURED" });
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects submissions to an expired active room before execution", async () => {
+    vi.mocked(prisma.battleRoom.findUnique).mockResolvedValue(
+      makeRoom({ expiresAt: new Date(Date.now() - 1_000) })
+    );
+
+    const result = await submitCode("room-1", "user-1", "print(1)");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("BATTLE_EXPIRED");
+    expect(executeCode).not.toHaveBeenCalled();
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects surrender in an expired active room", async () => {
+    const expired = makeRoom({ expiresAt: new Date(Date.now() - 1_000) });
+    const txPrisma = {
+      battleRoom: {
+        findUnique: vi.fn().mockResolvedValue(expired),
+        update: vi.fn(),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementation((async (cb: any) => cb(txPrisma)) as any);
+
+    const result = await surrenderBattle("room-1", "user-1");
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("BATTLE_EXPIRED");
+    expect(txPrisma.battleRoom.update).not.toHaveBeenCalled();
   });
 
   it("prevents joining an expired waiting room", async () => {

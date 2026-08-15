@@ -15,6 +15,11 @@ export async function GET(
   }
 
   const { roomId } = await params;
+  let initialState = await getBattle(roomId, userId);
+  if (!initialState) {
+    return new Response("FORBIDDEN", { status: 403 });
+  }
+
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
@@ -31,7 +36,8 @@ export async function GET(
       const sendState = async () => {
         if (isClosed) return;
         try {
-          const state = await getBattle(roomId, userId);
+          const state = initialState ?? await getBattle(roomId, userId);
+          initialState = null;
 
           if (!state) {
             if (!isClosed) {
@@ -64,6 +70,7 @@ export async function GET(
 
       // Initial send
       await sendState();
+      if (isClosed) return;
 
       // Poll matching periodically
       interval = setInterval(async () => {
