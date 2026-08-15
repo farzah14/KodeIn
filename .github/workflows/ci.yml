@@ -4,21 +4,18 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
 
 jobs:
-  build-and-test:
+  check:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: 22
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
@@ -29,5 +26,9 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
 
-      - name: Run CI Validation Check
+      - name: Run CI Validation Check (lint, typecheck, tests, build)
         run: npm run check
+        env:
+          # Build must succeed without a real DSN: e.g. first-time
+          # contributors do not have access to the production database.
+          AUTH_SECRET: ci-only-secret
